@@ -89,23 +89,23 @@
 | UI-302 | Store Page Customizer | Store Owner | T-9.1 | WYSIWYG editor for store public page |
 | UI-303 | Product Manager | Store Owner | T-9.2, T-9.3 | CRUD products: name, price, images, stock, category |
 | UI-304 | Inventory Manager | Store Owner | — | Stock levels, low-stock alerts |
-| UI-305 | Order Queue | Store Owner | T-9.5 | Incoming orders with accept/preparing/ready actions |
-| UI-306 | Offer Manager | Store Owner | T-9.4 | Create/edit promotional offers |
+| UI-305 | Order Queue | Store Owner | T-12.1 | Incoming orders with accept/preparing/ready actions |
+| UI-306 | Offer Manager | Store Owner | T-11.1 | Create/edit promotional offers |
 | UI-307 | Store Analytics | Store Owner | — | Charts: sales, top products, revenue |
-| UI-308 | Review Manager | Store Owner | — | View and respond to reviews |
+| UI-308 | Review Manager | Store Owner | T-10.1 | View and respond to reviews |
 
 ### 1.6 System Admin Interfaces
 
 | Interface ID | Name | Actor(s) | Transactions | Description |
 |-------------|------|----------|-------------|-------------|
 | UI-400 | Admin Dashboard | Admin | — | System-wide KPIs, alerts, pending approvals |
-| UI-401 | User Management | Admin | T-10.1 | User table: search, filter, view, suspend, delete |
-| UI-402 | Vet Verification | Admin | T-10.2 | Verify vet licenses, approve/reject |
-| UI-403 | Hospital Approval | Admin | T-10.3 | Approve/reject hospital registrations |
-| UI-404 | Store Approval | Admin | T-10.4 | Approve/reject store registrations |
-| UI-405 | Medicine Manager | Admin | T-10.4 | CRUD medicines with allergy/contraindication data |
-| UI-406 | Breed Manager | Admin | T-10.5 | CRUD cat breed entries |
-| UI-407 | AI Data Manager | Admin | T-10.6 | CRUD illness-symptom pairs + regenerate embeddings |
+| UI-401 | User Management | Admin | T-13.1 | User table: search, filter, view, suspend, delete |
+| UI-402 | Vet Verification | Admin | T-13.2 | Verify vet licenses, approve/reject |
+| UI-403 | Hospital Approval | Admin | T-13.3 | Approve/reject hospital registrations |
+| UI-404 | Store Approval | Admin | T-13.4 | Approve/reject store registrations |
+| UI-405 | Medicine Manager | Admin | T-13.5 | CRUD medicines with allergy/contraindication data |
+| UI-406 | Breed Manager | Admin | T-13.6 | CRUD cat breed entries |
+| UI-407 | AI Data Manager | Admin | T-13.7 | CRUD illness-symptom pairs + regenerate embeddings |
 | UI-408 | System Analytics | Admin | — | Platform-wide charts and metrics |
 | UI-409 | Content Moderation | Admin | — | Review reports, moderate content |
 
@@ -120,6 +120,7 @@
 | SI-001 | AuthController | AuthService | Method call | register(), login(), verifyToken(), refreshToken() |
 | SI-002 | CatController | CatService | Method call | registerCat(), getCatsByOwner(), updateCat() |
 | SI-003 | HospitalController | HospitalService | Method call | findNearby(), getDetails(), updatePage() |
+| SI-003b | StoreController | StoreService | Method call | findNearby(), getDetails(), updatePage(), manageProducts() |
 | SI-004 | AppointmentController | AppointmentService | Method call | create(), confirm(), cancel(), getByUser() |
 | SI-005 | ChatController | ChatService | Method call | getOrCreateChat(), sendMessage(), getMessages() |
 | SI-006 | OrderController | OrderService | Method call | createOrder(), confirmOrder(), updateStatus() |
@@ -144,6 +145,8 @@
 | SI-028 | ChatService | MessageRepository | Method call | create(), findByChatRoom() |
 | SI-029 | OrderService | OrderRepository | Method call | create(), updateStatus(), findByStore() |
 | SI-030 | OrderService | ProductRepository | Method call | validateStock(), decrementStock() |
+| SI-030b | StoreService | StoreRepository | Method call | findByOwner(), updatePageConfig(), findByRadius() |
+| SI-030c | StoreService | ProductRepository | Method call | create(), update(), findByStore() |
 | SI-031 | PrescriptionService | PrescriptionRepository | Method call | create(), findByCat() |
 | SI-032 | PrescriptionService | MedicineRepository | Method call | search(), getContraindications() |
 | SI-033 | AIService | VectorDBRepository | Method call | similaritySearch(), store() |
@@ -185,7 +188,7 @@
 
 | Category | Count |
 |----------|-------|
-| **User Interfaces (UI)** | 50 screens |
-| **System Interfaces (Internal)** | 44 interfaces |
+| **User Interfaces (UI)** | 51 screens |
+| **System Interfaces (Internal)** | 47 interfaces |
 | **External Interfaces** | 12 integrations |
-| **Total** | **106 interfaces** |
+| **Total** | **110 interfaces** |

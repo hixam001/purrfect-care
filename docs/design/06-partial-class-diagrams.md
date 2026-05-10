@@ -449,7 +449,7 @@ classDiagram
 
 ---
 
-## Partial Class Diagram 5: AI Companion (from SD-6, TS-6)
+## Partial Class Diagram 5: AI Companion (from SD-6, TS-7)
 
 ```mermaid
 classDiagram
@@ -555,7 +555,7 @@ classDiagram
 
 ---
 
-## Partial Class Diagram 6: Prescription (from SD-7, TS-7)
+## Partial Class Diagram 6: Prescription (from SD-7, TS-6)
 
 ```mermaid
 classDiagram
@@ -668,7 +668,7 @@ classDiagram
 
 ---
 
-## Partial Class Diagram 7: Cat Store & Orders (from SD-8, TS-4, TS-9)
+## Partial Class Diagram 7: Cat Store & Orders (from SD-8, TS-4, TS-9, TS-12)
 
 ```mermaid
 classDiagram
@@ -844,7 +844,7 @@ classDiagram
 
 ---
 
-## Partial Class Diagram 8: Review System (cross-cutting)
+## Partial Class Diagram 8: Review System (from TS-10, cross-cutting)
 
 ```mermaid
 classDiagram
@@ -889,13 +889,23 @@ classDiagram
         +vet_id: UUID
         +rating: int
         +comment: string
-        +response: string
-        +response_by: UUID
+        +status: string
         +created_at: DateTime
+    }
+
+    class ReviewResponse {
+        +id: UUID
+        +review_id: UUID
+        +responder_id: UUID
+        +response_text: string
+        +status: string
+        +responded_at: DateTime
     }
 
     ReviewView --> ReviewController : HTTP
     ReviewController --> ReviewService : business logic
     ReviewService --> ReviewRepository : CRUD
     ReviewRepository ..> Review : manages
+    ReviewRepository ..> ReviewResponse : manages
+    Review "1" --> "0..1" ReviewResponse : has
 ```

@@ -579,7 +579,7 @@ stop
 
 ---
 
-## Swimlane 6: Hospital/Store Dashboard Customization
+## Swimlane 6: Hospital Dashboard Customization
 
 ### PlantUML (True Swimlane)
 
@@ -656,7 +656,101 @@ stop
 @enduml
 ```
 
-> **Note**: The same swimlane pattern applies to **Store Owner → Store Page Customization**, replacing Hospital-specific fields with store-specific fields (products, delivery zones, store hours).
+---
+
+## Swimlane 6b: Store Dashboard Customization
+
+### PlantUML (True Swimlane)
+
+```plantuml
+@startuml
+|Store Owner|
+start
+:Opens Store Dashboard;
+:Clicks "Customize Store Page";
+
+|System (Backend)|
+:Authenticate user;
+:Verify store_owner role;
+
+|Supabase|
+:Fetch current store 
+page_config, banner_url,
+products, categories,
+delivery_zones, operating_hours;
+
+|Store Owner|
+:Views store page editor
+(WYSIWYG interface);
+
+fork
+    :Upload new banner image;
+    |Supabase Storage|
+    :Store image in 
+    store-assets bucket;
+    :Return public URL;
+fork again
+    |Store Owner|
+    :Edit store description;
+    :Update operating hours;
+    :Update contact info;
+fork again
+    |Store Owner|
+    :Configure delivery zones
+    (set delivery areas on map);
+    :Set delivery fee;
+fork again
+    |Store Owner|
+    :Manage product categories
+    (add/edit/reorder categories);
+fork again
+    |Store Owner|
+    :Manage products
+    (add/edit/remove products);
+    :Upload product images;
+    :Set prices and stock quantities;
+fork again
+    |Store Owner|
+    :Reorder page layout sections
+    (drag and drop);
+end fork
+
+|Store Owner|
+:Clicks "Preview";
+:Reviews preview of 
+public-facing store page;
+
+if (Satisfied?) then (yes)
+    :Clicks "Publish";
+    
+    |System (Backend)|
+    :Validate page configuration;
+    :Validate delivery zones;
+    
+    |Supabase|
+    :UPDATE cat_stores 
+    SET page_config = ?,
+    banner_url = ?,
+    operating_hours = ?,
+    delivery_zones = ?,
+    delivery_fee = ?
+    WHERE id = ?;
+    
+    :UPDATE products
+    (any product changes);
+    
+    :UPDATE product_categories
+    (any category changes);
+    
+    |Store Owner|
+    :Success: "Store page is live! ✓";
+else (no)
+    |Store Owner|
+    :Continue editing;
+endif
+stop
+@enduml
+```
 
 ---
 
@@ -1025,11 +1119,12 @@ stop
 | 3 | Purchase Products | Cat Owner, Location, Backend, Supabase, Stripe, Notification | UC-1.9 | TS-4 (Transaction with LineItem → SubsequentTransaction) |
 | 4 | Vet-User Chat | Cat Owner, Backend, Supabase, Realtime, Vet, Notification | UC-1.6, UC-2.4 | TS-5 (Transaction with TransactionLineItem) |
 | 5 | AI Consultation | Cat Owner, Backend, OpenAI, pgvector, Supabase | UC-1.11 | TS-7 (Participant-Transaction-SpecificItem) |
-| 6 | Dashboard Customization | Hospital Admin, Backend, Supabase, Storage | UC-3.2, UC-4.2 | TS-8 (Participant-Transaction-Place) |
-| 7 | Order Fulfillment | Cat Owner, Realtime, Store Owner, Backend, Supabase, Stripe, Notification | UC-4.5 | TS-11 (Transaction → SubsequentTransaction) |
-| 8 | Medicine Management | System Admin, Backend, Supabase, OpenAI, pgvector | UC-5.5 | TS-12 (Participant-Transaction-Item) |
+| 6 | Hospital Dashboard Customization | Hospital Admin, Backend, Supabase, Storage | UC-3.2 | TS-8 (Participant-Transaction-Place + Item) |
+| 6b | Store Dashboard Customization | Store Owner, Backend, Supabase, Storage | UC-4.2 | TS-9 (Participant-Transaction-Place + Item + Classification) |
+| 7 | Order Fulfillment | Cat Owner, Realtime, Store Owner, Backend, Supabase, Stripe, Notification | UC-4.5 | TS-12 (Transaction → SubsequentTransaction) |
+| 8 | Medicine Management | System Admin, Backend, Supabase, OpenAI, pgvector | UC-5.5 | TS-13 (Participant-Transaction-Item) |
 | 9 | Treatment & Prescription | Vet, Backend, Supabase, Notification, Cat Owner | UC-2.5, UC-2.9 | TS-6 (Transaction → SubsequentTransaction with Item) |
-| 10 | Review & Rating | Cat Owner, Backend, Supabase, Notification, Business Owner | UC-1.14 | TS-9 (Transaction → SubsequentTransaction) |
+| 10 | Review & Rating | Cat Owner, Backend, Supabase, Notification, Business Owner | UC-1.14 | TS-10 (Transaction → SubsequentTransaction) |
 
 ---
 

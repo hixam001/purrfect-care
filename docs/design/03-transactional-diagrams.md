@@ -848,7 +848,7 @@ classDiagram
 
 **Transaction Set Type**: Participant-Transaction-SpecificItem/Item
 
-> A Participant (SystemAdmin) performs management Transactions (Approval, Verification, Suspension) on SpecificItems (individual users/vets/hospitals) or Items (medicines, breeds).
+> A Participant (SystemAdmin) performs management Transactions (Approval, Verification, Suspension) on SpecificItems (individual users/vets/hospitals/stores) or Items (medicines, breeds).
 
 **Players**: Participant, Transaction, SpecificItem/Item
 
@@ -895,6 +895,14 @@ classDiagram
         +is_approved: boolean
     }
 
+    class StoreProfile {
+        <<SpecificItem>>
+        +serial_number: UUID
+        +name: string
+        +is_approved: boolean
+        +delivery_zones: JSON
+    }
+
     class Medicine {
         <<Item>>
         +number: UUID
@@ -914,11 +922,13 @@ classDiagram
     AdminAction "0..*" --> "0..1" UserAccount : on
     AdminAction "0..*" --> "0..1" VetProfile : on
     AdminAction "0..*" --> "0..1" HospitalProfile : on
+    AdminAction "0..*" --> "0..1" StoreProfile : on
     AdminAction "0..*" --> "0..1" Medicine : on
     AdminAction "0..*" --> "0..1" CatBreed : on
 
     note for AdminAction "Transaction: any admin management action"
     note for UserAccount "SpecificItem: individually tracked users"
+    note for StoreProfile "SpecificItem: individually tracked stores"
     note for Medicine "Item: general catalog items"
 ```
 
