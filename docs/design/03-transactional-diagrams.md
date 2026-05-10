@@ -38,6 +38,7 @@
 
 ```mermaid
 classDiagram
+
     note for Actor "Person who wants to use the system"
     note for CatOwnerParticipant "Actor becomes a Participant after registration"
     note for Registration "The registration event itself is the Transaction"
