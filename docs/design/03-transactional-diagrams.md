@@ -38,35 +38,6 @@
 
 ```mermaid
 classDiagram
-    class Actor {
-        +name: string
-        +address: string
-        +phone: string
-    }
-
-    class CatOwnerParticipant {
-        <<Participant>>
-        +number: UUID
-        +start_date: DateTime
-        +end_date: DateTime
-        +authorization_level: string = "cat_owner"
-        +password: string
-        +email: string
-        +location: Point
-        +is_active: boolean
-    }
-
-    class Registration {
-        <<Transaction>>
-        +number: UUID
-        +date: DateTime
-        +time: Time
-        +status: string
-        +registration_type: string
-    }
-
-    Actor "1" --> "0..*" CatOwnerParticipant : becomes
-    CatOwnerParticipant "1" --> "0..*" Registration : initiates
 
     note for Actor "Person who wants to use the system"
     note for CatOwnerParticipant "Actor becomes a Participant after registration"
