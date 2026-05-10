@@ -555,23 +555,24 @@ classDiagram
 
 ---
 
-## TS-8: Hospital/Store Dashboard Customization
+## TS-8: Hospital Dashboard Customization
 
-**Transaction Set Type**: Simple Participant-Transaction-Place
+**Transaction Set Type**: Participant-Transaction-Place + Item
 
-> A Participant (HospitalAdmin/StoreOwner) performs a Transaction (PageUpdate) on a Place (Hospital/CatStore).
+> A Participant (HospitalAdmin) performs a Transaction (HospitalPageUpdate) on a Place (Hospital). The Hospital contains Items (HospitalServices) that are managed as part of the customization. Per the PDF, Place is an optional player used when the transaction occurs at or affects a specific location.
 
-**Players**: Participant, Transaction, Place
+**Players**: Participant, Transaction, Place, Item
 
 ```mermaid
 classDiagram
     class HospitalAdmin {
         <<Participant>>
         +number: UUID
+        +start_date: DateTime
         +authorization_level: string = "hospital_admin"
     }
 
-    class PageUpdate {
+    class HospitalPageUpdate {
         <<Transaction>>
         +number: UUID
         +date: DateTime
@@ -590,6 +591,8 @@ classDiagram
         +banner_url: string
         +page_config: JSON
         +operating_hours: JSON
+        +location: Point
+        +rating: float
     }
 
     class HospitalService {
@@ -600,27 +603,119 @@ classDiagram
         +price: float
         +duration_minutes: int
         +category: string
+        +is_active: boolean
     }
 
-    HospitalAdmin "1" --> "0..*" PageUpdate : performs
-    PageUpdate "0..*" --> "1" Hospital : updates
+    HospitalAdmin "1" --> "0..*" HospitalPageUpdate : performs
+    HospitalPageUpdate "0..*" --> "1" Hospital : updates
     Hospital "1" --> "0..*" HospitalService : offers
 
-    note for PageUpdate "Transaction: the customization event"
-    note for Hospital "Place: the entity being customized"
+    note for HospitalPageUpdate "Transaction: the customization event for hospital page"
+    note for Hospital "Place: the hospital entity being customized"
+    note for HospitalService "Item: services managed during customization (CRUD)"
 ```
 
-> The same pattern applies to **StoreOwner → StorePageUpdate → CatStore**
+**Example mapping**: `HospitalAdmin (Participant) → HospitalPageUpdate (Transaction) → Hospital (Place) → HospitalService (Item)`
 
 ---
 
-## TS-9: Review & Rating
+## TS-9: Store Dashboard Customization
 
-**Transaction Set Type**: Participant-Transaction-Place (or Participant-Transaction-Participant)
+**Transaction Set Type**: Participant-Transaction-Place + Item
 
-> A Participant (CatOwner) creates a Transaction (Review) about a Place (Hospital/CatStore) or another Participant (Vet).
+> A Participant (StoreOwner) performs a Transaction (StorePageUpdate) on a Place (CatStore). The CatStore contains Items (Products) organized by a classification Item (ProductCategory). Unlike the hospital, the store customization also involves managing delivery zones, delivery fees, and product inventory — making it a distinct transaction set with different players and attributes.
 
-**Players**: Participant (reviewer), Transaction, Place/Participant (target)
+**Players**: Participant, Transaction, Place, Item, Item (classification)
+
+```mermaid
+classDiagram
+    class StoreOwner {
+        <<Participant>>
+        +number: UUID
+        +start_date: DateTime
+        +authorization_level: string = "store_owner"
+    }
+
+    class StorePageUpdate {
+        <<Transaction>>
+        +number: UUID
+        +date: DateTime
+        +time: Time
+        +status: string
+        +change_type: string
+        +previous_config: JSON
+        +new_config: JSON
+    }
+
+    class CatStore {
+        <<Place>>
+        +number: UUID
+        +name: string
+        +address: string
+        +location: Point
+        +banner_url: string
+        +page_config: JSON
+        +operating_hours: JSON
+        +delivery_zones: JSON
+        +delivery_fee: float
+        +rating: float
+    }
+
+    class Product {
+        <<Item>>
+        +number: UUID
+        +name: string
+        +description: string
+        +price: float
+        +default_value: float
+        +images: string[]
+        +stock_quantity: int
+        +brand: string
+        +is_active: boolean
+    }
+
+    class ProductCategory {
+        <<Item - Classification>>
+        +number: UUID
+        +name: string
+        +description: string
+        +icon_url: string
+        +sort_order: int
+    }
+
+    StoreOwner "1" --> "0..*" StorePageUpdate : performs
+    StorePageUpdate "0..*" --> "1" CatStore : updates
+    CatStore "1" --> "0..*" Product : sells
+    Product "0..*" --> "1" ProductCategory : categorized by
+
+    note for StorePageUpdate "Transaction: the customization event for store page"
+    note for CatStore "Place: the store entity being customized"
+    note for Product "Item: products managed during customization (CRUD)"
+    note for ProductCategory "Item (Classification): grouping for products"
+```
+
+**Example mapping**: `StoreOwner (Participant) → StorePageUpdate (Transaction) → CatStore (Place) → Product (Item) → ProductCategory (Item-Classification)`
+
+**Key differences from TS-8 (Hospital)**:
+
+| Aspect | TS-8 Hospital | TS-9 Store |
+|--------|--------------|-----------|
+| Participant | HospitalAdmin | StoreOwner |
+| Place | Hospital | CatStore |
+| Item | HospitalService (with duration, category) | Product (with stock, price, images, brand) |
+| Item Classification | Service category (enum field) | ProductCategory (separate Item) |
+| Extra Place attributes | — | delivery_zones, delivery_fee |
+| Inventory tracking | No | Yes (stock_quantity on Product) |
+
+---
+
+## TS-10: Review & Rating
+
+**Transaction Set Type**: Participant-Transaction-Place (or Participant-Transaction-Participant) + SubsequentTransaction
+
+> A Participant (CatOwner) creates a Transaction (Review) about a Place (Hospital/CatStore) or another Participant (Vet). The reviewed entity may respond with a SubsequentTransaction (ReviewResponse).
+
+**Players**: Participant (reviewer), Transaction, SubsequentTransaction, Place/Participant (target)
 
 ```mermaid
 classDiagram
@@ -680,7 +775,7 @@ classDiagram
 
 ---
 
-## TS-10: Offer/Promotion Management
+## TS-11: Offer/Promotion Management
 
 **Transaction Set Type**: Participant-Transaction-Item-Place
 
@@ -735,7 +830,7 @@ classDiagram
 
 ---
 
-## TS-11: Order Fulfillment (Store Owner processing)
+## TS-12: Order Fulfillment (Store Owner processing)
 
 **Transaction Set Type**: Transaction and Subsequent Transaction (without LineItem)
 
@@ -778,7 +873,7 @@ classDiagram
 
 ---
 
-## TS-12: Admin Management Operations
+## TS-13: Admin Management Operations
 
 **Transaction Set Type**: Participant-Transaction-SpecificItem/Item
 
@@ -869,11 +964,12 @@ classDiagram
 | TS-5 | Vet-User Chat | Participant-Transaction with LineItem (two Participants) | Participant (×2), Transaction, TransactionLineItem |
 | TS-6 | Prescribe Medicine | Transaction & Subsequent Transaction with LineItem | Participant, Transaction, SubsequentTransaction, Item, SpecificItem |
 | TS-7 | AI Consultation | Participant-Transaction-SpecificItem with LineItem | Participant, Transaction, TransactionLineItem, SpecificItem, Item |
-| TS-8 | Dashboard Customization | Participant-Transaction-Place | Participant, Transaction, Place |
-| TS-9 | Review & Rating | Participant-Transaction + SubsequentTransaction | Participant, Transaction, SubsequentTransaction, Place |
-| TS-10 | Offer Management | Participant-Transaction-Item-Place | Participant, Transaction, Item, Place |
-| TS-11 | Order Fulfillment | Transaction & Subsequent Transaction | Participant, Transaction, SubsequentTransaction |
-| TS-12 | Admin Operations | Participant-Transaction-SpecificItem/Item | Participant, Transaction, SpecificItem, Item |
+| TS-8 | Hospital Dashboard Customization | Participant-Transaction-Place + Item | Participant, Transaction, Place, Item |
+| TS-9 | Store Dashboard Customization | Participant-Transaction-Place + Item + Item-Classification | Participant, Transaction, Place, Item, Item (Classification) |
+| TS-10 | Review & Rating | Participant-Transaction + SubsequentTransaction | Participant, Transaction, SubsequentTransaction, Place |
+| TS-11 | Offer Management | Participant-Transaction-Item-Place | Participant, Transaction, Item, Place |
+| TS-12 | Order Fulfillment | Transaction & Subsequent Transaction | Participant, Transaction, SubsequentTransaction |
+| TS-13 | Admin Operations | Participant-Transaction-SpecificItem/Item | Participant, Transaction, SpecificItem, Item |
 
 ---
 
