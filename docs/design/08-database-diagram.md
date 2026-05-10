@@ -6,8 +6,11 @@
 
 ## Database ER Diagram
 
+> Each table is annotated with its **Transaction Pattern player role** (Participant, Transaction, TransactionLineItem, Item, SpecificItem, Place, SubsequentTransaction).
+
 ```mermaid
 erDiagram
+    %% Participant tables
     users ||--o| user_profiles : has
     users ||--o{ cats : owns
     users ||--o| vets : "registered as"
@@ -20,6 +23,7 @@ erDiagram
     users ||--o{ ai_consultations : initiates
     users ||--o{ chat_rooms : participates
 
+    %% SpecificItem tables
     cats }o--|| cat_breeds : "is of"
     cats ||--|| medical_records : has
     cats ||--o{ patient_history : has
@@ -27,27 +31,37 @@ erDiagram
     cats ||--o{ prescriptions : "prescribed for"
     cats ||--o{ ai_consultations : about
 
+    %% Participant-Place relationships
     vets }o--o| hospitals : "works at"
     vets ||--o{ appointments : attends
     vets ||--o{ appointment_slots : "available at"
     vets ||--o{ prescriptions : prescribes
     vets ||--o{ chat_rooms : "chats in"
+    vets ||--o{ treatments : performs
 
+    %% Place-Item relationships
     hospitals ||--o{ hospital_services : offers
     hospitals ||--o{ appointment_slots : schedules
     hospitals ||--o{ appointments : hosts
     hospitals ||--o{ offers : promotes
     hospitals ||--o{ reviews : receives
 
+    %% Transaction-SubsequentTransaction relationships
     appointments }o--|| hospital_services : "for service"
     appointments ||--o| appointment_slots : "at slot"
+    appointments ||--o{ treatments : "followed by"
     appointments ||--o{ prescriptions : "results in"
     appointments ||--o{ patient_history : "logged in"
+    appointments ||--o| payments : "paid via"
 
+    %% SubsequentTransaction-Item
     prescriptions }o--|| medicines : "of medicine"
+    treatments ||--o{ prescriptions : "leads to"
 
+    %% Transaction-TransactionLineItem
     chat_rooms ||--o{ messages : contains
 
+    %% Place-Item-Transaction relationships
     cat_stores ||--o{ products : sells
     cat_stores ||--o{ orders : receives
     cat_stores ||--o{ offers : promotes
@@ -56,7 +70,12 @@ erDiagram
     products }o--|| product_categories : categorized
     products ||--o{ order_items : "ordered as"
 
+    %% Transaction-TransactionLineItem-SubsequentTransaction
     orders ||--o{ order_items : contains
+    orders ||--o| payments : "paid via"
+
+    %% Transaction-SubsequentTransaction
+    reviews ||--o| review_responses : "responded with"
 ```
 
 ---
@@ -444,7 +463,49 @@ erDiagram
 
 ---
 
-### 21. `offers` — Promotions for hospitals and stores
+### 21. `treatments` — Treatment records from appointments *(SubsequentTransaction)*
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `id` | UUID | PK | Treatment ID |
+| `appointment_id` | UUID | FK → appointments.id, NOT NULL | Parent appointment (Transaction → SubsequentTransaction) |
+| `vet_id` | UUID | FK → vets.id, NOT NULL | Performing vet |
+| `cat_id` | UUID | FK → cats.id, NOT NULL | Patient cat |
+| `diagnosis` | TEXT | | Diagnosis made during appointment |
+| `notes` | TEXT | | Treatment notes |
+| `follow_up_instructions` | TEXT | | Post-treatment care instructions |
+| `follow_up_date` | DATE | | Recommended follow-up date |
+| `status` | VARCHAR(20) | DEFAULT 'completed', CHECK IN ('in_progress','completed','follow_up_needed') | Treatment status |
+| `created_at` | TIMESTAMPTZ | DEFAULT now() | Treatment timestamp |
+
+**Indexes**: `idx_treatments_appointment`, `idx_treatments_cat`
+
+> **Transaction Pattern**: SubsequentTransaction following Appointment. Per the PDF: *"Patient – appointment – treatment/admission"*
+
+---
+
+### 22. `payments` — Payment records *(SubsequentTransaction)*
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `id` | UUID | PK | Payment ID |
+| `appointment_id` | UUID | FK → appointments.id | Payment for appointment |
+| `order_id` | UUID | FK → orders.id | Payment for order |
+| `user_id` | UUID | FK → users.id, NOT NULL | Payer |
+| `amount` | DECIMAL(10,2) | NOT NULL | Payment amount |
+| `payment_method` | VARCHAR(50) | | card, wallet, etc. |
+| `stripe_payment_id` | VARCHAR(255) | NOT NULL | Stripe payment intent ID |
+| `status` | VARCHAR(20) | DEFAULT 'pending', CHECK IN ('pending','completed','failed','refunded') | Payment status |
+| `created_at` | TIMESTAMPTZ | DEFAULT now() | Payment timestamp |
+| `completed_at` | TIMESTAMPTZ | | Completion timestamp |
+
+**Indexes**: `idx_payments_appointment`, `idx_payments_order`, `idx_payments_user`
+
+> **Transaction Pattern**: SubsequentTransaction. Per the PDF: *"Order – order line item – payment"*
+
+---
+
+### 23. `offers` — Promotions for hospitals and stores *(Transaction)*
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
@@ -462,25 +523,38 @@ erDiagram
 
 ---
 
-### 22. `reviews` — User reviews
+### 24. `reviews` — User reviews *(Transaction)*
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | `id` | UUID | PK | Review ID |
-| `user_id` | UUID | FK → users.id, NOT NULL | Reviewer |
-| `hospital_id` | UUID | FK → hospitals.id | Reviewed hospital |
-| `store_id` | UUID | FK → cat_stores.id | Reviewed store |
-| `vet_id` | UUID | FK → vets.id | Reviewed vet |
+| `user_id` | UUID | FK → users.id, NOT NULL | Reviewer (Participant) |
+| `hospital_id` | UUID | FK → hospitals.id | Reviewed hospital (Place) |
+| `store_id` | UUID | FK → cat_stores.id | Reviewed store (Place) |
+| `vet_id` | UUID | FK → vets.id | Reviewed vet (Participant) |
 | `rating` | INTEGER | NOT NULL, CHECK 1-5 | Star rating |
 | `comment` | TEXT | | Review text |
-| `response` | TEXT | | Business response |
-| `response_by` | UUID | FK → users.id | Who responded |
+| `status` | VARCHAR(20) | DEFAULT 'published' | Review status |
 | `created_at` | TIMESTAMPTZ | DEFAULT now() | Review date |
-| `responded_at` | TIMESTAMPTZ | | Response date |
 
 ---
 
-### 23. `illness_records` — AI knowledge base (vector DB)
+### 25. `review_responses` — Business responses to reviews *(SubsequentTransaction)*
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| `id` | UUID | PK | Response ID |
+| `review_id` | UUID | FK → reviews.id, NOT NULL, UNIQUE | Parent review (Transaction → SubsequentTransaction) |
+| `responder_id` | UUID | FK → users.id, NOT NULL | Who responded (hospital admin/store owner/vet) |
+| `response_text` | TEXT | NOT NULL | Response content |
+| `status` | VARCHAR(20) | DEFAULT 'published' | Response status |
+| `responded_at` | TIMESTAMPTZ | DEFAULT now() | Response timestamp |
+
+> **Transaction Pattern**: SubsequentTransaction following Review Transaction
+
+---
+
+### 26. `illness_records` — AI knowledge base / vector DB *(Item)*
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
@@ -499,22 +573,23 @@ erDiagram
 
 ---
 
-### 24. `ai_consultations` — AI interaction log
+### 27. `ai_consultations` — AI interaction log *(Transaction)*
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | `id` | UUID | PK | Consultation ID |
-| `user_id` | UUID | FK → users.id, NOT NULL | User who asked |
-| `cat_id` | UUID | FK → cats.id | Cat consulted about |
+| `user_id` | UUID | FK → users.id, NOT NULL | User who asked (Participant) |
+| `cat_id` | UUID | FK → cats.id | Cat consulted about (SpecificItem) |
 | `query_text` | TEXT | NOT NULL | Original symptom description |
 | `results` | JSONB | NOT NULL | Matched illnesses + confidence scores |
 | `confidence_score` | DECIMAL(4,3) | | Highest match confidence (0-1) |
 | `severity` | VARCHAR(20) | | Assessed severity |
+| `status` | VARCHAR(20) | DEFAULT 'completed' | Consultation status |
 | `created_at` | TIMESTAMPTZ | DEFAULT now() | Consultation time |
 
 ---
 
-### 25. `notifications` — System notifications
+### 28. `notifications` — System notifications
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
@@ -554,5 +629,23 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";         -- Trigram search for medicine
 | messages | SELECT room members | Only chat room participants |
 | orders | SELECT buyer + store | Buyer and store owner |
 | hospitals/stores | SELECT all, UPDATE admin | Public read, admin write |
+| treatments | SELECT vet + owner | Treating vet and cat owner |
+| payments | SELECT payer + admin | Payer and system admin |
+| review_responses | SELECT all | Public like reviews |
 
-## Table Count: **25 tables**
+## Table Count: **28 tables**
+
+---
+
+## Transaction Pattern Player Role → Table Mapping
+
+| Player Role | Database Tables |
+|-------------|----------------|
+| **Participant** | `users`, `user_profiles`, `vets` |
+| **SpecificItem** | `cats`, `medical_records` |
+| **Item** | `cat_breeds`, `medicines`, `hospital_services`, `products`, `product_categories`, `illness_records` |
+| **Place** | `hospitals`, `cat_stores` |
+| **Transaction** | `appointments`, `appointment_slots`, `orders`, `chat_rooms`, `ai_consultations`, `reviews`, `offers` |
+| **TransactionLineItem** | `order_items`, `messages` |
+| **SubsequentTransaction** | `treatments`, `prescriptions`, `payments`, `patient_history`, `review_responses` |
+| **System** | `notifications` |

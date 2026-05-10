@@ -1,46 +1,128 @@
-# 02 — Swimlane (Activity) Diagrams
+# 02 — Swimlane / Workflow Diagrams
 
-> Swimlane diagrams show the flow of activities across different actors/roles for each use case.
-> Render these using Mermaid Live Editor (https://mermaid.live) or any Mermaid-compatible viewer.
+> **Swimlane diagrams** (also called workflow diagrams) are **activity diagrams** where activities are organized into **lanes** — one per actor/role. They show the **flow of work** across actors using activities, decisions, forks, joins, and transitions.
+>
+> **How to render**: Use [PlantUML Online](https://www.plantuml.com/plantuml/uml) for the PlantUML code, or [Mermaid Live](https://mermaid.live) for the Mermaid code.
 
 ---
 
 ## Swimlane 1: User Registration & Cat Registration
 
-```mermaid
-sequenceDiagram
-    participant U as Cat Owner
-    participant F as Frontend (React)
-    participant B as Backend (Python)
-    participant DB as Supabase
-    participant N as Notification Service
+### PlantUML (True Swimlane)
 
-    rect rgb(200, 220, 255)
-    Note over U,DB: User Registration Flow
-    U->>F: Opens registration page
-    U->>F: Enters email, password, name, location
-    F->>B: POST /api/auth/register
-    B->>DB: Create user in auth.users
-    DB-->>B: User created (UUID)
-    B->>DB: Insert profile into users table
-    DB-->>B: Profile saved
-    B->>N: Send welcome email
-    N-->>U: Welcome email received
-    B-->>F: Registration success + JWT token
-    F-->>U: Redirect to dashboard
+```plantuml
+@startuml
+|Cat Owner|
+start
+:Opens Registration Page;
+:Fills registration form
+(email, password, name, phone, location);
+:Submits form;
+
+|System (Backend)|
+:Validates input data;
+if (Valid?) then (yes)
+    :Hash password;
+    |Supabase|
+    :Create user in auth.users;
+    :Generate UUID;
+    :Insert profile into users table;
+    |System (Backend)|
+    :Generate JWT token;
+    |Notification Service|
+    :Send welcome email;
+    |Cat Owner|
+    :Receives welcome email;
+    :Redirected to Dashboard;
+else (no)
+    |System (Backend)|
+    :Return validation errors;
+    |Cat Owner|
+    :Shows error messages;
+    :Correct and resubmit;
+endif
+
+:Clicks "Register Cat";
+:Fills cat details
+(name, breed, age, weight, 
+color, photo, medical history);
+:Submits cat form;
+
+|System (Backend)|
+:Validate cat data;
+|Supabase|
+:Validate breed_id exists in cat_breeds;
+if (Breed valid?) then (yes)
+    :INSERT into cats table;
+    :INSERT into medical_records
+    (allergies, conditions, vaccination);
+    :INSERT into patient_history
+    (initial entry);
+    |Cat Owner|
+    :Cat profile displayed;
+else (no)
+    |System (Backend)|
+    :Return "Invalid breed" error;
+    |Cat Owner|
+    :Select valid breed;
+endif
+stop
+@enduml
+```
+
+### Mermaid (Flowchart with Subgraphs as Lanes)
+
+```mermaid
+flowchart LR
+    subgraph CatOwner["🐱 Cat Owner"]
+        A1([Start]) --> A2[Open Registration Page]
+        A2 --> A3[Fill form: email, password, name, location]
+        A3 --> A4[Submit]
     end
 
-    rect rgb(200, 255, 220)
-    Note over U,DB: Cat Registration Flow
-    U->>F: Clicks "Register Cat"
-    U->>F: Fills cat details (name, breed, age, weight, medical history)
-    F->>B: POST /api/cats
-    B->>DB: Validate breed exists in breed_db
-    DB-->>B: Breed validated
-    B->>DB: Insert into cats table
-    DB-->>B: Cat record created
-    B-->>F: Cat registered successfully
-    F-->>U: Shows cat profile
+    subgraph Backend["⚙️ System Backend"]
+        A4 --> B1{Valid input?}
+        B1 -->|No| B2[Return errors]
+        B2 --> A3
+        B1 -->|Yes| B3[Hash password]
+    end
+
+    subgraph Supabase["🗄️ Supabase"]
+        B3 --> C1[Create user in auth.users]
+        C1 --> C2[Insert profile into users table]
+    end
+
+    subgraph Backend2["⚙️ System Backend"]
+        C2 --> B4[Generate JWT token]
+    end
+
+    subgraph NotifSvc["📧 Notification Service"]
+        B4 --> N1[Send welcome email]
+    end
+
+    subgraph CatOwner2["🐱 Cat Owner"]
+        N1 --> A5[Receive welcome email]
+        B4 --> A6[Redirected to Dashboard]
+        A6 --> A7[Click Register Cat]
+        A7 --> A8[Fill cat details: name, breed, age, weight]
+        A8 --> A9[Submit]
+    end
+
+    subgraph Backend3["⚙️ System Backend"]
+        A9 --> B5{Breed valid?}
+        B5 -->|No| B6[Return breed error]
+        B6 --> A8
+    end
+
+    subgraph Supabase2["🗄️ Supabase"]
+        B5 -->|Yes| C3[INSERT into cats]
+        C3 --> C4[INSERT into medical_records]
+        C4 --> C5[INSERT into patient_history]
+    end
+
+    subgraph CatOwner3["🐱 Cat Owner"]
+        C5 --> A10[Cat profile displayed]
+        A10 --> A11([End])
     end
 ```
 
@@ -48,58 +130,178 @@ sequenceDiagram
 
 ## Swimlane 2: Book Appointment (DoorDash-style)
 
+### PlantUML (True Swimlane)
+
+```plantuml
+@startuml
+|Cat Owner|
+start
+:Clicks "Find Hospitals";
+
+|Location Service|
+:Get user geolocation;
+:Return lat/lng coordinates;
+
+|System (Backend)|
+:Query hospitals within radius
+(PostGIS: ST_DWithin);
+
+|Supabase|
+:SELECT hospitals 
+WHERE ST_DWithin(location, point, radius)
+AND is_active = true
+AND is_approved = true
+ORDER BY distance;
+:Return hospital list with 
+ratings, services, distance;
+
+|Cat Owner|
+:Views hospital cards 
+sorted by distance;
+:Selects a hospital;
+
+|System (Backend)|
+:Fetch hospital details;
+
+|Supabase|
+:SELECT hospital details,
+services, vets, available slots, 
+offers, reviews;
+
+|Cat Owner|
+:Views hospital page 
+(DoorDash-style layout);
+:Selects service type 
+(checkup / vaccination / treatment);
+:Selects preferred vet;
+:Selects available time slot;
+:Selects which cat;
+:Reviews appointment summary;
+:Clicks "Book & Pay";
+
+|System (Backend)|
+:Check slot still available;
+
+|Supabase|
+:SELECT is_booked FROM 
+appointment_slots WHERE id = ?;
+
+if (Slot available?) then (yes)
+    |Payment Gateway (Stripe)|
+    :Create payment intent;
+    :Return client_secret;
+    
+    |Cat Owner|
+    :Enter payment details;
+    :Confirm payment;
+    
+    |Payment Gateway (Stripe)|
+    if (Payment success?) then (yes)
+        :Return payment confirmation;
+        
+        |System (Backend)|
+        :Create Appointment record;
+        
+        |Supabase|
+        :INSERT into appointments;
+        :UPDATE appointment_slots 
+        SET is_booked = true;
+        :INSERT into payments;
+        
+        |Notification Service|
+        fork
+            :Notify Cat Owner 
+            (email + push);
+        fork again
+            :Notify Vet 
+            (push);
+        fork again
+            :Notify Hospital 
+            (dashboard alert);
+        end fork
+        
+        |Cat Owner|
+        :Views confirmation page
+        with appointment details;
+    else (no)
+        |Cat Owner|
+        :Payment failed message;
+        :Retry or change payment method;
+    endif
+else (no)
+    |System (Backend)|
+    :Slot no longer available;
+    |Cat Owner|
+    :Show alternative slots;
+    :Select different slot;
+endif
+stop
+@enduml
+```
+
+### Mermaid (Flowchart with Subgraphs as Lanes)
+
 ```mermaid
-sequenceDiagram
-    participant U as Cat Owner
-    participant F as Frontend (React)
-    participant B as Backend (Python)
-    participant G as Location Service
-    participant DB as Supabase
-    participant P as Payment Gateway
-    participant N as Notification Service
-
-    rect rgb(255, 230, 200)
-    Note over U,G: Find Nearby Hospitals
-    U->>F: Clicks "Find Hospitals"
-    F->>G: Request user geolocation
-    G-->>F: Lat/Lng coordinates
-    F->>B: GET /api/hospitals/nearby?lat=X&lng=Y&radius=10km
-    B->>DB: Query hospitals within radius (PostGIS)
-    DB-->>B: List of nearby hospitals
-    B-->>F: Hospitals with distance, ratings, services
-    F-->>U: Displays hospital cards sorted by distance
+flowchart TD
+    subgraph Owner["🐱 Cat Owner"]
+        A1([Start]) --> A2[Click Find Hospitals]
     end
 
-    rect rgb(220, 200, 255)
-    Note over U,DB: Select Hospital & Service
-    U->>F: Selects a hospital
-    F->>B: GET /api/hospitals/{id}
-    B->>DB: Fetch hospital details, services, vets, slots
-    DB-->>B: Hospital data
-    B-->>F: Hospital page data
-    F-->>U: Shows hospital page (services, vets, reviews, offers)
-    U->>F: Selects service (checkup/vaccination/treatment)
-    U->>F: Selects vet and time slot
-    U->>F: Selects which cat
+    subgraph Location["📍 Location Service"]
+        A2 --> L1[Get user geolocation]
+        L1 --> L2[Return lat/lng]
     end
 
-    rect rgb(200, 255, 240)
-    Note over U,P: Booking & Payment
-    F->>B: POST /api/appointments
-    B->>DB: Check slot still available
-    DB-->>B: Slot available
-    B->>P: Create payment intent
-    P-->>B: Payment intent (client_secret)
-    B-->>F: Appointment summary + payment intent
-    F->>P: Process payment (Stripe Elements)
-    P-->>F: Payment confirmed
-    F->>B: PUT /api/appointments/{id}/confirm
-    B->>DB: Update appointment status = confirmed
-    B->>DB: Mark slot as booked
-    B->>N: Notify user, vet, hospital
-    N-->>U: Appointment confirmation (email + push)
-    B-->>F: Booking confirmed
-    F-->>U: Shows confirmation page
+    subgraph Backend["⚙️ Backend"]
+        L2 --> B1[Query hospitals within radius via PostGIS]
+    end
+
+    subgraph DB["🗄️ Supabase"]
+        B1 --> D1[SELECT nearby hospitals ORDER BY distance]
+    end
+
+    subgraph Owner2["🐱 Cat Owner"]
+        D1 --> A3[View hospital cards sorted by distance]
+        A3 --> A4[Select a hospital]
+        A4 --> A5[View hospital page with services/vets/offers]
+        A5 --> A6[Select service + vet + slot + cat]
+        A6 --> A7[Click Book and Pay]
+    end
+
+    subgraph Backend2["⚙️ Backend"]
+        A7 --> B2{Slot still available?}
+        B2 -->|No| B3[Return alternative slots]
+        B3 --> A6
+    end
+
+    subgraph Stripe["💳 Stripe"]
+        B2 -->|Yes| S1[Create payment intent]
+    end
+
+    subgraph Owner3["🐱 Cat Owner"]
+        S1 --> A8[Enter payment details]
+        A8 --> A9[Confirm payment]
+    end
+
+    subgraph Stripe2["💳 Stripe"]
+        A9 --> S2{Payment success?}
+        S2 -->|No| S3[Payment failed]
+        S3 --> A8
+    end
+
+    subgraph DB2["🗄️ Supabase"]
+        S2 -->|Yes| D2[INSERT appointment]
+        D2 --> D3[UPDATE slot = booked]
+        D3 --> D4[INSERT payment record]
+    end
+
+    subgraph Notif["📧 Notifications"]
+        D4 --> N1[Notify owner + vet + hospital]
+    end
+
+    subgraph Owner4["🐱 Cat Owner"]
+        N1 --> A10[View confirmation page]
+        A10 --> A11([End])
     end
 ```
 
@@ -107,334 +309,735 @@ sequenceDiagram
 
 ## Swimlane 3: Purchase Products (Cat Store — DoorDash-style)
 
-```mermaid
-sequenceDiagram
-    participant U as Cat Owner
-    participant F as Frontend (React)
-    participant B as Backend (Python)
-    participant G as Location Service
-    participant DB as Supabase
-    participant P as Payment Gateway
-    participant N as Notification Service
+### PlantUML (True Swimlane)
 
-    rect rgb(255, 245, 200)
-    Note over U,G: Find Nearby Stores
-    U->>F: Clicks "Cat Stores"
-    F->>G: Request user geolocation
-    G-->>F: Lat/Lng coordinates
-    F->>B: GET /api/stores/nearby?lat=X&lng=Y
-    B->>DB: Query stores within radius
-    DB-->>B: List of nearby stores
-    B-->>F: Stores with distance, ratings, categories
-    F-->>U: Displays store cards sorted by distance
-    end
+```plantuml
+@startuml
+|Cat Owner|
+start
+:Clicks "Cat Stores";
 
-    rect rgb(230, 255, 230)
-    Note over U,DB: Browse Store & Add to Cart
-    U->>F: Selects a store
-    F->>B: GET /api/stores/{id}
-    B->>DB: Fetch store details, products, categories, offers
-    DB-->>B: Store data
-    B-->>F: Store page
-    F-->>U: Shows store page (products, offers, reviews)
-    U->>F: Browses products by category
-    U->>F: Adds items to cart
-    F-->>U: Cart updated (local state)
-    end
+|Location Service|
+:Get user geolocation;
+:Return lat/lng;
 
-    rect rgb(220, 230, 255)
-    Note over U,P: Checkout & Payment
-    U->>F: Clicks "Checkout"
-    F->>B: POST /api/orders
-    B->>DB: Validate items in stock
-    DB-->>B: Stock validated
-    B->>B: Calculate total + delivery fee
-    B->>P: Create payment intent
-    P-->>B: Payment intent
-    B-->>F: Order summary + payment intent
-    F->>P: Process payment
-    P-->>F: Payment confirmed
-    F->>B: PUT /api/orders/{id}/confirm
-    B->>DB: Create order record, update inventory
-    B->>N: Notify user + store owner
-    N-->>U: Order confirmation
-    B-->>F: Order confirmed
-    F-->>U: Shows order tracking page
-    end
+|System (Backend)|
+:Query nearby stores 
+(PostGIS radius search);
+
+|Supabase|
+:SELECT stores 
+WHERE ST_DWithin(...)
+AND is_open = true
+ORDER BY distance;
+
+|Cat Owner|
+:Views store cards 
+sorted by distance;
+:Selects a store;
+
+|System (Backend)|
+:Fetch store details;
+
+|Supabase|
+:SELECT store page config,
+products, categories, offers;
+
+|Cat Owner|
+:Views store page 
+(DoorDash-style layout);
+:Browses products by category;
+:Adds items to cart;
+:Reviews cart 
+(items, quantities, subtotal);
+:Clicks "Checkout";
+:Enters delivery address;
+
+|System (Backend)|
+:Validate all items in stock;
+
+|Supabase|
+:SELECT stock_quantity 
+FROM products WHERE id IN (...);
+
+if (All items in stock?) then (yes)
+    |System (Backend)|
+    :Calculate subtotal + delivery fee;
+    
+    |Payment Gateway (Stripe)|
+    :Create payment intent for total;
+    :Return client_secret;
+    
+    |Cat Owner|
+    :Enter payment details;
+    :Confirm order;
+    
+    |Payment Gateway (Stripe)|
+    if (Payment success?) then (yes)
+        |Supabase|
+        :INSERT into orders;
+        :INSERT into order_items 
+        (one per product);
+        :UPDATE products 
+        SET stock = stock - qty;
+        :INSERT into payments;
+        
+        |Notification Service|
+        fork
+            :Notify Cat Owner 
+            "Order confirmed!";
+        fork again
+            :Notify Store Owner 
+            "New order received!";
+        end fork
+        
+        |Cat Owner|
+        :Views order confirmation 
+        + tracking page;
+    else (no)
+        |Cat Owner|
+        :Payment failed;
+        :Retry payment;
+    endif
+else (no)
+    |System (Backend)|
+    :Return out-of-stock items;
+    |Cat Owner|
+    :Remove/adjust items;
+    :Update cart;
+endif
+stop
+@enduml
 ```
 
 ---
 
 ## Swimlane 4: Vet-User Direct Chat
 
-```mermaid
-sequenceDiagram
-    participant U as Cat Owner
-    participant FU as User Frontend
-    participant RT as Supabase Realtime
-    participant DB as Supabase
-    participant FV as Vet Frontend
-    participant V as Veterinarian
-    participant N as Notification Service
+### PlantUML (True Swimlane)
 
-    rect rgb(240, 220, 255)
-    Note over U,V: Initialize Chat
-    U->>FU: Opens chat with vet
-    FU->>DB: GET /api/chats?vet_id=X&user_id=Y
-    DB-->>FU: Chat history (messages)
-    FU->>RT: Subscribe to chat channel
-    FU-->>U: Display chat window with history
-    end
+```plantuml
+@startuml
+|Cat Owner|
+start
+:Opens chat with vet;
 
-    rect rgb(220, 255, 240)
-    Note over U,V: Send & Receive Messages
-    U->>FU: Types and sends message
-    FU->>DB: INSERT message into messages table
-    DB->>RT: Broadcast new message event
-    RT->>FV: Real-time message received
-    FV-->>V: New message notification
-    V->>FV: Reads and types reply
-    FV->>DB: INSERT reply into messages table
-    DB->>RT: Broadcast reply event
-    RT->>FU: Real-time reply received
-    FU-->>U: Shows vet's reply
-    end
+|System (Backend)|
+:Check if chat room exists
+(user_id, vet_id);
 
-    rect rgb(255, 240, 220)
-    Note over N,V: Offline Notification
-    U->>FU: Sends message (vet offline)
-    FU->>DB: INSERT message
-    DB->>N: Trigger push notification
-    N-->>V: Push notification "New message from cat owner"
-    end
+|Supabase|
+if (Chat room exists?) then (yes)
+    :SELECT messages 
+    FROM messages 
+    WHERE chat_room_id = ?
+    ORDER BY sent_at DESC 
+    LIMIT 50;
+else (no)
+    :INSERT new chat_room
+    (user_id, vet_id);
+    :Return empty message list;
+endif
+
+|Supabase Realtime|
+:Subscribe to chat channel;
+
+|Cat Owner|
+:Views chat window 
+with message history;
+:Types message;
+:Clicks Send;
+
+|System (Backend)|
+:Validate message content;
+
+|Supabase|
+:INSERT into messages
+(chat_room_id, sender_id, 
+content, type, sent_at);
+:UPDATE chat_rooms 
+SET last_message_at = now(),
+unread_vet = unread_vet + 1;
+
+|Supabase Realtime|
+:Broadcast message event 
+to chat channel;
+
+|Veterinarian|
+if (Vet online?) then (yes)
+    :Receives real-time message;
+    :Reads message;
+    :Types reply;
+    :Clicks Send;
+    
+    |Supabase|
+    :INSERT reply into messages;
+    :UPDATE unread_user + 1;
+    
+    |Supabase Realtime|
+    :Broadcast reply event;
+    
+    |Cat Owner|
+    :Receives reply in real-time;
+    :Continues conversation;
+else (no)
+    |Notification Service|
+    :Send push notification to vet;
+    :Send email notification;
+    
+    |Veterinarian|
+    :Receives push notification
+    "New message from [owner]";
+    :Opens app to respond later;
+endif
+stop
+@enduml
 ```
 
 ---
 
 ## Swimlane 5: AI Companion Consultation
 
-```mermaid
-sequenceDiagram
-    participant U as Cat Owner
-    participant F as Frontend (React)
-    participant B as Backend (Python)
-    participant AI as AI Service
-    participant VDB as Vector DB (pgvector)
-    participant DB as Supabase
+### PlantUML (True Swimlane)
 
-    rect rgb(255, 220, 220)
-    Note over U,VDB: Symptom Analysis
-    U->>F: Opens AI Companion
-    U->>F: Describes symptoms ("My cat is vomiting and has diarrhea")
-    F->>B: POST /api/ai/consult {symptoms: "...", cat_id: "..."}
-    B->>DB: Fetch cat details (breed, age, allergies, history)
-    DB-->>B: Cat profile data
-    B->>AI: Generate embedding for symptom text
-    AI-->>B: Vector embedding [0.12, -0.34, ...]
-    B->>VDB: Similarity search (cosine distance) with cat context
-    VDB-->>B: Top 5 matching illness-solution pairs
-    end
+```plantuml
+@startuml
+|Cat Owner|
+start
+:Opens AI Companion;
+:Selects which cat to ask about;
+:Describes symptoms in 
+natural language
+"My cat is vomiting and 
+has diarrhea for 2 days";
+:Submits query;
 
-    rect rgb(220, 255, 220)
-    Note over B,U: Generate Recommendation
-    B->>AI: Generate natural language response from matches
-    AI-->>B: Structured recommendation
-    B->>B: Calculate severity score
-    B->>DB: Log interaction (query, results, timestamp)
-    B-->>F: Response with illnesses, remedies, severity, confidence
-    F-->>U: Display AI recommendations
-    alt High Severity
-        F-->>U: "⚠️ We recommend seeing a vet immediately"
-        F-->>U: Show "Book Appointment" button
-    else Low Severity
-        F-->>U: Show home remedies and monitoring tips
-    end
-    end
+|System (Backend)|
+:Receive symptom query;
+
+|Supabase|
+:Fetch cat profile
+(breed, age, weight);
+:Fetch medical record
+(allergies, conditions, history);
+
+|System (Backend)|
+:Build context string 
+(symptoms + cat profile);
+
+|AI Service (OpenAI)|
+:Generate vector embedding 
+for symptom text;
+:Return float[1536] vector;
+
+|Supabase (pgvector)|
+:Cosine similarity search:
+SELECT *, 
+1-(embedding <=> query_vector) 
+as similarity
+FROM illness_records
+ORDER BY similarity DESC
+LIMIT 5;
+:Return top 5 matched 
+illness-solution pairs;
+
+|System (Backend)|
+:Filter results by cat breed;
+:Calculate severity score;
+:Build recommendation;
+
+|Supabase|
+:INSERT into ai_consultations
+(user_id, cat_id, query, 
+results, confidence, severity);
+
+|Cat Owner|
+if (Severity = HIGH/CRITICAL?) then (yes)
+    #pink:Display warning:
+    "⚠️ We recommend seeing 
+    a vet immediately";
+    :Show matched illnesses 
+    with confidence scores;
+    :Show "Book Appointment" button;
+    
+    if (User clicks Book?) then (yes)
+        :Redirect to 
+        Appointment Booking flow;
+    else (no)
+        :Acknowledge warning;
+    endif
+else (no)
+    :Display matched illnesses 
+    with confidence scores;
+    :Show home remedies;
+    :Show monitoring tips;
+    :Show "Was this helpful?" feedback;
+endif
+stop
+@enduml
 ```
 
 ---
 
-## Swimlane 6: Hospital Dashboard Customization
+## Swimlane 6: Hospital/Store Dashboard Customization
 
-```mermaid
-sequenceDiagram
-    participant HA as Hospital Admin
-    participant F as Frontend (React)
-    participant B as Backend (Python)
-    participant DB as Supabase
-    participant S as Storage (Supabase)
+### PlantUML (True Swimlane)
 
-    rect rgb(230, 240, 255)
-    Note over HA,S: Customize Hospital Page
-    HA->>F: Opens Hospital Dashboard
-    F->>B: GET /api/hospitals/my-hospital
-    B->>DB: Fetch hospital config + page data
-    DB-->>B: Current page configuration
-    B-->>F: Dashboard data
-    F-->>HA: Shows page editor
+```plantuml
+@startuml
+|Hospital Admin|
+start
+:Opens Hospital Dashboard;
+:Clicks "Customize Page";
 
-    HA->>F: Uploads new banner image
-    F->>S: Upload image to storage bucket
-    S-->>F: Public image URL
+|System (Backend)|
+:Authenticate user;
+:Verify hospital_admin role;
+
+|Supabase|
+:Fetch current hospital 
+page_config, banner_url,
+services, operating_hours;
+
+|Hospital Admin|
+:Views page editor 
+(WYSIWYG interface);
+
+fork
+    :Upload new banner image;
+    |Supabase Storage|
+    :Store image in 
+    hospital-assets bucket;
+    :Return public URL;
+fork again
+    |Hospital Admin|
+    :Edit description;
+    :Update operating hours;
+    :Update contact info;
+fork again
+    |Hospital Admin|
+    :Add/edit promotional section
+    "20% off vaccinations this month";
+fork again
+    |Hospital Admin|
+    :Reorder page sections
+    (drag and drop);
+fork again
+    |Hospital Admin|
+    :Manage services list
+    (add/edit/remove services);
+end fork
+
+|Hospital Admin|
+:Clicks "Preview";
+:Reviews preview of 
+public-facing page;
+
+if (Satisfied?) then (yes)
+    :Clicks "Publish";
     
-    HA->>F: Updates description, hours, contact info
-    HA->>F: Adds promotional section ("20% off vaccinations")
-    HA->>F: Reorders page sections
-    HA->>F: Clicks "Preview"
-    F-->>HA: Shows preview of changes
+    |System (Backend)|
+    :Validate page configuration;
     
-    HA->>F: Clicks "Publish"
-    F->>B: PUT /api/hospitals/{id}/page
-    B->>DB: Update hospital page configuration
-    DB-->>B: Updated
-    B-->>F: Page published
-    F-->>HA: "Changes are live!"
-    end
+    |Supabase|
+    :UPDATE hospitals 
+    SET page_config = ?,
+    banner_url = ?,
+    operating_hours = ?
+    WHERE id = ?;
+    
+    |Hospital Admin|
+    :Success: "Changes are live! ✓";
+else (no)
+    |Hospital Admin|
+    :Continue editing;
+endif
+stop
+@enduml
 ```
+
+> **Note**: The same swimlane pattern applies to **Store Owner → Store Page Customization**, replacing Hospital-specific fields with store-specific fields (products, delivery zones, store hours).
 
 ---
 
-## Swimlane 7: Store Order Processing
+## Swimlane 7: Order Fulfillment (Store Owner Processing)
 
-```mermaid
-sequenceDiagram
-    participant SO as Store Owner
-    participant F as Frontend (React)
-    participant B as Backend (Python)
-    participant DB as Supabase
-    participant RT as Supabase Realtime
-    participant N as Notification Service
-    participant U as Cat Owner
+### PlantUML (True Swimlane)
 
-    rect rgb(255, 240, 230)
-    Note over SO,U: Order Processing Flow
-    RT->>F: New order notification (real-time)
-    F-->>SO: 🔔 New order received!
-    SO->>F: Views order details
-    F->>B: GET /api/orders/{id}
-    B->>DB: Fetch order details + items
-    DB-->>B: Order data
-    B-->>F: Order info
-    F-->>SO: Shows order (items, quantities, delivery address)
+```plantuml
+@startuml
+|Cat Owner|
+start
+:Places order 
+(from Swimlane 3);
 
-    SO->>F: Clicks "Accept Order"
-    F->>B: PUT /api/orders/{id}/status {status: "preparing"}
-    B->>DB: Update order status
-    B->>N: Notify customer "Order being prepared"
-    N-->>U: Push notification
+|Supabase Realtime|
+:Broadcast new order event 
+to store channel;
+
+|Store Owner|
+:Receives real-time notification
+🔔 "New order received!";
+:Views order details
+(items, quantities, address, notes);
+
+if (Can fulfill order?) then (yes)
+    :Clicks "Accept Order";
     
-    SO->>F: Clicks "Ready for Pickup/Delivery"
-    F->>B: PUT /api/orders/{id}/status {status: "ready"}
-    B->>DB: Update order status
-    B->>N: Notify customer "Order ready"
-    N-->>U: Push notification
-
-    SO->>F: Clicks "Completed"
-    F->>B: PUT /api/orders/{id}/status {status: "completed"}
-    B->>DB: Update order status, finalize payment
-    B->>N: Notify customer "Order completed"
-    N-->>U: "Your order has been delivered! Rate your experience"
-    end
+    |System (Backend)|
+    :Update order status;
+    
+    |Supabase|
+    :UPDATE orders 
+    SET status = 'preparing';
+    :INSERT into order_fulfillment
+    (status_change log);
+    
+    |Notification Service|
+    :Notify Cat Owner 
+    "Your order is being prepared";
+    
+    |Cat Owner|
+    :Receives status update;
+    
+    |Store Owner|
+    :Prepares order;
+    :Clicks "Ready for Pickup/Delivery";
+    
+    |Supabase|
+    :UPDATE orders 
+    SET status = 'ready';
+    
+    |Notification Service|
+    :Notify Cat Owner 
+    "Your order is ready!";
+    
+    |Cat Owner|
+    :Receives "order ready" update;
+    
+    |Store Owner|
+    :Hands off order for delivery;
+    :Clicks "Completed";
+    
+    |Supabase|
+    :UPDATE orders 
+    SET status = 'delivered',
+    delivered_at = now();
+    :Finalize payment;
+    
+    |Notification Service|
+    :Notify Cat Owner 
+    "Order delivered! 
+    Rate your experience";
+    
+    |Cat Owner|
+    :Receives delivery confirmation;
+    :Optionally rates & reviews store;
+    
+else (no)
+    |Store Owner|
+    :Clicks "Reject Order";
+    :Enters rejection reason;
+    
+    |Supabase|
+    :UPDATE orders 
+    SET status = 'cancelled';
+    
+    |Payment Gateway (Stripe)|
+    :Process refund;
+    
+    |Notification Service|
+    :Notify Cat Owner 
+    "Order cancelled. Refund issued.";
+    
+    |Cat Owner|
+    :Receives cancellation + refund;
+endif
+stop
+@enduml
 ```
 
 ---
 
 ## Swimlane 8: Admin — Manage Medicine Database
 
-```mermaid
-sequenceDiagram
-    participant A as System Admin
-    participant F as Frontend (React)
-    participant B as Backend (Python)
-    participant DB as Supabase
-    participant AI as AI Service
-    participant VDB as Vector DB (pgvector)
+### PlantUML (True Swimlane)
 
-    rect rgb(240, 255, 240)
-    Note over A,VDB: Add New Medicine
-    A->>F: Opens Medicine Management
-    F->>B: GET /api/admin/medicines
-    B->>DB: Fetch all medicines
-    DB-->>B: Medicine list
-    B-->>F: Medicines data
-    F-->>A: Shows medicine table
+```plantuml
+@startuml
+|System Admin|
+start
+:Opens Admin Panel;
+:Navigates to Medicine Management;
 
-    A->>F: Clicks "Add Medicine"
-    A->>F: Fills form (name, ingredients, dosage, contraindications)
-    A->>F: Adds allergy warnings (e.g. "Not for cats with kidney disease")
-    A->>F: Adds breed-specific warnings
-    F->>B: POST /api/admin/medicines
-    B->>DB: Insert medicine record
-    DB-->>B: Medicine created
-    B->>AI: Generate embedding for medicine description + uses
-    AI-->>B: Vector embedding
-    B->>VDB: Store medicine vector for AI search
-    VDB-->>B: Stored
-    B-->>F: Medicine added successfully
-    F-->>A: Updated medicine list
-    end
+|System (Backend)|
+:Verify admin role;
+
+|Supabase|
+:SELECT * FROM medicines 
+ORDER BY name 
+LIMIT 20 OFFSET 0;
+
+|System Admin|
+:Views medicine table
+(searchable, sortable);
+:Clicks "Add New Medicine";
+:Fills medicine form:
+- Name & generic name
+- Manufacturer
+- Ingredients list
+- Dosage form (tablet/liquid/etc)
+- Usage instructions
+- Contraindications
+- Allergy warnings
+- Breed-specific warnings
+- Side effects;
+
+:Submits form;
+
+|System (Backend)|
+:Validate medicine data;
+:Check for duplicate names;
+
+if (Valid & unique?) then (yes)
+    |Supabase|
+    :INSERT into medicines
+    (all fields);
+    
+    |AI Service (OpenAI)|
+    :Generate embedding for 
+    (name + description + 
+    symptoms it treats);
+    :Return vector float[1536];
+    
+    |Supabase (pgvector)|
+    :UPDATE medicines 
+    SET embedding = vector
+    WHERE id = new_id;
+    
+    |System Admin|
+    :Medicine added successfully ✓;
+    :Updated medicine list displayed;
+else (no)
+    |System (Backend)|
+    :Return validation errors;
+    |System Admin|
+    :Shows error messages;
+    :Correct and resubmit;
+endif
+stop
+@enduml
 ```
 
 ---
 
-## Swimlane 9: Vet — Prescribe Medicine & Update Patient Record
+## Swimlane 9: Vet — Treatment, Prescribe Medicine & Update Patient Record
 
-```mermaid
-sequenceDiagram
-    participant V as Veterinarian
-    participant F as Frontend (React)
-    participant B as Backend (Python)
-    participant DB as Supabase
-    participant N as Notification Service
-    participant U as Cat Owner
+### PlantUML (True Swimlane)
 
-    rect rgb(255, 235, 240)
-    Note over V,U: During/After Appointment
-    V->>F: Opens appointment details
-    F->>B: GET /api/appointments/{id}
-    B->>DB: Fetch appointment + cat details + history
-    DB-->>B: Full context
-    B-->>F: Appointment data + patient history
-    F-->>V: Shows appointment context
+```plantuml
+@startuml
+|Veterinarian|
+start
+:Opens today's appointments;
+:Selects current appointment;
 
-    V->>F: Adds diagnosis notes
-    V->>F: Searches medicine database
-    F->>B: GET /api/medicines?search=amoxicillin
-    B->>DB: Search medicines
-    DB-->>B: Matching medicines
-    B-->>F: Medicine results
-    F-->>V: Shows medicine options with allergy warnings
+|System (Backend)|
+:Fetch full appointment context;
 
-    V->>F: Selects medicine, sets dosage & duration
-    Note over F: System checks for allergies/contraindications against cat profile
-    F->>B: POST /api/prescriptions
-    B->>DB: Check cat allergies vs medicine contraindications
-    alt Contraindication Found
-        B-->>F: ⚠️ Warning: Cat has allergy to ingredient X
-        F-->>V: Shows allergy warning, asks to proceed or change
-    else No Issues
-        B->>DB: Create prescription record
-        B->>DB: Update patient history
-        B->>N: Notify cat owner of new prescription
-        N-->>U: "New prescription for [cat name]"
-        B-->>F: Prescription created
-        F-->>V: Prescription confirmed
-    end
-    end
+|Supabase|
+:SELECT appointment details 
++ cat profile 
++ medical_record (allergies)
++ patient_history 
++ past prescriptions;
+
+|Veterinarian|
+:Reviews patient context:
+- Cat info & breed
+- Known allergies  
+- Medical history
+- Past prescriptions;
+
+:Conducts examination;
+:Enters diagnosis notes;
+:Adds treatment record;
+
+|Supabase|
+:INSERT into treatments
+(appointment_id, vet_id, cat_id,
+diagnosis, notes, follow_up);
+
+|Veterinarian|
+:Searches medicine database;
+
+|System (Backend)|
+:Search medicines by name/condition;
+
+|Supabase|
+:SELECT * FROM medicines 
+WHERE name ILIKE '%query%';
+
+|Veterinarian|
+:Views medicine options 
+with ingredients & warnings;
+:Selects medicine;
+:Sets dosage, frequency, duration;
+:Clicks "Prescribe";
+
+|System (Backend)|
+:Cross-check cat allergies vs 
+medicine contraindications;
+
+|Supabase|
+:SELECT allergies FROM 
+medical_records WHERE cat_id = ?;
+:SELECT contraindications, 
+allergy_warnings FROM 
+medicines WHERE id = ?;
+
+|System (Backend)|
+if (Contraindication found?) then (yes)
+    |Veterinarian|
+    #pink:⚠️ WARNING: 
+    Cat is allergic to [ingredient]
+    in this medicine;
+    
+    if (Override?) then (yes)
+        :Acknowledges risk;
+        :Adds override reason;
+    else (no)
+        :Selects different medicine;
+        stop
+    endif
+else (no)
+endif
+
+|Supabase|
+:INSERT into prescriptions
+(appointment_id, cat_id, vet_id,
+medicine_id, dosage, frequency,
+duration_days, instructions);
+
+:INSERT into patient_history
+(cat_id, type='prescription',
+appointment_id, prescription_id);
+
+|Notification Service|
+:Notify Cat Owner:
+"New prescription for [cat name]:
+[medicine] - [dosage] [frequency]
+for [duration] days";
+
+|Cat Owner|
+:Receives prescription notification;
+:Views prescription details 
+in patient history;
+
+|Veterinarian|
+:Prescription confirmed ✓;
+:Adds follow-up instructions;
+:Marks appointment complete;
+
+|Supabase|
+:UPDATE appointments 
+SET status = 'completed';
+:INSERT into patient_history
+(type='appointment_completed');
+
+stop
+@enduml
 ```
 
 ---
 
-## Summary of All Swimlane Diagrams
+## Swimlane 10: Review & Rating Flow
 
-| # | Swimlane | Actors Involved | Primary Use Case |
-|---|----------|----------------|-----------------|
-| 1 | Registration | User, Frontend, Backend, DB, Notification | UC-1.1, UC-1.2 |
-| 2 | Book Appointment | User, Frontend, Backend, Location, DB, Payment, Notification | UC-1.5 |
-| 3 | Purchase Products | User, Frontend, Backend, Location, DB, Payment, Notification | UC-1.9 |
-| 4 | Vet-User Chat | User, Vet, Frontends, Realtime, DB, Notification | UC-1.6, UC-2.4 |
-| 5 | AI Consultation | User, Frontend, Backend, AI, Vector DB, DB | UC-1.11 |
-| 6 | Hospital Dashboard | Hospital Admin, Frontend, Backend, DB, Storage | UC-3.2 |
-| 7 | Order Processing | Store Owner, Frontend, Backend, DB, Realtime, Notification, User | UC-4.5 |
-| 8 | Medicine Management | Admin, Frontend, Backend, DB, AI, Vector DB | UC-5.5 |
-| 9 | Prescribe Medicine | Vet, Frontend, Backend, DB, Notification, User | UC-2.5 |
+### PlantUML (True Swimlane)
+
+```plantuml
+@startuml
+|Cat Owner|
+start
+:Completes appointment/order;
+:Receives prompt: 
+"Rate your experience";
+:Opens review form;
+:Selects star rating (1-5);
+:Writes review comment;
+:Submits review;
+
+|System (Backend)|
+:Validate review content;
+:Check user had actual 
+appointment/order with target;
+
+|Supabase|
+:INSERT into reviews
+(user_id, target_id, 
+rating, comment);
+:Recalculate average rating:
+UPDATE hospitals/stores/vets 
+SET rating = AVG(reviews.rating),
+total_reviews = COUNT(*);
+
+|Notification Service|
+:Notify Hospital Admin / 
+Store Owner / Vet:
+"New review received (★★★★☆)";
+
+|Hospital Admin / Store Owner|
+:Receives review notification;
+:Views review in dashboard;
+
+if (Wants to respond?) then (yes)
+    :Writes response;
+    :Submits response;
+    
+    |Supabase|
+    :INSERT into review_responses
+    (review_id, responder_id, 
+    response_text);
+    
+    |Notification Service|
+    :Notify Cat Owner:
+    "Business responded 
+    to your review";
+    
+    |Cat Owner|
+    :Views response;
+else (no)
+    |Hospital Admin / Store Owner|
+    :Acknowledges review;
+endif
+stop
+@enduml
+```
+
+---
+
+## Summary of All Swimlane / Workflow Diagrams
+
+| # | Swimlane | Actors/Lanes | Primary Use Case | Transaction Pattern |
+|---|----------|-------------|-----------------|-------------------|
+| 1 | Registration | Cat Owner, Backend, Supabase, Notification | UC-1.1, UC-1.2 | TS-1, TS-2 |
+| 2 | Book Appointment | Cat Owner, Location, Backend, Supabase, Stripe, Notification | UC-1.5 | TS-3 (Transaction → SubsequentTransaction + Place) |
+| 3 | Purchase Products | Cat Owner, Location, Backend, Supabase, Stripe, Notification | UC-1.9 | TS-4 (Transaction with LineItem → SubsequentTransaction) |
+| 4 | Vet-User Chat | Cat Owner, Backend, Supabase, Realtime, Vet, Notification | UC-1.6, UC-2.4 | TS-5 (Transaction with TransactionLineItem) |
+| 5 | AI Consultation | Cat Owner, Backend, OpenAI, pgvector, Supabase | UC-1.11 | TS-7 (Participant-Transaction-SpecificItem) |
+| 6 | Dashboard Customization | Hospital Admin, Backend, Supabase, Storage | UC-3.2, UC-4.2 | TS-8 (Participant-Transaction-Place) |
+| 7 | Order Fulfillment | Cat Owner, Realtime, Store Owner, Backend, Supabase, Stripe, Notification | UC-4.5 | TS-11 (Transaction → SubsequentTransaction) |
+| 8 | Medicine Management | System Admin, Backend, Supabase, OpenAI, pgvector | UC-5.5 | TS-12 (Participant-Transaction-Item) |
+| 9 | Treatment & Prescription | Vet, Backend, Supabase, Notification, Cat Owner | UC-2.5, UC-2.9 | TS-6 (Transaction → SubsequentTransaction with Item) |
+| 10 | Review & Rating | Cat Owner, Backend, Supabase, Notification, Business Owner | UC-1.14 | TS-9 (Transaction → SubsequentTransaction) |
+
+---
+
+## Diagram Format Guide
+
+| Format | Tool | Best For |
+|--------|------|----------|
+| **PlantUML** (primary) | [plantuml.com](https://www.plantuml.com/plantuml/uml), VS Code PlantUML extension | **True swimlanes** with `\|Lane\|` syntax — proper UML activity diagrams |
+| **Mermaid** (secondary) | [mermaid.live](https://mermaid.live), GitHub markdown | Flowcharts with subgraphs approximating lanes — good for GitHub rendering |
+
+> **Recommendation**: Use the **PlantUML** versions for formal documentation and presentations. The PlantUML activity diagram syntax with `|Lane Name|` partitions renders proper swimlane diagrams with vertical lanes.
