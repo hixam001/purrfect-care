@@ -4,78 +4,557 @@
 
 ---
 
-## Database ER Diagram
+## Complete ER Diagram (PlantUML)
 
-> Each table is annotated with its **Transaction Pattern player role** (Participant, Transaction, TransactionLineItem, Item, SpecificItem, Place, SubsequentTransaction).
+> **28 entities**, **43 relationships**. Each entity includes full attributes. Render at [plantuml.com](https://www.plantuml.com/plantuml/uml).
 
-```mermaid
-erDiagram
-    %% Participant tables
-    users ||--o| user_profiles : has
-    users ||--o{ cats : owns
-    users ||--o| vets : "registered as"
-    users ||--o| hospitals : admins
-    users ||--o| cat_stores : owns
-    users ||--o{ appointments : books
-    users ||--o{ orders : places
-    users ||--o{ reviews : writes
-    users ||--o{ notifications : receives
-    users ||--o{ ai_consultations : initiates
-    users ||--o{ chat_rooms : participates
+```plantuml
+@startuml PurrfectCare_ER
+skinparam linetype ortho
+skinparam classAttributeIconSize 0
+hide circle
+skinparam defaultFontSize 10
 
-    %% SpecificItem tables
-    cats }o--|| cat_breeds : "is of"
-    cats ||--|| medical_records : has
-    cats ||--o{ patient_history : has
-    cats ||--o{ appointments : "subject of"
-    cats ||--o{ prescriptions : "prescribed for"
-    cats ||--o{ ai_consultations : about
+' ============================
+' PARTICIPANT DOMAIN (Blue)
+' ============================
+skinparam class<<Participant>> {
+    BackgroundColor #E3F2FD
+    BorderColor #1565C0
+}
 
-    %% Participant-Place relationships
-    vets }o--o| hospitals : "works at"
-    vets ||--o{ appointments : attends
-    vets ||--o{ appointment_slots : "available at"
-    vets ||--o{ prescriptions : prescribes
-    vets ||--o{ chat_rooms : "chats in"
-    vets ||--o{ treatments : performs
+entity "users" <<Participant>> {
+    *id : UUID <<PK>>
+    --
+    email : VARCHAR(255) <<UNIQUE, NOT NULL>>
+    password_hash : VARCHAR(255)
+    name : VARCHAR(100) <<NOT NULL>>
+    phone : VARCHAR(20)
+    role : ENUM(cat_owner,vet,hospital_admin,store_owner,admin)
+    avatar_url : TEXT
+    location : GEOGRAPHY(Point,4326)
+    address : VARCHAR(255)
+    city : VARCHAR(100)
+    country : VARCHAR(100)
+    is_active : BOOLEAN <<DEFAULT true>>
+    created_at : TIMESTAMPTZ <<DEFAULT now()>>
+    updated_at : TIMESTAMPTZ
+}
 
-    %% Place-Item relationships
-    hospitals ||--o{ hospital_services : offers
-    hospitals ||--o{ appointment_slots : schedules
-    hospitals ||--o{ appointments : hosts
-    hospitals ||--o{ offers : promotes
-    hospitals ||--o{ reviews : receives
+entity "user_profiles" <<Participant>> {
+    *id : UUID <<PK>>
+    --
+    user_id : UUID <<FK, UNIQUE>>
+    preferences : JSONB
+    notification_settings : VARCHAR(50)
+    payment_customer_id : VARCHAR(100)
+    last_login : TIMESTAMPTZ
+}
 
-    %% Transaction-SubsequentTransaction relationships
-    appointments }o--|| hospital_services : "for service"
-    appointments ||--o| appointment_slots : "at slot"
-    appointments ||--o{ treatments : "followed by"
-    appointments ||--o{ prescriptions : "results in"
-    appointments ||--o{ patient_history : "logged in"
-    appointments ||--o| payments : "paid via"
+entity "vets" <<Participant>> {
+    *id : UUID <<PK>>
+    --
+    user_id : UUID <<FK, UNIQUE>>
+    license_number : VARCHAR(50) <<UNIQUE>>
+    specialization : VARCHAR(100)
+    experience_years : INT
+    bio : TEXT
+    qualifications : TEXT[]
+    hospital_id : UUID <<FK>>
+    is_verified : BOOLEAN <<DEFAULT false>>
+    rating : DECIMAL(2,1) <<DEFAULT 0>>
+    total_reviews : INT <<DEFAULT 0>>
+    verified_at : TIMESTAMPTZ
+}
 
-    %% SubsequentTransaction-Item
-    prescriptions }o--|| medicines : "of medicine"
-    treatments ||--o{ prescriptions : "leads to"
+' ============================
+' SPECIFIC ITEM DOMAIN (Teal)
+' ============================
+skinparam class<<SpecificItem>> {
+    BackgroundColor #E0F2F1
+    BorderColor #00695C
+}
 
-    %% Transaction-TransactionLineItem
-    chat_rooms ||--o{ messages : contains
+entity "cats" <<SpecificItem>> {
+    *id : UUID <<PK>>
+    --
+    owner_id : UUID <<FK>>
+    name : VARCHAR(100) <<NOT NULL>>
+    breed_id : UUID <<FK>>
+    age_months : INT
+    weight_kg : DECIMAL(4,2)
+    color : VARCHAR(50)
+    gender : VARCHAR(10)
+    photo_url : TEXT
+    is_neutered : BOOLEAN
+    microchip_id : VARCHAR(50)
+    registered_at : TIMESTAMPTZ <<DEFAULT now()>>
+}
 
-    %% Place-Item-Transaction relationships
-    cat_stores ||--o{ products : sells
-    cat_stores ||--o{ orders : receives
-    cat_stores ||--o{ offers : promotes
-    cat_stores ||--o{ reviews : receives
+entity "cat_breeds" <<Item>> {
+    *id : UUID <<PK>>
+    --
+    name : VARCHAR(100) <<UNIQUE>>
+    origin_country : VARCHAR(100)
+    size_category : VARCHAR(20)
+    coat_type : VARCHAR(50)
+    temperament : TEXT
+    description : TEXT
+    avg_lifespan_years : DECIMAL(3,1)
+    avg_weight_kg : DECIMAL(3,1)
+    common_health_issues : TEXT[]
+    grooming_needs : TEXT[]
+    image_url : TEXT
+}
 
-    products }o--|| product_categories : categorized
-    products ||--o{ order_items : "ordered as"
+entity "medical_records" <<SpecificItem>> {
+    *id : UUID <<PK>>
+    --
+    cat_id : UUID <<FK, UNIQUE>>
+    allergies : TEXT[]
+    existing_conditions : TEXT[]
+    vaccination_status : JSONB
+    blood_type : VARCHAR(10)
+    notes : TEXT
+    last_updated : TIMESTAMPTZ
+}
 
-    %% Transaction-TransactionLineItem-SubsequentTransaction
-    orders ||--o{ order_items : contains
-    orders ||--o| payments : "paid via"
+entity "patient_history" <<SubsequentTransaction>> {
+    *id : UUID <<PK>>
+    --
+    cat_id : UUID <<FK>>
+    entry_type : VARCHAR(50)
+    description : TEXT
+    appointment_id : UUID <<FK>>
+    prescription_id : UUID <<FK>>
+    vet_id : UUID <<FK>>
+    created_at : TIMESTAMPTZ <<DEFAULT now()>>
+}
 
-    %% Transaction-SubsequentTransaction
-    reviews ||--o| review_responses : "responded with"
+' ============================
+' PLACE DOMAIN (Green)
+' ============================
+skinparam class<<Place>> {
+    BackgroundColor #E8F5E9
+    BorderColor #2E7D32
+}
+
+entity "hospitals" <<Place>> {
+    *id : UUID <<PK>>
+    --
+    admin_user_id : UUID <<FK, UNIQUE>>
+    name : VARCHAR(200) <<NOT NULL>>
+    description : TEXT
+    phone : VARCHAR(20)
+    email : VARCHAR(255)
+    location : GEOGRAPHY(Point,4326)
+    address : VARCHAR(255)
+    city : VARCHAR(100)
+    banner_url : TEXT
+    operating_hours : JSONB
+    is_active : BOOLEAN <<DEFAULT true>>
+    is_approved : BOOLEAN <<DEFAULT false>>
+    rating : DECIMAL(2,1) <<DEFAULT 0>>
+    total_reviews : INT <<DEFAULT 0>>
+    page_config : JSONB
+    created_at : TIMESTAMPTZ <<DEFAULT now()>>
+}
+
+entity "cat_stores" <<Place>> {
+    *id : UUID <<PK>>
+    --
+    owner_user_id : UUID <<FK, UNIQUE>>
+    name : VARCHAR(200) <<NOT NULL>>
+    description : TEXT
+    phone : VARCHAR(20)
+    email : VARCHAR(255)
+    location : GEOGRAPHY(Point,4326)
+    address : VARCHAR(255)
+    city : VARCHAR(100)
+    banner_url : TEXT
+    operating_hours : JSONB
+    delivery_zones : JSONB
+    delivery_fee : DECIMAL(8,2)
+    is_active : BOOLEAN <<DEFAULT true>>
+    is_approved : BOOLEAN <<DEFAULT false>>
+    rating : DECIMAL(2,1) <<DEFAULT 0>>
+    total_reviews : INT <<DEFAULT 0>>
+    page_config : JSONB
+    created_at : TIMESTAMPTZ <<DEFAULT now()>>
+}
+
+' ============================
+' ITEM DOMAIN (Indigo)
+' ============================
+skinparam class<<Item>> {
+    BackgroundColor #E8EAF6
+    BorderColor #283593
+}
+
+entity "hospital_services" <<Item>> {
+    *id : UUID <<PK>>
+    --
+    hospital_id : UUID <<FK>>
+    name : VARCHAR(100) <<NOT NULL>>
+    description : TEXT
+    category : VARCHAR(50)
+    price : DECIMAL(10,2)
+    duration_minutes : INT
+    is_active : BOOLEAN <<DEFAULT true>>
+}
+
+entity "medicines" <<Item>> {
+    *id : UUID <<PK>>
+    --
+    name : VARCHAR(200) <<NOT NULL>>
+    generic_name : VARCHAR(200)
+    manufacturer : VARCHAR(200)
+    ingredients : TEXT[]
+    dosage_form : VARCHAR(50)
+    description : TEXT
+    usage_instructions : TEXT
+    contraindications : TEXT[]
+    allergy_warnings : TEXT[]
+    breed_warnings : TEXT[]
+    side_effects : TEXT[]
+    requires_prescription : BOOLEAN <<DEFAULT true>>
+    is_active : BOOLEAN <<DEFAULT true>>
+    embedding : VECTOR(1536)
+}
+
+entity "product_categories" <<Item>> {
+    *id : UUID <<PK>>
+    --
+    name : VARCHAR(100) <<UNIQUE>>
+    description : TEXT
+    icon_url : TEXT
+    sort_order : INT
+}
+
+entity "products" <<Item>> {
+    *id : UUID <<PK>>
+    --
+    store_id : UUID <<FK>>
+    category_id : UUID <<FK>>
+    name : VARCHAR(200) <<NOT NULL>>
+    description : TEXT
+    price : DECIMAL(10,2) <<NOT NULL>>
+    discount_price : DECIMAL(10,2)
+    images : TEXT[]
+    stock_quantity : INT <<DEFAULT 0>>
+    brand : VARCHAR(100)
+    weight : DECIMAL(6,2)
+    unit : VARCHAR(20)
+    is_active : BOOLEAN <<DEFAULT true>>
+    rating : DECIMAL(2,1) <<DEFAULT 0>>
+    total_reviews : INT <<DEFAULT 0>>
+    created_at : TIMESTAMPTZ <<DEFAULT now()>>
+}
+
+entity "illness_records" <<Item>> {
+    *id : UUID <<PK>>
+    --
+    illness_name : VARCHAR(200) <<NOT NULL>>
+    description : TEXT
+    symptoms : TEXT[]
+    affected_breeds : TEXT[]
+    severity_level : VARCHAR(20)
+    home_remedies : TEXT
+    when_to_see_vet : TEXT
+    related_medicines : TEXT[]
+    embedding : VECTOR(1536)
+}
+
+' ============================
+' TRANSACTION DOMAIN (Green)
+' ============================
+skinparam class<<Transaction>> {
+    BackgroundColor #FFF3E0
+    BorderColor #E65100
+}
+
+entity "appointment_slots" <<Transaction>> {
+    *id : UUID <<PK>>
+    --
+    hospital_id : UUID <<FK>>
+    vet_id : UUID <<FK>>
+    slot_date : DATE
+    start_time : TIME
+    end_time : TIME
+    is_booked : BOOLEAN <<DEFAULT false>>
+    is_recurring : BOOLEAN <<DEFAULT false>>
+}
+
+entity "appointments" <<Transaction>> {
+    *id : UUID <<PK>>
+    --
+    user_id : UUID <<FK>>
+    cat_id : UUID <<FK>>
+    vet_id : UUID <<FK>>
+    hospital_id : UUID <<FK>>
+    service_id : UUID <<FK>>
+    slot_id : UUID <<FK>>
+    appointment_date : TIMESTAMPTZ
+    status : VARCHAR(20) <<DEFAULT pending>>
+    notes : TEXT
+    amount_paid : DECIMAL(10,2)
+    payment_id : VARCHAR(100)
+    created_at : TIMESTAMPTZ <<DEFAULT now()>>
+    updated_at : TIMESTAMPTZ
+}
+
+entity "orders" <<Transaction>> {
+    *id : UUID <<PK>>
+    --
+    user_id : UUID <<FK>>
+    store_id : UUID <<FK>>
+    subtotal : DECIMAL(10,2)
+    delivery_fee : DECIMAL(8,2)
+    total : DECIMAL(10,2)
+    status : VARCHAR(20) <<DEFAULT pending>>
+    payment_id : VARCHAR(100)
+    delivery_address : VARCHAR(255)
+    delivery_location : GEOGRAPHY(Point,4326)
+    notes : TEXT
+    ordered_at : TIMESTAMPTZ <<DEFAULT now()>>
+    delivered_at : TIMESTAMPTZ
+}
+
+entity "chat_rooms" <<Transaction>> {
+    *id : UUID <<PK>>
+    --
+    user_id : UUID <<FK>>
+    vet_id : UUID <<FK>>
+    last_message_at : TIMESTAMPTZ
+    unread_user : INT <<DEFAULT 0>>
+    unread_vet : INT <<DEFAULT 0>>
+    is_active : BOOLEAN <<DEFAULT true>>
+    created_at : TIMESTAMPTZ <<DEFAULT now()>>
+}
+
+entity "ai_consultations" <<Transaction>> {
+    *id : UUID <<PK>>
+    --
+    user_id : UUID <<FK>>
+    cat_id : UUID <<FK>>
+    query_text : TEXT <<NOT NULL>>
+    results : JSONB
+    confidence_score : DECIMAL(3,2)
+    severity : VARCHAR(20)
+    created_at : TIMESTAMPTZ <<DEFAULT now()>>
+}
+
+entity "reviews" <<Transaction>> {
+    *id : UUID <<PK>>
+    --
+    user_id : UUID <<FK>>
+    hospital_id : UUID <<FK>>
+    store_id : UUID <<FK>>
+    vet_id : UUID <<FK>>
+    rating : INT <<CHECK 1..5>>
+    comment : TEXT
+    status : VARCHAR(20) <<DEFAULT active>>
+    created_at : TIMESTAMPTZ <<DEFAULT now()>>
+}
+
+entity "offers" <<Transaction>> {
+    *id : UUID <<PK>>
+    --
+    hospital_id : UUID <<FK>>
+    store_id : UUID <<FK>>
+    title : VARCHAR(200) <<NOT NULL>>
+    description : TEXT
+    discount_percent : DECIMAL(5,2)
+    promo_code : VARCHAR(50)
+    valid_from : TIMESTAMPTZ
+    valid_to : TIMESTAMPTZ
+    is_active : BOOLEAN <<DEFAULT true>>
+    applicable_items : TEXT[]
+}
+
+' ============================
+' TRANSACTION LINE ITEM (Purple)
+' ============================
+skinparam class<<LineItem>> {
+    BackgroundColor #F3E5F5
+    BorderColor #7B1FA2
+}
+
+entity "order_items" <<LineItem>> {
+    *id : UUID <<PK>>
+    --
+    order_id : UUID <<FK>>
+    product_id : UUID <<FK>>
+    quantity : INT <<NOT NULL>>
+    unit_price : DECIMAL(10,2)
+    total_price : DECIMAL(10,2)
+}
+
+entity "messages" <<LineItem>> {
+    *id : UUID <<PK>>
+    --
+    chat_room_id : UUID <<FK>>
+    sender_id : UUID <<FK>>
+    content : TEXT
+    message_type : VARCHAR(20) <<DEFAULT text>>
+    media_url : TEXT
+    is_read : BOOLEAN <<DEFAULT false>>
+    sent_at : TIMESTAMPTZ <<DEFAULT now()>>
+}
+
+' ============================
+' SUBSEQUENT TRANSACTION (Red)
+' ============================
+skinparam class<<SubsequentTx>> {
+    BackgroundColor #FFEBEE
+    BorderColor #C62828
+}
+
+entity "treatments" <<SubsequentTx>> {
+    *id : UUID <<PK>>
+    --
+    appointment_id : UUID <<FK>>
+    vet_id : UUID <<FK>>
+    cat_id : UUID <<FK>>
+    diagnosis : TEXT
+    notes : TEXT
+    follow_up_instructions : TEXT
+    follow_up_date : DATE
+    status : VARCHAR(20)
+    created_at : TIMESTAMPTZ <<DEFAULT now()>>
+}
+
+entity "prescriptions" <<SubsequentTx>> {
+    *id : UUID <<PK>>
+    --
+    appointment_id : UUID <<FK>>
+    cat_id : UUID <<FK>>
+    vet_id : UUID <<FK>>
+    medicine_id : UUID <<FK>>
+    dosage : VARCHAR(100)
+    frequency : VARCHAR(100)
+    duration_days : INT
+    instructions : TEXT
+    status : VARCHAR(20) <<DEFAULT active>>
+    prescribed_at : TIMESTAMPTZ <<DEFAULT now()>>
+}
+
+entity "payments" <<SubsequentTx>> {
+    *id : UUID <<PK>>
+    --
+    order_id : UUID <<FK>>
+    appointment_id : UUID <<FK>>
+    user_id : UUID <<FK>>
+    amount : DECIMAL(10,2) <<NOT NULL>>
+    payment_method : VARCHAR(50)
+    stripe_payment_id : VARCHAR(100)
+    status : VARCHAR(20)
+    created_at : TIMESTAMPTZ <<DEFAULT now()>>
+    completed_at : TIMESTAMPTZ
+}
+
+entity "review_responses" <<SubsequentTx>> {
+    *id : UUID <<PK>>
+    --
+    review_id : UUID <<FK, UNIQUE>>
+    responder_id : UUID <<FK>>
+    response_text : TEXT <<NOT NULL>>
+    status : VARCHAR(20) <<DEFAULT active>>
+    responded_at : TIMESTAMPTZ <<DEFAULT now()>>
+}
+
+' ============================
+' SYSTEM (Grey)
+' ============================
+skinparam class<<System>> {
+    BackgroundColor #ECEFF1
+    BorderColor #37474F
+}
+
+entity "notifications" <<System>> {
+    *id : UUID <<PK>>
+    --
+    user_id : UUID <<FK>>
+    type : VARCHAR(50) <<NOT NULL>>
+    title : VARCHAR(200)
+    body : TEXT
+    channel : VARCHAR(20)
+    data : JSONB
+    is_read : BOOLEAN <<DEFAULT false>>
+    created_at : TIMESTAMPTZ <<DEFAULT now()>>
+}
+
+' ============================
+' RELATIONSHIPS (43 total)
+' ============================
+
+' Participant relationships
+users ||--o| user_profiles : has
+users ||--o{ cats : owns
+users ||--o| vets : "registered as"
+users ||--o| hospitals : admins
+users ||--o| cat_stores : owns
+users ||--o{ appointments : books
+users ||--o{ orders : places
+users ||--o{ reviews : writes
+users ||--o{ notifications : receives
+users ||--o{ ai_consultations : initiates
+users ||--o{ chat_rooms : participates
+
+' SpecificItem relationships
+cats }o--|| cat_breeds : "is of breed"
+cats ||--|| medical_records : has
+cats ||--o{ patient_history : "has history"
+cats ||--o{ appointments : "subject of"
+cats ||--o{ prescriptions : "prescribed for"
+cats ||--o{ ai_consultations : about
+
+' Participant-Place
+vets }o--o| hospitals : "works at"
+vets ||--o{ appointments : attends
+vets ||--o{ appointment_slots : "available at"
+vets ||--o{ prescriptions : prescribes
+vets ||--o{ chat_rooms : "chats in"
+vets ||--o{ treatments : performs
+
+' Place-Item
+hospitals ||--o{ hospital_services : offers
+hospitals ||--o{ appointment_slots : schedules
+hospitals ||--o{ appointments : hosts
+hospitals ||--o{ offers : promotes
+hospitals ||--o{ reviews : receives
+
+' Transaction-SubsequentTransaction
+appointments }o--|| hospital_services : "for service"
+appointments ||--o| appointment_slots : "at slot"
+appointments ||--o{ treatments : "followed by"
+appointments ||--o{ prescriptions : "results in"
+appointments ||--o{ patient_history : "logged in"
+appointments ||--o| payments : "paid via"
+
+' SubsequentTransaction-Item
+prescriptions }o--|| medicines : "of medicine"
+treatments ||--o{ prescriptions : "leads to"
+
+' Transaction-TransactionLineItem
+chat_rooms ||--o{ messages : contains
+orders ||--o{ order_items : contains
+
+' Place-Item-Transaction (Store)
+cat_stores ||--o{ products : sells
+cat_stores ||--o{ orders : receives
+cat_stores ||--o{ offers : promotes
+cat_stores ||--o{ reviews : receives
+products }o--|| product_categories : categorized
+products ||--o{ order_items : "ordered as"
+
+' Order payment
+orders ||--o| payments : "paid via"
+
+' Review response
+reviews ||--o| review_responses : "responded with"
+
+@enduml
 ```
 
 ---
@@ -649,3 +1128,4 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";         -- Trigram search for medicine
 | **TransactionLineItem** | `order_items`, `messages` |
 | **SubsequentTransaction** | `treatments`, `prescriptions`, `payments`, `patient_history`, `review_responses` |
 | **System** | `notifications` |
+
