@@ -403,10 +403,46 @@ classDiagram
         +vet_id: UUID
         +rating: int
         +comment: string
-        +response: string
-        +response_by: UUID
+        +status: string
         +created_at: DateTime
+    }
+
+    class ReviewResponse {
+        +id: UUID
+        +review_id: UUID
+        +responder_id: UUID
+        +response_text: string
+        +status: string
         +responded_at: DateTime
+    }
+
+    %% =====================================================
+    %% SUBSEQUENT TRANSACTION DOMAIN
+    %% =====================================================
+    class Treatment {
+        +id: UUID
+        +appointment_id: UUID
+        +vet_id: UUID
+        +cat_id: UUID
+        +diagnosis: string
+        +notes: string
+        +follow_up_instructions: string
+        +follow_up_date: Date
+        +status: string
+        +created_at: DateTime
+    }
+
+    class Payment {
+        +id: UUID
+        +order_id: UUID
+        +appointment_id: UUID
+        +user_id: UUID
+        +amount: float
+        +payment_method: string
+        +stripe_payment_id: string
+        +status: string
+        +created_at: DateTime
+        +completed_at: DateTime
     }
 
     %% =====================================================
@@ -489,9 +525,12 @@ classDiagram
 
     Appointment "*" --> "1" HospitalService : for service
     Appointment "1" --> "1" AppointmentSlot : at slot
+    Appointment "1" --> "*" Treatment : followed by
     Appointment "1" --> "*" Prescription : results in
     Appointment "1" --> "*" PatientHistory : logged in
+    Appointment "1" --> "0..1" Payment : paid via
 
+    Treatment "1" --> "*" Prescription : leads to
     Prescription "*" --> "1" Medicine : of medicine
 
     ChatRoom "1" --> "*" Message : contains
@@ -505,6 +544,11 @@ classDiagram
     Product "1" --> "*" OrderItem : ordered as
 
     Order "1" --> "*" OrderItem : contains
+    Order "1" --> "0..1" Payment : paid via
+
+    Review "1" --> "0..1" ReviewResponse : responded with
+
+    Vet "1" --> "*" Treatment : performs
 ```
 
 ---
@@ -629,6 +673,23 @@ classDiagram
         +getAnalytics(req, res): Response
     }
 
+    class StoreController {
+        -storeService: StoreService
+        +getMyStore(req, res): Response
+        +updateStorePage(req, res): Response
+        +createProduct(req, res): Response
+        +updateProduct(req, res): Response
+        +deleteProduct(req, res): Response
+    }
+
+    class OfferController {
+        -offerService: OfferService
+        +getOffers(req, res): Response
+        +createOffer(req, res): Response
+        +updateOffer(req, res): Response
+        +deleteOffer(req, res): Response
+    }
+
     BaseController <|-- AuthController
     BaseController <|-- CatController
     BaseController <|-- HospitalController
@@ -640,6 +701,8 @@ classDiagram
     BaseController <|-- MedicineController
     BaseController <|-- ReviewController
     BaseController <|-- AdminController
+    BaseController <|-- StoreController
+    BaseController <|-- OfferController
 ```
 
 ---
@@ -758,8 +821,42 @@ classDiagram
         -reviewRepo: ReviewRepository
         +create(userId, data): Review
         +getByTarget(type, targetId): Review[]
-        +respond(reviewId, userId, response): Review
+        +respond(reviewId, userId, response): ReviewResponse
         +calculateAvgRating(type, targetId): float
+    }
+
+    class StoreService {
+        -storeRepo: StoreRepository
+        -productRepo: ProductRepository
+        -categoryRepo: ProductCategoryRepo
+        -storageService: StorageService
+        +getMyStore(ownerUserId): StoreDetail
+        +updateStorePage(storeId, pageData): CatStore
+        +createProduct(storeId, data): Product
+        +updateProduct(productId, data): Product
+        +deleteProduct(productId): boolean
+    }
+
+    class OfferService {
+        -offerRepo: OfferRepository
+        +getOffersByOwner(ownerId, type): Offer[]
+        +createOffer(ownerId, data): Offer
+        +updateOffer(offerId, data): Offer
+        +deleteOffer(offerId): boolean
+        +validateDateRange(from, to): boolean
+    }
+
+    class AdminService {
+        -userRepo: UserRepository
+        -vetRepo: VetRepository
+        -hospitalRepo: HospitalRepository
+        -storeRepo: StoreRepository
+        -notificationService: NotificationService
+        +getDashboardStats(): DashboardStats
+        +verifyVet(vetId, action): Vet
+        +approveHospital(hospitalId, action): Hospital
+        +approveStore(storeId, action): CatStore
+        +suspendUser(userId, reason): User
     }
 
     class EmbeddingService {
@@ -928,6 +1025,35 @@ classDiagram
         +findByCat(catId): AIConsultation[]
     }
 
+    class VetRepository {
+        +findUnverified(): Vet[]
+        +verify(vetId): Vet
+        +findByHospital(hospitalId): Vet[]
+    }
+
+    class OfferRepository {
+        +findByHospital(hospitalId): Offer[]
+        +findByStore(storeId): Offer[]
+        +findActive(): Offer[]
+    }
+
+    class ProductCategoryRepo {
+        +findAll(): ProductCategory[]
+        +reorder(ids): void
+    }
+
+    class TreatmentRepository {
+        +findByAppointment(appointmentId): Treatment[]
+        +findByCat(catId): Treatment[]
+        +findByVet(vetId): Treatment[]
+    }
+
+    class PaymentRepository {
+        +findByOrder(orderId): Payment
+        +findByAppointment(appointmentId): Payment
+        +findByUser(userId): Payment[]
+    }
+
     BaseRepository <|-- UserRepository
     BaseRepository <|-- CatRepository
     BaseRepository <|-- BreedRepository
@@ -947,6 +1073,11 @@ classDiagram
     BaseRepository <|-- IllnessRepository
     BaseRepository <|-- VectorDBRepository
     BaseRepository <|-- ConsultationLogRepo
+    BaseRepository <|-- VetRepository
+    BaseRepository <|-- OfferRepository
+    BaseRepository <|-- ProductCategoryRepo
+    BaseRepository <|-- TreatmentRepository
+    BaseRepository <|-- PaymentRepository
 ```
 
 ---
@@ -955,10 +1086,10 @@ classDiagram
 
 | Layer | Count | Classes |
 |-------|-------|---------|
-| **Models (Data)** | 25 | User, UserProfile, Cat, CatBreed, MedicalRecord, PatientHistory, Vet, Hospital, HospitalService, AppointmentSlot, Appointment, Medicine, Prescription, ChatRoom, Message, CatStore, ProductCategory, Product, Order, OrderItem, Offer, Review, IllnessRecord, AIConsultation, Notification |
-| **Enumerations** | 6 | Role, AppointmentStatus, OrderStatus, MessageType, SeverityLevel, PrescriptionStatus, NotificationType |
-| **Controllers** | 11 | BaseController + 10 concrete controllers |
-| **Services** | 13 | AuthService, CatService, HospitalBizService, AppointmentService, ChatService, PrescriptionService, OrderService, AIService, MedicineService, ReviewService, EmbeddingService, NotificationService, GeoLocationService, StorageService, StripeGateway |
-| **Repositories** | 18 | BaseRepository + 17 concrete repositories |
-| **Views (React)** | 14 | (Defined in partial class diagrams) |
-| **Total** | **~87** | |
+| **Models (Data)** | 28 | User, UserProfile, Cat, CatBreed, MedicalRecord, PatientHistory, Vet, Hospital, HospitalService, AppointmentSlot, Appointment, Medicine, Prescription, ChatRoom, Message, CatStore, ProductCategory, Product, Order, OrderItem, Offer, Review, ReviewResponse, Treatment, Payment, IllnessRecord, AIConsultation, Notification |
+| **Enumerations** | 7 | Role, AppointmentStatus, OrderStatus, MessageType, SeverityLevel, PrescriptionStatus, NotificationType |
+| **Controllers** | 13 | BaseController + 12 concrete (Auth, Cat, Hospital, Appointment, Chat, Prescription, Order, AI, Medicine, Review, Admin, Store, Offer) |
+| **Services** | 16 | AuthService, CatService, HospitalBizService, AppointmentService, ChatService, PrescriptionService, OrderService, AIService, MedicineService, ReviewService, StoreService, OfferService, AdminService, EmbeddingService, NotificationService, GeoLocationService, StorageService, StripeGateway |
+| **Repositories** | 23 | BaseRepository + 22 concrete (User, Cat, Breed, MedicalRecord, PatientHistory, Hospital, Appointment, Slot, Chat, Message, Prescription, Medicine, Order, Product, Store, Review, Illness, VectorDB, ConsultationLog, Vet, Offer, ProductCategory, Treatment, Payment) |
+| **Views (React)** | 20 | (Defined in 13 partial class diagrams) |
+| **Total** | **~107** | |

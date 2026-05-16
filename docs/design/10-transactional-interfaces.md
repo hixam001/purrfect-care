@@ -128,7 +128,8 @@
 | SI-008 | AIController | AIService | Method call | consult(), getHistory() |
 | SI-009 | MedicineController | MedicineService | Method call | search(), create(), update() |
 | SI-010 | ReviewController | ReviewService | Method call | create(), getByTarget(), respond() |
-| SI-011 | AdminController | Multiple Services | Method call | manage*() operations across all domains |
+| SI-011 | AdminController | AdminService | Method call | getDashboardStats(), verifyVet(), approveHospital(), approveStore(), suspendUser() |
+| SI-012 | OfferController | OfferService | Method call | getOffers(), createOffer(), updateOffer(), deleteOffer() |
 
 ### 2.2 Service → Repository Interfaces
 
@@ -152,16 +153,25 @@
 | SI-033 | AIService | VectorDBRepository | Method call | similaritySearch(), store() |
 | SI-034 | AIService | EmbeddingService | Method call | generateEmbedding() |
 | SI-035 | All Services | NotificationService | Method call | sendEmail(), sendPush() |
+| SI-036 | AdminService | UserRepository | Method call | findAll(), update(), deactivate() |
+| SI-037 | AdminService | VetRepository | Method call | findUnverified(), verify() |
+| SI-038 | AdminService | HospitalRepository | Method call | approve(), findAll() |
+| SI-039 | AdminService | StoreRepository | Method call | approve(), findAll() |
+| SI-040a | OfferService | OfferRepository | Method call | findByHospital(), findByStore(), create(), update() |
+| SI-040b | ReviewService | ReviewRepository | Method call | create(), findByTarget(), createResponse() |
 
 ### 2.3 Service → Service Interfaces (Cross-Domain)
 
 | Interface ID | Source | Target | Purpose |
 |-------------|--------|--------|---------|
-| SI-040 | PrescriptionService | MedicalRecordRepo | Check cat allergies before prescribing |
-| SI-041 | AIService | CatRepository | Fetch cat breed/medical context for AI |
-| SI-042 | AppointmentService | NotificationService | Send booking confirmations |
-| SI-043 | OrderService | NotificationService | Send order status updates |
-| SI-044 | ChatService | NotificationService | Send offline message alerts |
+| SI-041 | PrescriptionService | MedicalRecordRepo | Check cat allergies before prescribing |
+| SI-042 | AIService | CatRepository | Fetch cat breed/medical context for AI |
+| SI-043 | AppointmentService | NotificationService | Send booking confirmations |
+| SI-044 | OrderService | NotificationService | Send order status updates |
+| SI-045 | ChatService | NotificationService | Send offline message alerts |
+| SI-046 | ReviewService | NotificationService | Notify business of new reviews |
+| SI-047 | AdminService | NotificationService | Notify users of approval/suspension |
+| SI-048 | OrderService | StripeGateway | Process refunds on order cancellation |
 
 ---
 
@@ -189,6 +199,6 @@
 | Category | Count |
 |----------|-------|
 | **User Interfaces (UI)** | 51 screens |
-| **System Interfaces (Internal)** | 47 interfaces |
+| **System Interfaces (Internal)** | 57 interfaces |
 | **External Interfaces** | 12 integrations |
-| **Total** | **110 interfaces** |
+| **Total** | **120 interfaces** |

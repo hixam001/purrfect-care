@@ -1110,6 +1110,185 @@ stop
 
 ---
 
+## Swimlane 11: Offer / Promotion Management
+
+### PlantUML (True Swimlane)
+
+```plantuml
+@startuml
+|Hospital Admin / Store Owner|
+start
+:Opens Dashboard;
+:Navigates to "Offers";
+
+|System (Backend)|
+:Fetch existing offers
+for this hospital/store;
+|Supabase|
+:SELECT * FROM offers
+WHERE hospital_id = ? 
+OR store_id = ?
+ORDER BY valid_from DESC;
+|Hospital Admin / Store Owner|
+:Views offers list
+(active / expired);
+
+:Clicks "Create Offer";
+:Fills offer form
+(title, description, discount_percent,
+promo_code, valid_from, valid_to,
+applicable_items);
+:Submits form;
+
+|System (Backend)|
+:Validate offer data;
+if (valid_from < valid_to?) then (yes)
+    |Supabase|
+    :INSERT into offers
+    (hospital_id/store_id, title,
+    discount_percent, promo_code,
+    valid_from, valid_to,
+    applicable_items, is_active=true);
+    |Hospital Admin / Store Owner|
+    :Offer created ✓;
+    :Offer appears in listing;
+else (no)
+    |System (Backend)|
+    :Return validation error
+    "End date must be after start date";
+    |Hospital Admin / Store Owner|
+    :Correct dates and resubmit;
+endif
+
+note right
+  Owner can also:
+  - Toggle offer active/inactive
+  - Edit offer details
+  - Delete expired offers
+end note
+
+stop
+@enduml
+```
+
+---
+
+## Swimlane 12: Admin — Verify Vets, Approve Hospitals & Stores
+
+### PlantUML (True Swimlane)
+
+```plantuml
+@startuml
+|System Admin|
+start
+:Opens Admin Dashboard;
+
+|System (Backend)|
+:Fetch dashboard stats;
+|Supabase|
+:SELECT COUNT(*) FROM vets 
+WHERE is_verified = false;
+:SELECT COUNT(*) FROM hospitals 
+WHERE is_approved = false;
+:SELECT COUNT(*) FROM cat_stores 
+WHERE is_approved = false;
+|System Admin|
+:Views KPIs + pending counts;
+
+fork
+    :Clicks "Pending Vets";
+    |System (Backend)|
+    :Fetch unverified vets;
+    |Supabase|
+    :SELECT v.*, u.name, u.email 
+    FROM vets v JOIN users u 
+    WHERE v.is_verified = false;
+    |System Admin|
+    :Reviews vet credentials
+    (license, qualifications, bio);
+    
+    if (Approve?) then (yes)
+        :Clicks "Approve";
+        |Supabase|
+        :UPDATE vets 
+        SET is_verified = true,
+        verified_at = now()
+        WHERE id = ?;
+        |Notification Service|
+        :Notify Vet:
+        "Your profile has been verified!";
+    else (no)
+        :Clicks "Reject" + reason;
+        |Notification Service|
+        :Notify Vet:
+        "Profile rejected: " + reason;
+    endif
+
+fork again
+    |System Admin|
+    :Clicks "Pending Hospitals";
+    |Supabase|
+    :SELECT * FROM hospitals 
+    WHERE is_approved = false;
+    |System Admin|
+    :Reviews hospital details;
+    
+    if (Approve?) then (yes)
+        :Clicks "Approve";
+        |Supabase|
+        :UPDATE hospitals 
+        SET is_approved = true 
+        WHERE id = ?;
+        |Notification Service|
+        :Notify Hospital Admin:
+        "Hospital approved!";
+    else (no)
+        :Clicks "Reject" + reason;
+        |Notification Service|
+        :Notify Hospital Admin:
+        "Hospital rejected: " + reason;
+    endif
+
+fork again
+    |System Admin|
+    :Clicks "Pending Stores";
+    |Supabase|
+    :SELECT * FROM cat_stores 
+    WHERE is_approved = false;
+    |System Admin|
+    :Reviews store details;
+    
+    if (Approve?) then (yes)
+        :Clicks "Approve";
+        |Supabase|
+        :UPDATE cat_stores 
+        SET is_approved = true 
+        WHERE id = ?;
+        |Notification Service|
+        :Notify Store Owner:
+        "Store approved!";
+    else (no)
+        :Clicks "Reject" + reason;
+        |Notification Service|
+        :Notify Store Owner:
+        "Store rejected: " + reason;
+    endif
+end fork
+
+|System Admin|
+note right
+  Admin can also:
+  - Suspend/reactivate users
+  - Manage cat breeds
+  - Manage AI illness data
+end note
+
+stop
+@enduml
+```
+
+---
+
 ## Summary of All Swimlane / Workflow Diagrams
 
 | # | Swimlane | Actors/Lanes | Primary Use Case | Transaction Pattern |
@@ -1125,6 +1304,8 @@ stop
 | 8 | Medicine Management | System Admin, Backend, Supabase, OpenAI, pgvector | UC-5.5 | TS-13 (Participant-Transaction-Item) |
 | 9 | Treatment & Prescription | Vet, Backend, Supabase, Notification, Cat Owner | UC-2.5, UC-2.9 | TS-6 (Transaction → SubsequentTransaction with Item) |
 | 10 | Review & Rating | Cat Owner, Backend, Supabase, Notification, Business Owner | UC-1.14 | TS-10 (Transaction → SubsequentTransaction) |
+| 11 | Offer Management | Hospital Admin / Store Owner, Backend, Supabase | UC-3.6, UC-4.6 | TS-11 (Participant-Transaction-Item) |
+| 12 | Admin Verification & Approval | System Admin, Backend, Supabase, Notification | UC-5.1–UC-5.4 | TS-13 (Participant-Transaction-SpecificItem) |
 
 ---
 
@@ -1136,3 +1317,4 @@ stop
 | **Mermaid** (secondary) | [mermaid.live](https://mermaid.live), GitHub markdown | Flowcharts with subgraphs approximating lanes — good for GitHub rendering |
 
 > **Recommendation**: Use the **PlantUML** versions for formal documentation and presentations. The PlantUML activity diagram syntax with `|Lane Name|` partitions renders proper swimlane diagrams with vertical lanes.
+

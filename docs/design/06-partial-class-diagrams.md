@@ -909,3 +909,441 @@ classDiagram
     ReviewRepository ..> ReviewResponse : manages
     Review "1" --> "0..1" ReviewResponse : has
 ```
+
+---
+
+## Partial Class Diagram 9: Hospital Dashboard Customization (from SD-9, TS-8)
+
+```mermaid
+classDiagram
+    class HospitalDashboardView {
+        -hospital: Hospital
+        -services: HospitalService[]
+        -analytics: HospitalAnalytics
+        +render(): JSX
+        +updatePage(config): void
+        +manageServices(): void
+        +manageStaff(): void
+        +uploadBanner(file): void
+    }
+
+    class HospitalController {
+        -hospitalService: HospitalBizService
+        +getMyHospital(req, res): Response
+        +updatePage(req, res): Response
+        +manageServices(req, res): Response
+        +manageStaff(req, res): Response
+        +getAnalytics(req, res): Response
+    }
+
+    class HospitalBizService {
+        -hospitalRepo: HospitalRepository
+        -storageService: StorageService
+        -geoService: GeoLocationService
+        +getMyHospital(adminUserId): HospitalDetail
+        +updatePage(hospitalId, config): Hospital
+        +manageServices(hospitalId, services): HospitalService[]
+        +manageStaff(hospitalId, vetIds): Vet[]
+        +getAnalytics(hospitalId): HospitalAnalytics
+    }
+
+    class HospitalRepository {
+        -db: SupabaseClient
+        +findByAdmin(adminUserId): Hospital
+        +findByRadius(lat, lng, radius): Hospital[]
+        +updatePageConfig(id, config): Hospital
+        +approve(id): Hospital
+    }
+
+    class Hospital {
+        +id: UUID
+        +admin_user_id: UUID
+        +name: string
+        +description: string
+        +phone: string
+        +email: string
+        +location: Point
+        +address: string
+        +banner_url: string
+        +operating_hours: JSON
+        +is_active: boolean
+        +is_approved: boolean
+        +rating: float
+        +total_reviews: int
+        +page_config: JSON
+        +created_at: DateTime
+    }
+
+    class HospitalService {
+        +id: UUID
+        +hospital_id: UUID
+        +name: string
+        +description: string
+        +category: string
+        +price: float
+        +duration_minutes: int
+        +is_active: boolean
+    }
+
+    HospitalDashboardView --> HospitalController : HTTP
+    HospitalController --> HospitalBizService : business logic
+    HospitalBizService --> HospitalRepository : hospital CRUD
+    HospitalBizService --> StorageService : banner uploads
+    HospitalRepository ..> Hospital : manages
+    Hospital "1" --> "*" HospitalService : offers
+```
+
+---
+
+## Partial Class Diagram 10: Store Dashboard Customization (from SD-11, TS-9)
+
+```mermaid
+classDiagram
+    class StoreDashboardView {
+        -store: CatStore
+        -products: Product[]
+        -categories: ProductCategory[]
+        +render(): JSX
+        +updatePage(config): void
+        +manageProducts(): void
+        +configureDelivery(): void
+    }
+
+    class StoreController {
+        -storeService: StoreService
+        +getMyStore(req, res): Response
+        +updateStorePage(req, res): Response
+        +createProduct(req, res): Response
+        +updateProduct(req, res): Response
+        +deleteProduct(req, res): Response
+        +manageCategories(req, res): Response
+    }
+
+    class StoreService {
+        -storeRepo: StoreRepository
+        -productRepo: ProductRepository
+        -categoryRepo: ProductCategoryRepo
+        -storageService: StorageService
+        +getMyStore(ownerUserId): StoreDetail
+        +updateStorePage(storeId, pageData): CatStore
+        +createProduct(storeId, data): Product
+        +updateProduct(productId, data): Product
+        +deleteProduct(productId): boolean
+    }
+
+    class StoreRepository {
+        -db: SupabaseClient
+        +findByOwner(ownerId): CatStore
+        +findByRadius(lat, lng, radius): CatStore[]
+        +updatePageConfig(id, config): CatStore
+        +approve(id): CatStore
+    }
+
+    class ProductCategoryRepo {
+        -db: SupabaseClient
+        +findAll(): ProductCategory[]
+        +create(data): ProductCategory
+        +update(id, data): ProductCategory
+        +reorder(ids): void
+    }
+
+    StoreDashboardView --> StoreController : HTTP
+    StoreController --> StoreService : business logic
+    StoreService --> StoreRepository : store CRUD
+    StoreService --> ProductRepository : product CRUD
+    StoreService --> ProductCategoryRepo : category CRUD
+    StoreService --> StorageService : image uploads
+```
+
+---
+
+## Partial Class Diagram 11: Offer Management (from SD-13, TS-11)
+
+```mermaid
+classDiagram
+    class OfferManagerView {
+        -offers: Offer[]
+        +render(): JSX
+        +createOffer(data): void
+        +toggleOffer(id, active): void
+        +deleteOffer(id): void
+    }
+
+    class OfferController {
+        -offerService: OfferService
+        +getOffers(req, res): Response
+        +createOffer(req, res): Response
+        +updateOffer(req, res): Response
+        +deleteOffer(req, res): Response
+    }
+
+    class OfferService {
+        -offerRepo: OfferRepository
+        +getOffersByOwner(ownerId, type): Offer[]
+        +createOffer(ownerId, data): Offer
+        +updateOffer(offerId, data): Offer
+        +deleteOffer(offerId): boolean
+        +validateDateRange(from, to): boolean
+    }
+
+    class OfferRepository {
+        -db: SupabaseClient
+        +findByHospital(hospitalId): Offer[]
+        +findByStore(storeId): Offer[]
+        +create(data): Offer
+        +update(id, data): Offer
+        +delete(id): boolean
+        +findActive(): Offer[]
+    }
+
+    class Offer {
+        +id: UUID
+        +hospital_id: UUID
+        +store_id: UUID
+        +title: string
+        +description: string
+        +discount_percent: float
+        +promo_code: string
+        +valid_from: DateTime
+        +valid_to: DateTime
+        +is_active: boolean
+        +applicable_items: string[]
+    }
+
+    OfferManagerView --> OfferController : HTTP
+    OfferController --> OfferService : business logic
+    OfferService --> OfferRepository : CRUD
+    OfferRepository ..> Offer : manages
+```
+
+---
+
+## Partial Class Diagram 12: Order Fulfillment (from SD-14, TS-12)
+
+```mermaid
+classDiagram
+    class StoreOrderView {
+        -orders: Order[]
+        -activeOrder: Order
+        +render(): JSX
+        +acceptOrder(orderId): void
+        +rejectOrder(orderId, reason): void
+        +updateStatus(orderId, status): void
+    }
+
+    class OrderController {
+        -orderService: OrderService
+        +getOrderDetails(req, res): Response
+        +updateOrderStatus(req, res): Response
+        +getStoreOrders(req, res): Response
+    }
+
+    class OrderService {
+        -orderRepo: OrderRepository
+        -stripeGateway: StripeGateway
+        -notificationService: NotificationService
+        +getOrderDetails(orderId): OrderDetail
+        +updateOrderStatus(orderId, status): Order
+        +cancelOrder(orderId, reason): Order
+    }
+
+    class Payment {
+        +id: UUID
+        +order_id: UUID
+        +appointment_id: UUID
+        +user_id: UUID
+        +amount: float
+        +payment_method: string
+        +stripe_payment_id: string
+        +status: string
+        +created_at: DateTime
+        +completed_at: DateTime
+    }
+
+    StoreOrderView --> OrderController : HTTP/Realtime
+    OrderController --> OrderService : business logic
+    OrderService --> OrderRepository : status updates
+    OrderService --> StripeGateway : refunds
+    OrderService --> NotificationService : customer alerts
+    Order "1" --> "0..1" Payment : paid via
+```
+
+---
+
+## Partial Class Diagram 13: Treatment & Prescription (from SD-7, TS-6)
+
+```mermaid
+classDiagram
+    class Treatment {
+        +id: UUID
+        +appointment_id: UUID
+        +vet_id: UUID
+        +cat_id: UUID
+        +diagnosis: string
+        +notes: string
+        +follow_up_instructions: string
+        +follow_up_date: Date
+        +status: string
+        +created_at: DateTime
+    }
+
+    class TreatmentRepository {
+        -db: SupabaseClient
+        +create(data): Treatment
+        +findByAppointment(appointmentId): Treatment[]
+        +findByCat(catId): Treatment[]
+        +findByVet(vetId): Treatment[]
+        +update(id, data): Treatment
+    }
+
+    Appointment "1" --> "*" Treatment : followed by
+    Treatment "1" --> "*" Prescription : leads to
+    TreatmentRepository ..> Treatment : manages
+```
+
+---
+
+## Partial Class Diagram 14: Admin Operations (from SD-15, TS-13)
+
+```mermaid
+classDiagram
+    class AdminDashboardView {
+        -stats: DashboardStats
+        -pendingApprovals: PendingList
+        +render(): JSX
+        +approveVet(vetId): void
+        +approveHospital(hospitalId): void
+        +approveStore(storeId): void
+        +suspendUser(userId, reason): void
+    }
+
+    class AdminController {
+        -adminService: AdminService
+        +getDashboard(req, res): Response
+        +manageUsers(req, res): Response
+        +verifyVet(req, res): Response
+        +approveHospital(req, res): Response
+        +approveStore(req, res): Response
+        +suspendUser(req, res): Response
+        +manageBreeds(req, res): Response
+        +manageAIData(req, res): Response
+    }
+
+    class AdminService {
+        -userRepo: UserRepository
+        -vetRepo: VetRepository
+        -hospitalRepo: HospitalRepository
+        -storeRepo: StoreRepository
+        -notificationService: NotificationService
+        +getDashboardStats(): DashboardStats
+        +getPendingVets(): Vet[]
+        +verifyVet(vetId, action): Vet
+        +approveHospital(hospitalId, action): Hospital
+        +approveStore(storeId, action): CatStore
+        +suspendUser(userId, reason): User
+    }
+
+    class VetRepository {
+        -db: SupabaseClient
+        +findUnverified(): Vet[]
+        +verify(vetId): Vet
+        +findByHospital(hospitalId): Vet[]
+        +update(id, data): Vet
+    }
+
+    AdminDashboardView --> AdminController : HTTP
+    AdminController --> AdminService : business logic
+    AdminService --> UserRepository : user mgmt
+    AdminService --> VetRepository : vet verification
+    AdminService --> HospitalRepository : hospital approval
+    AdminService --> StoreRepository : store approval
+    AdminService --> NotificationService : notifications
+```
+
+---
+
+## Partial Class Diagram 15: Admin Medicine Management (from SD-10, TS-13)
+
+```mermaid
+classDiagram
+    class AdminMedicineView {
+        -medicines: Medicine[]
+        -selectedMedicine: Medicine
+        +render(): JSX
+        +addMedicine(data): void
+        +editMedicine(id, data): void
+        +deleteMedicine(id): void
+        +searchMedicines(query): void
+    }
+
+    class MedicineController {
+        -medicineService: MedicineService
+        +listMedicines(req, res): Response
+        +search(req, res): Response
+        +getById(req, res): Response
+        +create(req, res): Response
+        +update(req, res): Response
+        +delete(req, res): Response
+    }
+
+    class MedicineService {
+        -medicineRepo: MedicineRepository
+        -embeddingService: EmbeddingService
+        -vectorRepo: VectorRepository
+        +listMedicines(page, limit): PaginatedList
+        +search(query): Medicine[]
+        +getById(id): Medicine
+        +create(data): Medicine
+        +update(id, data): Medicine
+        +delete(id): boolean
+    }
+
+    class MedicineRepository {
+        -db: SupabaseClient
+        +findAll(page, limit): Medicine[]
+        +search(query): Medicine[]
+        +findById(id): Medicine
+        +create(data): Medicine
+        +update(id, data): Medicine
+        +delete(id): boolean
+        +getContraindications(id): ContraindicationInfo
+    }
+
+    class EmbeddingService {
+        -openaiClient: OpenAI
+        +generateEmbedding(text): float[]
+        +batchEmbed(texts): float[][]
+    }
+
+    class VectorRepository {
+        -db: SupabaseClient
+        +storeVector(id, vector): void
+        +updateVector(id, vector): void
+        +similaritySearch(vector, limit): VectorMatch[]
+    }
+
+    class Medicine {
+        +id: UUID
+        +name: string
+        +generic_name: string
+        +manufacturer: string
+        +ingredients: string[]
+        +dosage_form: string
+        +description: string
+        +usage_instructions: string
+        +contraindications: string[]
+        +allergy_warnings: string[]
+        +breed_warnings: string[]
+        +side_effects: string[]
+        +requires_prescription: boolean
+        +is_active: boolean
+        +embedding: vector
+    }
+
+    AdminMedicineView --> MedicineController : HTTP
+    MedicineController --> MedicineService : business logic
+    MedicineService --> MedicineRepository : medicine CRUD
+    MedicineService --> EmbeddingService : generate vectors
+    MedicineService --> VectorRepository : store vectors
+    MedicineRepository ..> Medicine : manages
+```

@@ -147,30 +147,42 @@ graph LR
     User --> UC1_10[Browse Medicine DB]
     User --> UC1_11[Consult AI Companion]
     User --> UC1_12[Manage Profile]
+    User --> UC1_13[View Orders]
     User --> UC1_14[Rate & Review]
+    User --> UC1_15[Manage Payment Methods]
 
     %% Vet Use Cases
+    Vet --> UC2_1[Register as Vet]
     Vet --> UC2_2[View Appointments]
     Vet --> UC2_3[Manage Patient Records]
     Vet --> UC2_4[Chat with Cat Owner]
     Vet --> UC2_5[Prescribe Medicine]
+    Vet --> UC2_6[View Medicine DB]
     Vet --> UC2_7[Update Availability]
+    Vet --> UC2_8[View Patient History]
     Vet --> UC2_9[Add Treatment Notes]
 
     %% Hospital Admin Use Cases
+    HAdmin --> UC3_1[Register Hospital]
     HAdmin --> UC3_2[Customize Hospital Page]
     HAdmin --> UC3_3[Manage Services]
     HAdmin --> UC3_4[Manage Staff]
     HAdmin --> UC3_5[Manage Appointment Slots]
+    HAdmin --> UC3_6[View Hospital Appointments]
     HAdmin --> UC3_7[Manage Offers]
     HAdmin --> UC3_8[View Hospital Analytics]
+    HAdmin --> UC3_9[Respond to Reviews]
 
     %% Store Owner Use Cases
+    SOwner --> UC4_1[Register Store]
     SOwner --> UC4_2[Customize Store Page]
     SOwner --> UC4_3[Manage Products]
+    SOwner --> UC4_4[Manage Inventory]
     SOwner --> UC4_5[Process Orders]
     SOwner --> UC4_6[Manage Store Offers]
     SOwner --> UC4_7[View Store Analytics]
+    SOwner --> UC4_8[Respond to Store Reviews]
+    SOwner --> UC4_9[Manage Store Hours]
 
     %% Admin Use Cases
     Admin --> UC5_1[Manage Users]
@@ -181,6 +193,8 @@ graph LR
     Admin --> UC5_6[Manage Cat Breed DB]
     Admin --> UC5_7[Manage AI Training Data]
     Admin --> UC5_8[View System Analytics]
+    Admin --> UC5_9[Moderate Content]
+    Admin --> UC5_10[Configure System]
 
     %% AI Use Cases
     UC1_11 --> AI
@@ -201,6 +215,7 @@ graph LR
     UC1_6 -.- UC2_4
     UC1_5 -.- UC2_2
     UC1_5 -.- UC3_5
+    UC3_9 -.- UC4_8
 ```
 
 ### PlantUML Code (Actor-Use Case Diagram)
@@ -267,11 +282,14 @@ rectangle "Purrfect Care System" {
     package "Cat Store" {
         usecase "Browse Cat Stores" as UC8
         usecase "Purchase Products" as UC9
+        usecase "Register Store" as UC41
         usecase "Customize Store Page" as UC42
         usecase "Manage Products" as UC43
+        usecase "Manage Inventory" as UC44
         usecase "Process Orders" as UC45
         usecase "Manage Store Offers" as UC46
         usecase "View Store Analytics" as UC47
+        usecase "Manage Store Hours" as UC49
     }
 
     package "AI Companion" {
@@ -335,12 +353,15 @@ HAdmin --> UC39
 
 ' --- Store Owner connections ---
 SOwner --> UC1
+SOwner --> UC41
 SOwner --> UC42
 SOwner --> UC43
+SOwner --> UC44
 SOwner --> UC45
 SOwner --> UC46
 SOwner --> UC47
 SOwner --> UC39
+SOwner --> UC49
 
 ' --- Admin connections ---
 Admin --> UC51
@@ -440,3 +461,55 @@ UC5 ..> UC22 : <<triggers>>
 | **Preconditions** | Hospital/Store is registered and approved |
 | **Main Flow** | 1. Admin opens dashboard → 2. Selects "Customize Page" → 3. System shows editable page builder → 4. Admin updates: banner image, description, operating hours, contact info → 5. Admin adds/reorders sections (services, offers, team) → 6. Admin previews changes → 7. Admin publishes → 8. Public-facing page updated |
 | **Postconditions** | Hospital/Store page reflects changes visible to all users |
+
+### UC-2.5: Prescribe Medicine (Key Use Case)
+
+| Field | Description |
+|-------|-------------|
+| **Use Case ID** | UC-2.5 |
+| **Name** | Prescribe Medicine |
+| **Primary Actor** | Veterinarian |
+| **Secondary Actors** | Notification Service |
+| **Preconditions** | Vet has an active/completed appointment with the cat |
+| **Main Flow** | 1. Vet opens appointment detail → 2. System shows cat info + medical record + patient history → 3. Vet searches medicine database → 4. Vet selects medicine and sets dosage, frequency, duration → 5. System checks for contraindications against cat's allergies → 6. If safe: prescription created → 7. Patient history updated → 8. Cat owner notified |
+| **Postconditions** | Prescription recorded, patient history updated, owner notified |
+| **Alternative Flows** | A1: Contraindication found → allergy warning displayed, vet must choose alternative |
+
+### UC-4.5: Process Orders (Key Use Case)
+
+| Field | Description |
+|-------|-------------|
+| **Use Case ID** | UC-4.5 |
+| **Name** | Process Orders (Order Fulfillment) |
+| **Primary Actor** | Store Owner |
+| **Secondary Actors** | Cat Owner, Payment Gateway, Notification Service |
+| **Preconditions** | Store is active, order has been placed by a customer |
+| **Main Flow** | 1. Store owner receives real-time notification of new order → 2. Views order details (items, quantities, delivery address) → 3. Accepts order → status changes to "preparing" → 4. Customer notified → 5. Store marks "ready" → customer notified → 6. Store marks "delivered" → order completed → 7. Customer prompted to review |
+| **Postconditions** | Order fulfilled, customer notified at each step |
+| **Alternative Flows** | A1: Store rejects order → payment refunded via Stripe → customer notified |
+
+### UC-5.2: Manage Vets (Key Use Case)
+
+| Field | Description |
+|-------|-------------|
+| **Use Case ID** | UC-5.2 |
+| **Name** | Verify & Manage Veterinarians |
+| **Primary Actor** | System Admin |
+| **Secondary Actors** | Notification Service |
+| **Preconditions** | Admin is logged in with admin role |
+| **Main Flow** | 1. Admin views list of unverified vets → 2. Reviews vet credentials (license number, qualifications, bio) → 3. Approves or rejects vet → 4. If approved: `is_verified = true`, `verified_at` set → 5. Vet notified of verification status |
+| **Postconditions** | Vet profile verified/rejected, vet notified |
+| **Alternative Flows** | A1: Admin requests additional documentation → vet notified to upload |
+
+### UC-1.14: Rate & Review (Key Use Case)
+
+| Field | Description |
+|-------|-------------|
+| **Use Case ID** | UC-1.14 |
+| **Name** | Rate & Review |
+| **Primary Actor** | Cat Owner |
+| **Secondary Actors** | Hospital Admin / Store Owner / Vet, Notification Service |
+| **Preconditions** | User has completed an appointment or received an order |
+| **Main Flow** | 1. User opens review form (from appointment/order detail) → 2. Sets star rating (1-5) and writes comment → 3. System verifies user had interaction with target → 4. Review saved → 5. Target's average rating recalculated → 6. Business owner notified of new review → 7. Business owner can respond → 8. Reviewer notified of response |
+| **Postconditions** | Review published, ratings updated, business optionally responds |
+| **Alternative Flows** | A1: User has no completed interaction → review blocked |

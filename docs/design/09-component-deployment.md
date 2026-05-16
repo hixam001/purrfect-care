@@ -52,6 +52,8 @@ graph TB
             MedCtrl[MedicineController]
             ReviewCtrl[ReviewController]
             AdmCtrl[AdminController]
+            StoreCtrl[StoreController]
+            OfferCtrl[OfferController]
         end
         
         subgraph "Middleware"
@@ -76,6 +78,9 @@ graph TB
             NotifSvc[NotificationService]
             GeoSvc[GeoLocationService]
             StorageSvc[StorageService]
+            StoreSvc[StoreService]
+            OfferSvc[OfferService]
+            AdminSvc[AdminService]
         end
 
         subgraph "Repositories (Data Access)"
@@ -90,6 +95,11 @@ graph TB
             MedRepo[MedicineRepository]
             VectorRepo[VectorDBRepository]
             ReviewRepo[ReviewRepository]
+            StoreRepo[StoreRepository]
+            VetRepo[VetRepository]
+            OfferRepo[OfferRepository]
+            TreatmentRepo[TreatmentRepository]
+            PaymentRepo[PaymentRepository]
         end
     end
 
@@ -137,7 +147,12 @@ graph TB
     ChatCtrl -.-> ChatSvc
     OrderCtrl -.-> OrderSvc
     AICtrl -.-> AISvc
-    AdmCtrl -.-> MedSvc
+    RxCtrl -.-> RxSvc
+    MedCtrl -.-> MedSvc
+    ReviewCtrl -.-> ReviewSvc
+    AdmCtrl -.-> AdminSvc
+    StoreCtrl -.-> StoreSvc
+    OfferCtrl -.-> OfferSvc
 
     %% Services to Repos
     AuthSvc -.-> UserRepo
@@ -148,12 +163,30 @@ graph TB
     OrderSvc -.-> ProdRepo
     AISvc -.-> VectorRepo
     AISvc -.-> EmbedSvc
+    RxSvc -.-> RxRepo
+    RxSvc -.-> MedRepo
+    ReviewSvc -.-> ReviewRepo
+    StoreSvc -.-> StoreRepo
+    StoreSvc -.-> ProdRepo
+    OfferSvc -.-> OfferRepo
+    AdminSvc -.-> UserRepo
+    AdminSvc -.-> VetRepo
+    AdminSvc -.-> HospRepo
+    AdminSvc -.-> StoreRepo
 
     %% Repos to DB
     UserRepo -->|SQL| SBDB
     CatRepo -->|SQL| SBDB
     HospRepo -->|SQL/PostGIS| SBDB
     VectorRepo -->|pgvector| SBDB
+    OrderRepo -->|SQL| SBDB
+    ProdRepo -->|SQL| SBDB
+    RxRepo -->|SQL| SBDB
+    MedRepo -->|SQL| SBDB
+    ReviewRepo -->|SQL| SBDB
+    StoreRepo -->|SQL/PostGIS| SBDB
+    VetRepo -->|SQL| SBDB
+    OfferRepo -->|SQL| SBDB
 
     %% External connections
     AuthSvc -->|OAuth| SBAuth
@@ -283,6 +316,9 @@ package "Backend (Python FastAPI)" <<backend>> {
         [PrescriptionController] as RXC
         [AIController] as AIC
         [AdminController] as ADC
+        [StoreController] as STC
+        [OfferController] as OFC
+        [ReviewController] as RVC
     }
     
     package "Middleware" {
@@ -303,6 +339,9 @@ package "Backend (Python FastAPI)" <<backend>> {
         [EmbeddingService] as ES
         [NotificationService] as NS
         [GeoService] as GS
+        [StoreService] as STS
+        [OfferService] as OFS
+        [AdminService] as ADS
     }
     
     package "Repositories" {
@@ -310,8 +349,11 @@ package "Backend (Python FastAPI)" <<backend>> {
         [CatRepository] as CRp
         [HospitalRepository] as HR
         [AppointmentRepository] as APR
-        [OrderRepository] as OR
         [VectorDBRepository] as VR
+        [ReviewRepository] as RVR
+        [StoreRepository] as STR
+        [VetRepository] as VTR
+        [OfferRepository] as OFR
     }
 }
 
@@ -338,6 +380,8 @@ ChatUI --> CHC
 StoreUI --> OC
 AIUI --> AIC
 AdminUI --> ADC
+HospDash --> HC
+StoreDash --> STC
 
 ' Controllers → Middleware → Services
 AC --> JWT
@@ -349,6 +393,11 @@ APC ..> APS
 CHC ..> CHS
 OC ..> OS
 AIC ..> AIS
+RXC ..> RXS
+RVC ..> ReviewService
+STC ..> STS
+OFC ..> OFS
+ADC ..> ADS
 
 ' Services → Repos
 AS --> UR
@@ -358,6 +407,13 @@ APS --> APR
 OS --> OR
 AIS --> VR
 AIS --> ES
+STS --> STR
+STS --> ProdRepo
+OFS --> OFR
+ADS --> UR
+ADS --> VTR
+ADS --> HR
+ADS --> STR
 
 ' Repos → DB
 UR --> DB
@@ -366,6 +422,9 @@ HR --> DB
 APR --> DB
 OR --> DB
 VR --> DB
+STR --> DB
+VTR --> DB
+OFR --> DB
 
 ' External
 AS --> SBA
