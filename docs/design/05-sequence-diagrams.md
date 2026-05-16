@@ -497,6 +497,330 @@ sequenceDiagram
 
 ---
 
+## SD-11: Store Dashboard Customization
+
+```mermaid
+sequenceDiagram
+    actor SO as Store Owner
+    participant SDV as StoreDashboardView
+    participant SC as StoreController
+    participant SS as StoreService
+    participant SR as StoreRepository
+    participant PR as ProductRepository
+    participant PCR as ProductCategoryRepo
+    participant STG as StorageService
+    participant DB as Supabase
+
+    SO->>SDV: Open Dashboard → "Customize Store Page"
+    SDV->>SC: GET /api/stores/my-store
+    SC->>SC: Auth middleware (store_owner role)
+    SC->>SS: getMyStore(ownerUserId)
+    SS->>SR: findByOwner(ownerUserId)
+    SR->>DB: SELECT * FROM cat_stores WHERE owner_user_id = ?
+    DB-->>SR: store
+    SS->>PR: findByStore(storeId)
+    PR->>DB: SELECT * FROM products WHERE store_id = ?
+    DB-->>PR: products[]
+    SS->>PCR: findAll()
+    PCR->>DB: SELECT * FROM product_categories ORDER BY sort_order
+    DB-->>PCR: categories[]
+    SS-->>SC: {store, products, categories, pageConfig}
+    SC-->>SDV: 200 {dashboardData}
+    SDV-->>SO: Show store page editor
+
+    SO->>SDV: Upload banner image
+    SDV->>STG: uploadImage(file, "store-assets")
+    STG->>DB: Upload to Supabase Storage bucket
+    DB-->>STG: publicUrl
+    STG-->>SDV: bannerUrl
+
+    SO->>SDV: Add/edit product
+    SDV->>SC: POST /api/stores/{id}/products {name, price, stock, category_id, images}
+    SC->>SS: createProduct(storeId, productData)
+    SS->>PR: create(productData)
+    PR->>DB: INSERT INTO products (...)
+    DB-->>PR: product
+    SS-->>SC: product
+    SC-->>SDV: 201 {product}
+
+    SO->>SDV: Update delivery zones & fee
+    SO->>SDV: Save all page changes
+    SDV->>SC: PUT /api/stores/{id}/page {banner_url, page_config, delivery_zones, delivery_fee, hours}
+    SC->>SS: updateStorePage(storeId, pageData)
+    SS->>SR: updatePageConfig(storeId, pageData)
+    SR->>DB: UPDATE cat_stores SET page_config=?, banner_url=?, delivery_zones=?, delivery_fee=? WHERE id=?
+    DB-->>SR: updated
+    SR-->>SS: updatedStore
+    SS-->>SC: success
+    SC-->>SDV: 200 {store}
+    SDV-->>SO: "Store page is live! ✓"
+```
+
+---
+
+## SD-12: Review & Rating
+
+```mermaid
+sequenceDiagram
+    actor U as Cat Owner
+    actor BO as Business Owner
+    participant RV as ReviewView
+    participant BOD as BusinessDashboard
+    participant RC as ReviewController
+    participant RS as ReviewService
+    participant RR as ReviewRepository
+    participant NS as NotificationService
+    participant DB as Supabase
+
+    U->>RV: Open review form (after appointment/order)
+    U->>RV: Set rating (1-5) + write comment
+    RV->>RC: POST /api/reviews {target_type, target_id, rating, comment}
+    RC->>RC: Auth middleware
+    RC->>RS: createReview(userId, reviewData)
+    RS->>RS: Verify user had appointment/order with target
+    RS->>RR: create(reviewData)
+    RR->>DB: INSERT INTO reviews (user_id, hospital_id/store_id/vet_id, rating, comment)
+    DB-->>RR: review
+    RS->>RR: recalculateRating(targetType, targetId)
+    RR->>DB: UPDATE hospitals/cat_stores/vets SET rating=AVG(reviews.rating), total_reviews=COUNT(*)
+    DB-->>RR: updated
+    RS->>NS: notifyBusinessOwner(targetOwnerId, reviewSummary)
+    NS-->>RS: notified
+    RS-->>RC: review
+    RC-->>RV: 201 {review}
+    RV-->>U: "Thanks for your review! ✓"
+
+    Note over BO,BOD: Business responds to review
+    BO->>BOD: View review in dashboard
+    BOD->>RC: GET /api/reviews?target_id=X
+    RC->>RS: getReviewsForTarget(targetType, targetId)
+    RS->>RR: findByTarget(targetType, targetId)
+    RR->>DB: SELECT r.*, rr.* FROM reviews r LEFT JOIN review_responses rr ON r.id=rr.review_id WHERE target_id=?
+    DB-->>RR: reviews[]
+    RS-->>RC: reviews
+    RC-->>BOD: 200 {reviews}
+    BOD-->>BO: Show reviews list
+
+    BO->>BOD: Write response to review
+    BOD->>RC: POST /api/reviews/{id}/respond {response_text}
+    RC->>RS: respondToReview(reviewId, responderId, responseText)
+    RS->>RR: createResponse(reviewId, responderId, responseText)
+    RR->>DB: INSERT INTO review_responses (review_id, responder_id, response_text)
+    DB-->>RR: reviewResponse
+    RS->>NS: notifyReviewer(reviewerUserId, "Business responded")
+    NS-->>RS: notified
+    RS-->>RC: reviewResponse
+    RC-->>BOD: 201 {response}
+    BOD-->>BO: "Response published ✓"
+```
+
+---
+
+## SD-13: Offer/Promotion Management
+
+```mermaid
+sequenceDiagram
+    actor HA as Hospital Admin / Store Owner
+    participant OFV as OfferManagerView
+    participant OFC as OfferController
+    participant OFS as OfferService
+    participant OFR as OfferRepository
+    participant DB as Supabase
+
+    HA->>OFV: Open Offer Manager
+    OFV->>OFC: GET /api/offers?owner_id=X
+    OFC->>OFC: Auth middleware (hospital_admin / store_owner)
+    OFC->>OFS: getOffersByOwner(userId, targetType)
+    OFS->>OFR: findByOwner(hospitalId or storeId)
+    OFR->>DB: SELECT * FROM offers WHERE hospital_id=? OR store_id=? ORDER BY valid_from DESC
+    DB-->>OFR: offers[]
+    OFS-->>OFC: offers
+    OFC-->>OFV: 200 {offers}
+    OFV-->>HA: Show offers list (active/expired)
+
+    HA->>OFV: Click "Create Offer" → Fill form
+    OFV->>OFC: POST /api/offers {title, description, discount_percent, promo_code, valid_from, valid_to, applicable_items[]}
+    OFC->>OFS: createOffer(ownerId, offerData)
+    OFS->>OFS: Validate date range (valid_from < valid_to)
+    OFS->>OFR: create(offerData)
+    OFR->>DB: INSERT INTO offers (...)
+    DB-->>OFR: offer
+    OFS-->>OFC: offer
+    OFC-->>OFV: 201 {offer}
+    OFV-->>HA: "Offer created! ✓"
+
+    HA->>OFV: Toggle offer active/inactive
+    OFV->>OFC: PATCH /api/offers/{id} {is_active: false}
+    OFC->>OFS: updateOffer(offerId, {is_active: false})
+    OFS->>OFR: update(offerId, data)
+    OFR->>DB: UPDATE offers SET is_active=? WHERE id=?
+    DB-->>OFR: updated
+    OFS-->>OFC: updatedOffer
+    OFC-->>OFV: 200 {offer}
+    OFV-->>HA: Offer deactivated
+```
+
+---
+
+## SD-14: Order Fulfillment (Store Owner)
+
+```mermaid
+sequenceDiagram
+    actor SO as Store Owner
+    actor U as Cat Owner
+    participant SOV as StoreOrderView
+    participant OC as OrderController
+    participant OS as OrderService
+    participant OR as OrderRepository
+    participant PG as StripeGateway
+    participant NS as NotificationService
+    participant RT as Supabase Realtime
+    participant DB as Supabase
+
+    Note over RT,SOV: New order placed by customer
+    RT->>SOV: Real-time event: new_order
+    SOV-->>SO: 🔔 "New order received!"
+
+    SO->>SOV: View order details
+    SOV->>OC: GET /api/orders/{id}
+    OC->>OS: getOrderDetails(orderId)
+    OS->>OR: findById(orderId)
+    OR->>DB: SELECT o.*, oi.*, p.name FROM orders o JOIN order_items oi JOIN products p WHERE o.id=?
+    DB-->>OR: {order, items[]}
+    OS-->>OC: orderDetails
+    OC-->>SOV: 200 {order, items, customer}
+    SOV-->>SO: Show order (items, qty, address, notes)
+
+    SO->>SOV: Click "Accept Order"
+    SOV->>OC: PUT /api/orders/{id}/status {status: "preparing"}
+    OC->>OC: Auth middleware (store_owner)
+    OC->>OS: updateOrderStatus(orderId, "preparing")
+    OS->>OR: updateStatus(orderId, "preparing")
+    OR->>DB: UPDATE orders SET status='preparing', updated_at=now()
+    DB-->>OR: updated
+    OS->>NS: notifyCustomer(userId, "Your order is being prepared")
+    NS-->>OS: sent
+    OS-->>OC: updatedOrder
+    OC-->>SOV: 200 {order}
+
+    SO->>SOV: Click "Ready for Pickup/Delivery"
+    SOV->>OC: PUT /api/orders/{id}/status {status: "ready"}
+    OC->>OS: updateOrderStatus(orderId, "ready")
+    OS->>OR: updateStatus(orderId, "ready")
+    OR->>DB: UPDATE orders SET status='ready'
+    OS->>NS: notifyCustomer(userId, "Your order is ready!")
+    OS-->>OC: updatedOrder
+    OC-->>SOV: 200 {order}
+
+    SO->>SOV: Click "Completed"
+    SOV->>OC: PUT /api/orders/{id}/status {status: "delivered"}
+    OC->>OS: updateOrderStatus(orderId, "delivered")
+    OS->>OR: updateStatus(orderId, "delivered")
+    OR->>DB: UPDATE orders SET status='delivered', delivered_at=now()
+    OS->>NS: notifyCustomer(userId, "Order delivered! Rate your experience")
+    OS-->>OC: updatedOrder
+    OC-->>SOV: 200 {order}
+    SOV-->>SO: Order completed ✓
+
+    alt Store Owner Rejects Order
+        SO->>SOV: Click "Reject Order" + reason
+        SOV->>OC: PUT /api/orders/{id}/status {status: "cancelled", reason: "..."}
+        OC->>OS: cancelOrder(orderId, reason)
+        OS->>OR: updateStatus(orderId, "cancelled")
+        OR->>DB: UPDATE orders SET status='cancelled'
+        OS->>PG: refundPayment(paymentId)
+        PG-->>OS: refunded
+        OS->>NS: notifyCustomer(userId, "Order cancelled. Refund issued.")
+        OS-->>OC: cancelledOrder
+        OC-->>SOV: 200 {order, refund}
+        SOV-->>SO: Order cancelled + refund processed
+    end
+```
+
+---
+
+## SD-15: Admin Management Operations
+
+```mermaid
+sequenceDiagram
+    actor A as System Admin
+    participant ADV as AdminDashboardView
+    participant ADC as AdminController
+    participant ADS as AdminService
+    participant UR as UserRepository
+    participant VR as VetRepository
+    participant HR as HospitalRepository
+    participant STR as StoreRepository
+    participant NS as NotificationService
+    participant DB as Supabase
+
+    A->>ADV: Open Admin Dashboard
+    ADV->>ADC: GET /api/admin/dashboard
+    ADC->>ADC: Auth middleware (admin role)
+    ADC->>ADS: getDashboardStats()
+    ADS->>DB: SELECT COUNT(*) FROM users/vets/hospitals/cat_stores grouped by status
+    DB-->>ADS: stats
+    ADS-->>ADC: {totalUsers, pendingVets, pendingHospitals, pendingStores}
+    ADC-->>ADV: 200 {dashboard}
+    ADV-->>A: Show admin KPIs + pending approvals
+
+    Note over A,ADV: Vet Verification Flow
+    A->>ADV: Click "Pending Vets"
+    ADV->>ADC: GET /api/admin/vets?status=unverified
+    ADC->>ADS: getPendingVets()
+    ADS->>VR: findUnverified()
+    VR->>DB: SELECT v.*, u.name, u.email FROM vets v JOIN users u WHERE v.is_verified=false
+    DB-->>VR: pendingVets[]
+    ADS-->>ADC: vets
+    ADC-->>ADV: 200 {vets}
+    ADV-->>A: Show pending vet list with documents
+
+    A->>ADV: Click "Approve" on a vet
+    ADV->>ADC: PUT /api/admin/vets/{id}/verify {action: "approve"}
+    ADC->>ADS: verifyVet(vetId, "approve")
+    ADS->>VR: update(vetId, {is_verified: true, verified_at: now()})
+    VR->>DB: UPDATE vets SET is_verified=true, verified_at=now() WHERE id=?
+    DB-->>VR: updated
+    ADS->>NS: notifyVet(vetUserId, "Your profile has been verified!")
+    NS-->>ADS: sent
+    ADS-->>ADC: verifiedVet
+    ADC-->>ADV: 200 {vet}
+    ADV-->>A: Vet verified ✓
+
+    Note over A,ADV: Hospital Approval Flow
+    A->>ADV: Review pending hospital
+    ADV->>ADC: PUT /api/admin/hospitals/{id}/approve {action: "approve"}
+    ADC->>ADS: approveHospital(hospitalId, "approve")
+    ADS->>HR: update(hospitalId, {is_approved: true})
+    HR->>DB: UPDATE hospitals SET is_approved=true WHERE id=?
+    ADS->>NS: notifyHospitalAdmin(adminUserId, "Hospital approved!")
+    ADS-->>ADC: approvedHospital
+    ADC-->>ADV: 200 {hospital}
+
+    Note over A,ADV: Store Approval Flow
+    A->>ADV: Review pending store
+    ADV->>ADC: PUT /api/admin/stores/{id}/approve {action: "approve"}
+    ADC->>ADS: approveStore(storeId, "approve")
+    ADS->>STR: update(storeId, {is_approved: true})
+    STR->>DB: UPDATE cat_stores SET is_approved=true WHERE id=?
+    ADS->>NS: notifyStoreOwner(ownerUserId, "Store approved!")
+    ADS-->>ADC: approvedStore
+    ADC-->>ADV: 200 {store}
+
+    Note over A,ADV: User Suspension Flow
+    A->>ADV: Click "Suspend" on user
+    ADV->>ADC: PUT /api/admin/users/{id}/suspend {reason: "..."}
+    ADC->>ADS: suspendUser(userId, reason)
+    ADS->>UR: update(userId, {is_active: false})
+    UR->>DB: UPDATE users SET is_active=false WHERE id=?
+    ADS->>NS: notifyUser(userId, "Account suspended: " + reason)
+    ADS-->>ADC: suspended
+    ADC-->>ADV: 200 {user}
+    ADV-->>A: User suspended
+```
+
+---
+
 ## Interfaces Identified (Summary)
 
 ### Boundary Interfaces (React Views)
@@ -516,6 +840,12 @@ sequenceDiagram
 | `CartView` | SD-8 |
 | `HospitalDashboardView` | SD-9 |
 | `AdminMedicineView` | SD-10 |
+| `StoreDashboardView` | SD-11 |
+| `ReviewView` | SD-12 |
+| `BusinessDashboard` | SD-12 |
+| `OfferManagerView` | SD-13 |
+| `StoreOrderView` | SD-14 |
+| `AdminDashboardView` | SD-15 |
 
 ### Controller Interfaces (Python REST)
 | Interface | Used In |
@@ -527,8 +857,12 @@ sequenceDiagram
 | `ChatController` | SD-5 |
 | `AIController` | SD-6 |
 | `PrescriptionController` | SD-7 |
-| `OrderController` | SD-8 |
+| `OrderController` | SD-8, SD-14 |
 | `MedicineController` | SD-10 |
+| `StoreController` | SD-11 |
+| `ReviewController` | SD-12 |
+| `OfferController` | SD-13 |
+| `AdminController` | SD-15 |
 
 ### Service Interfaces (Business Logic / Middleware)
 | Interface | Used In |
@@ -541,20 +875,24 @@ sequenceDiagram
 | `AIService` | SD-6 |
 | `EmbeddingService` | SD-6, SD-10 |
 | `PrescriptionService` | SD-7 |
-| `OrderService` | SD-8 |
+| `OrderService` | SD-8, SD-14 |
 | `MedicineService` | SD-10 |
-| `NotificationService` | SD-1, SD-4, SD-5, SD-7, SD-8 |
+| `StoreService` | SD-11 |
+| `ReviewService` | SD-12 |
+| `OfferService` | SD-13 |
+| `AdminService` | SD-15 |
+| `NotificationService` | SD-1, SD-4, SD-5, SD-7, SD-8, SD-12, SD-14, SD-15 |
 | `GeoLocationService` | SD-3, SD-8 |
-| `StorageService` | SD-9 |
+| `StorageService` | SD-9, SD-11 |
 
 ### Repository Interfaces (Data Access)
 | Interface | Used In |
 |-----------|---------|
-| `UserRepository` | SD-1 |
+| `UserRepository` | SD-1, SD-15 |
 | `CatRepository` | SD-2, SD-6 |
 | `BreedRepository` | SD-2 |
 | `MedicalRecordRepo` | SD-2, SD-7 |
-| `HospitalRepository` | SD-3, SD-9 |
+| `HospitalRepository` | SD-3, SD-9, SD-15 |
 | `AppointmentRepository` | SD-4 |
 | `SlotRepository` | SD-4 |
 | `ChatRepository` | SD-5 |
@@ -564,15 +902,42 @@ sequenceDiagram
 | `ConsultationLogRepo` | SD-6 |
 | `PrescriptionRepository` | SD-7 |
 | `PatientHistoryRepo` | SD-7 |
-| `OrderRepository` | SD-8 |
-| `ProductRepository` | SD-8 |
+| `OrderRepository` | SD-8, SD-14 |
+| `ProductRepository` | SD-8, SD-11 |
 | `MedicineRepository` | SD-10 |
 | `VectorRepository` | SD-10 |
+| `StoreRepository` | SD-11, SD-15 |
+| `ProductCategoryRepo` | SD-11 |
+| `ReviewRepository` | SD-12 |
+| `OfferRepository` | SD-13 |
+| `VetRepository` | SD-15 |
 
 ### External Gateway Interfaces
 | Interface | Used In |
 |-----------|---------|
-| `StripeGateway` | SD-4, SD-8 |
+| `StripeGateway` | SD-4, SD-8, SD-14 |
 | `Supabase Auth` | SD-1 |
-| `Supabase Realtime` | SD-5 |
-| `Supabase Storage` | SD-9 |
+| `Supabase Realtime` | SD-5, SD-14 |
+| `Supabase Storage` | SD-9, SD-11 |
+
+---
+
+## SD ↔ TS Cross-Reference
+
+| SD # | Sequence Diagram | Transaction Set |
+|------|-----------------|----------------|
+| SD-1 | User Registration | TS-1 |
+| SD-2 | Cat Registration | TS-2 |
+| SD-3 | Browse Nearby Hospitals | TS-3 (part 1) |
+| SD-4 | Book Appointment | TS-3 (part 2) |
+| SD-5 | Vet-User Chat | TS-5 |
+| SD-6 | AI Consultation | TS-7 |
+| SD-7 | Prescribe Medicine | TS-6 |
+| SD-8 | Purchase Products | TS-4 |
+| SD-9 | Hospital Dashboard | TS-8 |
+| SD-10 | Manage Medicine DB | TS-13 (medicines) |
+| SD-11 | Store Dashboard | TS-9 |
+| SD-12 | Review & Rating | TS-10 |
+| SD-13 | Offer Management | TS-11 |
+| SD-14 | Order Fulfillment | TS-12 |
+| SD-15 | Admin Operations | TS-13 (users/vets/hospitals/stores) |
