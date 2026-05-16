@@ -1082,6 +1082,163 @@ classDiagram
 
 ---
 
+### Layer 5: Views (React Components)
+
+```mermaid
+classDiagram
+    class RegistrationView {
+        -formData: RegistrationForm
+        +render(): JSX
+        +handleSubmit(): void
+        +selectRole(role): void
+    }
+
+    class CatRegistrationView {
+        -cats: Cat[]
+        -breeds: CatBreed[]
+        +render(): JSX
+        +handleSubmit(catData): void
+        +selectBreed(breedId): void
+    }
+
+    class HospitalListView {
+        -hospitals: Hospital[]
+        -userLocation: Point
+        +render(): JSX
+        +filterByDistance(radius): void
+        +selectHospital(id): void
+    }
+
+    class AppointmentBookingView {
+        -hospital: Hospital
+        -services: HospitalService[]
+        -slots: AppointmentSlot[]
+        +render(): JSX
+        +selectService(id): void
+        +selectSlot(id): void
+        +confirmBooking(): void
+    }
+
+    class ChatView {
+        -chatRooms: ChatRoom[]
+        -messages: Message[]
+        -activeRoom: ChatRoom
+        +render(): JSX
+        +sendMessage(content): void
+        +attachImage(file): void
+        +markAsRead(roomId): void
+    }
+
+    class PrescriptionView {
+        -appointment: Appointment
+        -catRecord: MedicalRecord
+        -medicines: Medicine[]
+        +render(): JSX
+        +searchMedicine(query): void
+        +prescribe(data): void
+    }
+
+    class StoreListView {
+        -stores: CatStore[]
+        -cart: CartItem[]
+        +render(): JSX
+        +addToCart(productId, qty): void
+        +checkout(): void
+    }
+
+    class AICompanionView {
+        -history: AIConsultation[]
+        -currentResult: AIRecommendation
+        +render(): JSX
+        +submitSymptoms(text): void
+        +bookFromAI(hospitalId): void
+    }
+
+    class ReviewView {
+        -reviews: Review[]
+        -rating: int
+        +render(): JSX
+        +submitReview(data): void
+        +respondToReview(id, text): void
+    }
+
+    class HospitalDashboardView {
+        -hospital: Hospital
+        -services: HospitalService[]
+        -analytics: HospitalAnalytics
+        +render(): JSX
+        +updatePage(config): void
+        +manageServices(): void
+        +manageStaff(): void
+        +uploadBanner(file): void
+    }
+
+    class StoreDashboardView {
+        -store: CatStore
+        -products: Product[]
+        -categories: ProductCategory[]
+        +render(): JSX
+        +updatePage(config): void
+        +manageProducts(): void
+        +configureDelivery(): void
+    }
+
+    class OfferManagerView {
+        -offers: Offer[]
+        +render(): JSX
+        +createOffer(data): void
+        +toggleOffer(id, active): void
+        +deleteOffer(id): void
+    }
+
+    class StoreOrderView {
+        -orders: Order[]
+        -activeOrder: Order
+        +render(): JSX
+        +acceptOrder(orderId): void
+        +rejectOrder(orderId, reason): void
+        +updateStatus(orderId, status): void
+    }
+
+    class AdminDashboardView {
+        -stats: DashboardStats
+        -pendingApprovals: PendingList
+        +render(): JSX
+        +approveVet(vetId): void
+        +approveHospital(hospitalId): void
+        +approveStore(storeId): void
+        +suspendUser(userId, reason): void
+    }
+
+    class AdminMedicineView {
+        -medicines: Medicine[]
+        -selectedMedicine: Medicine
+        +render(): JSX
+        +addMedicine(data): void
+        +editMedicine(id, data): void
+        +deleteMedicine(id): void
+    }
+
+    %% View → Controller relationships
+    RegistrationView --> AuthController : HTTP
+    CatRegistrationView --> CatController : HTTP
+    HospitalListView --> HospitalController : HTTP
+    AppointmentBookingView --> AppointmentController : HTTP
+    ChatView --> ChatController : WebSocket
+    PrescriptionView --> PrescriptionController : HTTP
+    StoreListView --> OrderController : HTTP
+    AICompanionView --> AIController : HTTP
+    ReviewView --> ReviewController : HTTP
+    HospitalDashboardView --> HospitalController : HTTP
+    StoreDashboardView --> StoreController : HTTP
+    OfferManagerView --> OfferController : HTTP
+    StoreOrderView --> OrderController : HTTP
+    AdminDashboardView --> AdminController : HTTP
+    AdminMedicineView --> MedicineController : HTTP
+```
+
+---
+
 ## Class Count Summary
 
 | Layer | Count | Classes |
@@ -1089,7 +1246,7 @@ classDiagram
 | **Models (Data)** | 28 | User, UserProfile, Cat, CatBreed, MedicalRecord, PatientHistory, Vet, Hospital, HospitalService, AppointmentSlot, Appointment, Medicine, Prescription, ChatRoom, Message, CatStore, ProductCategory, Product, Order, OrderItem, Offer, Review, ReviewResponse, Treatment, Payment, IllnessRecord, AIConsultation, Notification |
 | **Enumerations** | 7 | Role, AppointmentStatus, OrderStatus, MessageType, SeverityLevel, PrescriptionStatus, NotificationType |
 | **Controllers** | 13 | BaseController + 12 concrete (Auth, Cat, Hospital, Appointment, Chat, Prescription, Order, AI, Medicine, Review, Admin, Store, Offer) |
-| **Services** | 16 | AuthService, CatService, HospitalBizService, AppointmentService, ChatService, PrescriptionService, OrderService, AIService, MedicineService, ReviewService, StoreService, OfferService, AdminService, EmbeddingService, NotificationService, GeoLocationService, StorageService, StripeGateway |
+| **Services** | 18 | AuthService, CatService, HospitalBizService, AppointmentService, ChatService, PrescriptionService, OrderService, AIService, MedicineService, ReviewService, StoreService, OfferService, AdminService, EmbeddingService, NotificationService, GeoLocationService, StorageService, StripeGateway |
 | **Repositories** | 23 | BaseRepository + 22 concrete (User, Cat, Breed, MedicalRecord, PatientHistory, Hospital, Appointment, Slot, Chat, Message, Prescription, Medicine, Order, Product, Store, Review, Illness, VectorDB, ConsultationLog, Vet, Offer, ProductCategory, Treatment, Payment) |
-| **Views (React)** | 20 | (Defined in 13 partial class diagrams) |
-| **Total** | **~107** | |
+| **Views (React)** | 15 | RegistrationView, CatRegistrationView, HospitalListView, AppointmentBookingView, ChatView, PrescriptionView, StoreListView, AICompanionView, ReviewView, HospitalDashboardView, StoreDashboardView, OfferManagerView, StoreOrderView, AdminDashboardView, AdminMedicineView |
+| **Total** | **~104** | |
