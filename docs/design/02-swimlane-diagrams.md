@@ -1054,55 +1054,49 @@ stop
 |Cat Owner|
 start
 :Completes appointment/order;
-:Receives prompt: 
-"Rate your experience";
+:Receives prompt\n"Rate your experience";
 :Opens review form;
 :Selects star rating (1-5);
 :Writes review comment;
 :Submits review;
 
-|System (Backend)|
+|System Backend|
 :Validate review content;
-:Check user had actual 
-appointment/order with target;
+:Check user had actual\nappointment/order with target;
 
-|Supabase|
-:INSERT into reviews
-(user_id, target_id, 
-rating, comment);
-:Recalculate average rating:
-UPDATE hospitals/stores/vets 
-SET rating = AVG(reviews.rating),
-total_reviews = COUNT(*);
-
-|Notification Service|
-:Notify Hospital Admin / 
-Store Owner / Vet:
-"New review received (★★★★☆)";
-
-|Hospital Admin / Store Owner|
-:Receives review notification;
-:Views review in dashboard;
-
-if (Wants to respond?) then (yes)
-    :Writes response;
-    :Submits response;
-    
+if (Valid interaction?) then (yes)
     |Supabase|
-    :INSERT into review_responses
-    (review_id, responder_id, 
-    response_text);
-    
+    :INSERT into reviews\n(user_id, target_id, rating, comment);
+    :Recalculate average rating\nUPDATE hospitals/stores/vets\nSET rating = AVG(reviews.rating),\ntotal_reviews = COUNT(*);
+
     |Notification Service|
-    :Notify Cat Owner:
-    "Business responded 
-    to your review";
-    
-    |Cat Owner|
-    :Views response;
-else (no)
+    :Notify Hospital Admin /\nStore Owner / Vet\n"New review received";
+
     |Hospital Admin / Store Owner|
-    :Acknowledges review;
+    :Receives review notification;
+    :Views review in dashboard;
+
+    if (Wants to respond?) then (yes)
+        :Writes response;
+        :Submits response;
+
+        |Supabase|
+        :INSERT into review_responses\n(review_id, responder_id, response_text);
+
+        |Notification Service|
+        :Notify Cat Owner\n"Business responded to your review";
+
+        |Cat Owner|
+        :Views response;
+    else (no)
+        |Hospital Admin / Store Owner|
+        :Acknowledges review;
+    endif
+else (no)
+    |System Backend|
+    :Return error\n"No completed interaction found";
+    |Cat Owner|
+    :Shown error message;
 endif
 stop
 @enduml
