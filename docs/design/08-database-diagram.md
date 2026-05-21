@@ -4,558 +4,323 @@
 
 ---
 
-## Complete ER Diagram (PlantUML)
+## Complete ER Diagram (Mermaid Flowchart)
 
-> **28 entities**, **43 relationships**. Each entity includes full attributes. Render at [plantuml.com](https://www.plantuml.com/plantuml/uml).
+> **28 entities**, **43 relationships**. Each entity includes full attributes. Render natively in GitHub or Markdown viewers supporting Mermaid.
 
-```plantuml
-@startuml PurrfectCare_ER
-skinparam linetype ortho
-skinparam classAttributeIconSize 0
-hide circle
-skinparam defaultFontSize 10
+### Subsystem 1: Users, Roles, and Places (Chen ERD)
+```mermaid
+graph LR
+    %% ENTITIES (Strong = [], Weak = [[]])
+    users[users]
+    user_profiles[[user_profiles]]
+    vets[vets]
+    hospitals[hospitals]
+    hospital_services[[hospital_services]]
 
-' ============================
-' PARTICIPANT DOMAIN (Blue)
-' ============================
-skinparam class<<Participant>> {
-    BackgroundColor #E3F2FD
-    BorderColor #1565C0
-}
+    %% RELATIONSHIPS (Strong = {}, Weak = {{}})
+    has_profile{{has_profile}}
+    is_vet{is_vet}
+    manages{manages}
+    offers{{offers}}
 
-entity "users" <<Participant>> {
-    *id : UUID <<PK>>
-    --
-    email : VARCHAR(255) <<UNIQUE, NOT NULL>>
-    password_hash : VARCHAR(255)
-    name : VARCHAR(100) <<NOT NULL>>
-    phone : VARCHAR(20)
-    role : ENUM(cat_owner,vet,hospital_admin,store_owner,admin)
-    avatar_url : TEXT
-    location : GEOGRAPHY(Point,4326)
-    address : VARCHAR(255)
-    city : VARCHAR(100)
-    country : VARCHAR(100)
-    is_active : BOOLEAN <<DEFAULT true>>
-    created_at : TIMESTAMPTZ <<DEFAULT now()>>
-    updated_at : TIMESTAMPTZ
-}
+    %% CONNECTIONS (Participation)
+    users ---|Partial| has_profile
+    has_profile ---|Total| user_profiles
 
-entity "user_profiles" <<Participant>> {
-    *id : UUID <<PK>>
-    --
-    user_id : UUID <<FK, UNIQUE>>
-    preferences : JSONB
-    notification_settings : VARCHAR(50)
-    payment_customer_id : VARCHAR(100)
-    last_login : TIMESTAMPTZ
-}
+    users ---|Partial| is_vet
+    is_vet ---|Total| vets
 
-entity "vets" <<Participant>> {
-    *id : UUID <<PK>>
-    --
-    user_id : UUID <<FK, UNIQUE>>
-    license_number : VARCHAR(50) <<UNIQUE>>
-    specialization : VARCHAR(100)
-    experience_years : INT
-    bio : TEXT
-    qualifications : TEXT[]
-    hospital_id : UUID <<FK>>
-    is_verified : BOOLEAN <<DEFAULT false>>
-    rating : DECIMAL(2,1) <<DEFAULT 0>>
-    total_reviews : INT <<DEFAULT 0>>
-    verified_at : TIMESTAMPTZ
-}
+    users ---|Partial| manages
+    manages ---|Total| hospitals
 
-' ============================
-' SPECIFIC ITEM DOMAIN (Teal)
-' ============================
-skinparam class<<SpecificItem>> {
-    BackgroundColor #E0F2F1
-    BorderColor #00695C
-}
+    hospitals ---|Partial| offers
+    offers ---|Total| hospital_services
 
-entity "cats" <<SpecificItem>> {
-    *id : UUID <<PK>>
-    --
-    owner_id : UUID <<FK>>
-    name : VARCHAR(100) <<NOT NULL>>
-    breed_id : UUID <<FK>>
-    age_months : INT
-    weight_kg : DECIMAL(4,2)
-    color : VARCHAR(50)
-    gender : VARCHAR(10)
-    photo_url : TEXT
-    is_neutered : BOOLEAN
-    microchip_id : VARCHAR(50)
-    registered_at : TIMESTAMPTZ <<DEFAULT now()>>
-}
+    %% ATTRIBUTES - users (Ovals = ([ ]))
+    users --- A_u_id([<u>id</u>])
+    users --- A_u_email([email])
+    users --- A_u_name([name])
+    users --- A_u_phone([phone])
+    users --- A_u_role([role])
+    users --- A_u_avatar([avatar_url])
+    users --- A_u_loc([location])
+    users --- A_u_city([city])
+    users --- A_u_created([created_at])
 
-entity "cat_breeds" <<Item>> {
-    *id : UUID <<PK>>
-    --
-    name : VARCHAR(100) <<UNIQUE>>
-    origin_country : VARCHAR(100)
-    size_category : VARCHAR(20)
-    coat_type : VARCHAR(50)
-    temperament : TEXT
-    description : TEXT
-    avg_lifespan_years : DECIMAL(3,1)
-    avg_weight_kg : DECIMAL(3,1)
-    common_health_issues : TEXT[]
-    grooming_needs : TEXT[]
-    image_url : TEXT
-}
+    %% ATTRIBUTES - user_profiles
+    user_profiles --- A_up_id([<u>id</u>])
+    user_profiles --- A_up_pref([preferences <<Multi>>])
+    user_profiles --- A_up_notif([notification_settings])
 
-entity "medical_records" <<SpecificItem>> {
-    *id : UUID <<PK>>
-    --
-    cat_id : UUID <<FK, UNIQUE>>
-    allergies : TEXT[]
-    existing_conditions : TEXT[]
-    vaccination_status : JSONB
-    blood_type : VARCHAR(10)
-    notes : TEXT
-    last_updated : TIMESTAMPTZ
-}
+    %% ATTRIBUTES - vets
+    vets --- A_v_id([<u>id</u>])
+    vets --- A_v_lic([license_number])
+    vets --- A_v_spec([specialization])
+    vets --- A_v_exp([experience_years])
+    vets --- A_v_qual([qualifications <<Multi>>])
 
-entity "patient_history" <<SubsequentTransaction>> {
-    *id : UUID <<PK>>
-    --
-    cat_id : UUID <<FK>>
-    entry_type : VARCHAR(50)
-    description : TEXT
-    appointment_id : UUID <<FK>>
-    prescription_id : UUID <<FK>>
-    vet_id : UUID <<FK>>
-    created_at : TIMESTAMPTZ <<DEFAULT now()>>
-}
+    %% ATTRIBUTES - hospitals
+    hospitals --- A_h_id([<u>id</u>])
+    hospitals --- A_h_name([name])
+    hospitals --- A_h_phone([phone])
+    hospitals --- A_h_loc([location])
+    hospitals --- A_h_hours([operating_hours <<Multi>>])
+    hospitals --- A_h_rate([rating])
 
-' ============================
-' PLACE DOMAIN (Green)
-' ============================
-skinparam class<<Place>> {
-    BackgroundColor #E8F5E9
-    BorderColor #2E7D32
-}
-
-entity "hospitals" <<Place>> {
-    *id : UUID <<PK>>
-    --
-    admin_user_id : UUID <<FK, UNIQUE>>
-    name : VARCHAR(200) <<NOT NULL>>
-    description : TEXT
-    phone : VARCHAR(20)
-    email : VARCHAR(255)
-    location : GEOGRAPHY(Point,4326)
-    address : VARCHAR(255)
-    city : VARCHAR(100)
-    banner_url : TEXT
-    operating_hours : JSONB
-    is_active : BOOLEAN <<DEFAULT true>>
-    is_approved : BOOLEAN <<DEFAULT false>>
-    rating : DECIMAL(2,1) <<DEFAULT 0>>
-    total_reviews : INT <<DEFAULT 0>>
-    page_config : JSONB
-    created_at : TIMESTAMPTZ <<DEFAULT now()>>
-}
-
-entity "cat_stores" <<Place>> {
-    *id : UUID <<PK>>
-    --
-    owner_user_id : UUID <<FK, UNIQUE>>
-    name : VARCHAR(200) <<NOT NULL>>
-    description : TEXT
-    phone : VARCHAR(20)
-    email : VARCHAR(255)
-    location : GEOGRAPHY(Point,4326)
-    address : VARCHAR(255)
-    city : VARCHAR(100)
-    banner_url : TEXT
-    operating_hours : JSONB
-    delivery_zones : JSONB
-    delivery_fee : DECIMAL(8,2)
-    is_active : BOOLEAN <<DEFAULT true>>
-    is_approved : BOOLEAN <<DEFAULT false>>
-    rating : DECIMAL(2,1) <<DEFAULT 0>>
-    total_reviews : INT <<DEFAULT 0>>
-    page_config : JSONB
-    created_at : TIMESTAMPTZ <<DEFAULT now()>>
-}
-
-' ============================
-' ITEM DOMAIN (Indigo)
-' ============================
-skinparam class<<Item>> {
-    BackgroundColor #E8EAF6
-    BorderColor #283593
-}
-
-entity "hospital_services" <<Item>> {
-    *id : UUID <<PK>>
-    --
-    hospital_id : UUID <<FK>>
-    name : VARCHAR(100) <<NOT NULL>>
-    description : TEXT
-    category : VARCHAR(50)
-    price : DECIMAL(10,2)
-    duration_minutes : INT
-    is_active : BOOLEAN <<DEFAULT true>>
-}
-
-entity "medicines" <<Item>> {
-    *id : UUID <<PK>>
-    --
-    name : VARCHAR(200) <<NOT NULL>>
-    generic_name : VARCHAR(200)
-    manufacturer : VARCHAR(200)
-    ingredients : TEXT[]
-    dosage_form : VARCHAR(50)
-    description : TEXT
-    usage_instructions : TEXT
-    contraindications : TEXT[]
-    allergy_warnings : TEXT[]
-    breed_warnings : TEXT[]
-    side_effects : TEXT[]
-    requires_prescription : BOOLEAN <<DEFAULT true>>
-    is_active : BOOLEAN <<DEFAULT true>>
-    embedding : VECTOR(1536)
-}
-
-entity "product_categories" <<Item>> {
-    *id : UUID <<PK>>
-    --
-    name : VARCHAR(100) <<UNIQUE>>
-    description : TEXT
-    icon_url : TEXT
-    sort_order : INT
-}
-
-entity "products" <<Item>> {
-    *id : UUID <<PK>>
-    --
-    store_id : UUID <<FK>>
-    category_id : UUID <<FK>>
-    name : VARCHAR(200) <<NOT NULL>>
-    description : TEXT
-    price : DECIMAL(10,2) <<NOT NULL>>
-    discount_price : DECIMAL(10,2)
-    images : TEXT[]
-    stock_quantity : INT <<DEFAULT 0>>
-    brand : VARCHAR(100)
-    weight : DECIMAL(6,2)
-    unit : VARCHAR(20)
-    is_active : BOOLEAN <<DEFAULT true>>
-    rating : DECIMAL(2,1) <<DEFAULT 0>>
-    total_reviews : INT <<DEFAULT 0>>
-    created_at : TIMESTAMPTZ <<DEFAULT now()>>
-}
-
-entity "illness_records" <<Item>> {
-    *id : UUID <<PK>>
-    --
-    illness_name : VARCHAR(200) <<NOT NULL>>
-    description : TEXT
-    symptoms : TEXT[]
-    affected_breeds : TEXT[]
-    severity_level : VARCHAR(20)
-    home_remedies : TEXT
-    when_to_see_vet : TEXT
-    related_medicines : TEXT[]
-    embedding : VECTOR(1536)
-}
-
-' ============================
-' TRANSACTION DOMAIN (Green)
-' ============================
-skinparam class<<Transaction>> {
-    BackgroundColor #FFF3E0
-    BorderColor #E65100
-}
-
-entity "appointment_slots" <<Transaction>> {
-    *id : UUID <<PK>>
-    --
-    hospital_id : UUID <<FK>>
-    vet_id : UUID <<FK>>
-    slot_date : DATE
-    start_time : TIME
-    end_time : TIME
-    is_booked : BOOLEAN <<DEFAULT false>>
-    is_recurring : BOOLEAN <<DEFAULT false>>
-}
-
-entity "appointments" <<Transaction>> {
-    *id : UUID <<PK>>
-    --
-    user_id : UUID <<FK>>
-    cat_id : UUID <<FK>>
-    vet_id : UUID <<FK>>
-    hospital_id : UUID <<FK>>
-    service_id : UUID <<FK>>
-    slot_id : UUID <<FK>>
-    appointment_date : TIMESTAMPTZ
-    status : VARCHAR(20) <<DEFAULT pending>>
-    notes : TEXT
-    amount_paid : DECIMAL(10,2)
-    payment_id : VARCHAR(100)
-    created_at : TIMESTAMPTZ <<DEFAULT now()>>
-    updated_at : TIMESTAMPTZ
-}
-
-entity "orders" <<Transaction>> {
-    *id : UUID <<PK>>
-    --
-    user_id : UUID <<FK>>
-    store_id : UUID <<FK>>
-    subtotal : DECIMAL(10,2)
-    delivery_fee : DECIMAL(8,2)
-    total : DECIMAL(10,2)
-    status : VARCHAR(20) <<DEFAULT pending>>
-    payment_id : VARCHAR(100)
-    delivery_address : VARCHAR(255)
-    delivery_location : GEOGRAPHY(Point,4326)
-    notes : TEXT
-    ordered_at : TIMESTAMPTZ <<DEFAULT now()>>
-    delivered_at : TIMESTAMPTZ
-}
-
-entity "chat_rooms" <<Transaction>> {
-    *id : UUID <<PK>>
-    --
-    user_id : UUID <<FK>>
-    vet_id : UUID <<FK>>
-    last_message_at : TIMESTAMPTZ
-    unread_user : INT <<DEFAULT 0>>
-    unread_vet : INT <<DEFAULT 0>>
-    is_active : BOOLEAN <<DEFAULT true>>
-    created_at : TIMESTAMPTZ <<DEFAULT now()>>
-}
-
-entity "ai_consultations" <<Transaction>> {
-    *id : UUID <<PK>>
-    --
-    user_id : UUID <<FK>>
-    cat_id : UUID <<FK>>
-    query_text : TEXT <<NOT NULL>>
-    results : JSONB
-    confidence_score : DECIMAL(3,2)
-    severity : VARCHAR(20)
-    created_at : TIMESTAMPTZ <<DEFAULT now()>>
-}
-
-entity "reviews" <<Transaction>> {
-    *id : UUID <<PK>>
-    --
-    user_id : UUID <<FK>>
-    hospital_id : UUID <<FK>>
-    store_id : UUID <<FK>>
-    vet_id : UUID <<FK>>
-    rating : INT <<CHECK 1..5>>
-    comment : TEXT
-    status : VARCHAR(20) <<DEFAULT active>>
-    created_at : TIMESTAMPTZ <<DEFAULT now()>>
-}
-
-entity "offers" <<Transaction>> {
-    *id : UUID <<PK>>
-    --
-    hospital_id : UUID <<FK>>
-    store_id : UUID <<FK>>
-    title : VARCHAR(200) <<NOT NULL>>
-    description : TEXT
-    discount_percent : DECIMAL(5,2)
-    promo_code : VARCHAR(50)
-    valid_from : TIMESTAMPTZ
-    valid_to : TIMESTAMPTZ
-    is_active : BOOLEAN <<DEFAULT true>>
-    applicable_items : TEXT[]
-}
-
-' ============================
-' TRANSACTION LINE ITEM (Purple)
-' ============================
-skinparam class<<LineItem>> {
-    BackgroundColor #F3E5F5
-    BorderColor #7B1FA2
-}
-
-entity "order_items" <<LineItem>> {
-    *id : UUID <<PK>>
-    --
-    order_id : UUID <<FK>>
-    product_id : UUID <<FK>>
-    quantity : INT <<NOT NULL>>
-    unit_price : DECIMAL(10,2)
-    total_price : DECIMAL(10,2)
-}
-
-entity "messages" <<LineItem>> {
-    *id : UUID <<PK>>
-    --
-    chat_room_id : UUID <<FK>>
-    sender_id : UUID <<FK>>
-    content : TEXT
-    message_type : VARCHAR(20) <<DEFAULT text>>
-    media_url : TEXT
-    is_read : BOOLEAN <<DEFAULT false>>
-    sent_at : TIMESTAMPTZ <<DEFAULT now()>>
-}
-
-' ============================
-' SUBSEQUENT TRANSACTION (Red)
-' ============================
-skinparam class<<SubsequentTx>> {
-    BackgroundColor #FFEBEE
-    BorderColor #C62828
-}
-
-entity "treatments" <<SubsequentTx>> {
-    *id : UUID <<PK>>
-    --
-    appointment_id : UUID <<FK>>
-    vet_id : UUID <<FK>>
-    cat_id : UUID <<FK>>
-    diagnosis : TEXT
-    notes : TEXT
-    follow_up_instructions : TEXT
-    follow_up_date : DATE
-    status : VARCHAR(20)
-    created_at : TIMESTAMPTZ <<DEFAULT now()>>
-}
-
-entity "prescriptions" <<SubsequentTx>> {
-    *id : UUID <<PK>>
-    --
-    appointment_id : UUID <<FK>>
-    cat_id : UUID <<FK>>
-    vet_id : UUID <<FK>>
-    medicine_id : UUID <<FK>>
-    dosage : VARCHAR(100)
-    frequency : VARCHAR(100)
-    duration_days : INT
-    instructions : TEXT
-    status : VARCHAR(20) <<DEFAULT active>>
-    prescribed_at : TIMESTAMPTZ <<DEFAULT now()>>
-}
-
-entity "payments" <<SubsequentTx>> {
-    *id : UUID <<PK>>
-    --
-    order_id : UUID <<FK>>
-    appointment_id : UUID <<FK>>
-    user_id : UUID <<FK>>
-    amount : DECIMAL(10,2) <<NOT NULL>>
-    payment_method : VARCHAR(50)
-    stripe_payment_id : VARCHAR(100)
-    status : VARCHAR(20)
-    created_at : TIMESTAMPTZ <<DEFAULT now()>>
-    completed_at : TIMESTAMPTZ
-}
-
-entity "review_responses" <<SubsequentTx>> {
-    *id : UUID <<PK>>
-    --
-    review_id : UUID <<FK, UNIQUE>>
-    responder_id : UUID <<FK>>
-    response_text : TEXT <<NOT NULL>>
-    status : VARCHAR(20) <<DEFAULT active>>
-    responded_at : TIMESTAMPTZ <<DEFAULT now()>>
-}
-
-' ============================
-' SYSTEM (Grey)
-' ============================
-skinparam class<<System>> {
-    BackgroundColor #ECEFF1
-    BorderColor #37474F
-}
-
-entity "notifications" <<System>> {
-    *id : UUID <<PK>>
-    --
-    user_id : UUID <<FK>>
-    type : VARCHAR(50) <<NOT NULL>>
-    title : VARCHAR(200)
-    body : TEXT
-    channel : VARCHAR(20)
-    data : JSONB
-    is_read : BOOLEAN <<DEFAULT false>>
-    created_at : TIMESTAMPTZ <<DEFAULT now()>>
-}
-
-' ============================
-' RELATIONSHIPS (43 total)
-' ============================
-
-' Participant relationships
-users ||--o| user_profiles : has
-users ||--o{ cats : owns
-users ||--o| vets : "registered as"
-users ||--o| hospitals : admins
-users ||--o| cat_stores : owns
-users ||--o{ appointments : books
-users ||--o{ orders : places
-users ||--o{ reviews : writes
-users ||--o{ notifications : receives
-users ||--o{ ai_consultations : initiates
-users ||--o{ chat_rooms : participates
-
-' SpecificItem relationships
-cats }o--|| cat_breeds : "is of breed"
-cats ||--|| medical_records : has
-cats ||--o{ patient_history : "has history"
-cats ||--o{ appointments : "subject of"
-cats ||--o{ prescriptions : "prescribed for"
-cats ||--o{ ai_consultations : about
-
-' Participant-Place
-vets }o--o| hospitals : "works at"
-vets ||--o{ appointments : attends
-vets ||--o{ appointment_slots : "available at"
-vets ||--o{ prescriptions : prescribes
-vets ||--o{ chat_rooms : "chats in"
-vets ||--o{ treatments : performs
-
-' Place-Item
-hospitals ||--o{ hospital_services : offers
-hospitals ||--o{ appointment_slots : schedules
-hospitals ||--o{ appointments : hosts
-hospitals ||--o{ offers : promotes
-hospitals ||--o{ reviews : receives
-
-' Transaction-SubsequentTransaction
-appointments }o--|| hospital_services : "for service"
-appointments ||--o| appointment_slots : "at slot"
-appointments ||--o{ treatments : "followed by"
-appointments ||--o{ prescriptions : "results in"
-appointments ||--o{ patient_history : "logged in"
-appointments ||--o| payments : "paid via"
-
-' SubsequentTransaction-Item
-prescriptions }o--|| medicines : "of medicine"
-treatments ||--o{ prescriptions : "leads to"
-
-' Transaction-TransactionLineItem
-chat_rooms ||--o{ messages : contains
-orders ||--o{ order_items : contains
-
-' Place-Item-Transaction (Store)
-cat_stores ||--o{ products : sells
-cat_stores ||--o{ orders : receives
-cat_stores ||--o{ offers : promotes
-cat_stores ||--o{ reviews : receives
-products }o--|| product_categories : categorized
-products ||--o{ order_items : "ordered as"
-
-' Order payment
-orders ||--o| payments : "paid via"
-
-' Review response
-reviews ||--o| review_responses : "responded with"
-
-@enduml
+    %% ATTRIBUTES - hospital_services
+    hospital_services --- A_hs_id([<u>id</u>])
+    hospital_services --- A_hs_name([name])
+    hospital_services --- A_hs_price([price])
+    hospital_services --- A_hs_dur([duration_minutes])
 ```
+
+### Subsystem 2: Medical & Cats (Chen ERD)
+```mermaid
+graph LR
+    %% ENTITIES
+    users[users]
+    cats[cats]
+    cat_breeds[cat_breeds]
+    medical_records[[medical_records]]
+    patient_history[[patient_history]]
+    medicines[medicines]
+    illness_records[illness_records]
+
+    %% RELATIONSHIPS
+    owns{owns}
+    belongs_to{belongs_to}
+    has_record{{has_record}}
+    has_history{{has_history}}
+
+    %% CONNECTIONS
+    users ---|Partial| owns
+    owns ---|Total| cats
+
+    cats ---|Total| belongs_to
+    belongs_to ---|Partial| cat_breeds
+
+    cats ---|Total| has_record
+    has_record ---|Total| medical_records
+
+    cats ---|Total| has_history
+    has_history ---|Total| patient_history
+
+    %% ATTRIBUTES - cats
+    cats --- A_c_id([<u>id</u>])
+    cats --- A_c_name([name])
+    cats --- A_c_age([age_months])
+    cats --- A_c_weight([weight_kg])
+    cats --- A_c_gender([gender])
+
+    %% ATTRIBUTES - cat_breeds
+    cat_breeds --- A_cb_id([<u>id</u>])
+    cat_breeds --- A_cb_name([name])
+    cat_breeds --- A_cb_orig([origin_country])
+    cat_breeds --- A_cb_life([avg_lifespan_years])
+
+    %% ATTRIBUTES - medical_records
+    medical_records --- A_mr_id([<u>id</u>])
+    medical_records --- A_mr_alg([allergies <<Multi>>])
+    medical_records --- A_mr_cond([existing_conditions <<Multi>>])
+    medical_records --- A_mr_vac([vaccination_status <<Multi>>])
+
+    %% ATTRIBUTES - patient_history
+    patient_history --- A_ph_id([<u>id</u>])
+    patient_history --- A_ph_type([entry_type])
+    patient_history --- A_ph_desc([description])
+
+    %% ATTRIBUTES - medicines
+    medicines --- A_m_id([<u>id</u>])
+    medicines --- A_m_name([name])
+    medicines --- A_m_ingr([ingredients <<Multi>>])
+    medicines --- A_m_req([requires_prescription])
+
+    %% ATTRIBUTES - illness_records
+    illness_records --- A_ir_id([<u>id</u>])
+    illness_records --- A_ir_name([illness_name])
+    illness_records --- A_ir_symp([symptoms <<Multi>>])
+    illness_records --- A_ir_sev([severity_level])
+```
+
+### Subsystem 3: Commerce (Chen ERD)
+```mermaid
+graph LR
+    %% ENTITIES
+    users[users]
+    cat_stores[cat_stores]
+    products[products]
+    product_categories[product_categories]
+    orders[orders]
+    order_items[[order_items]]
+
+    %% RELATIONSHIPS
+    sells{sells}
+    categorized_in{categorized_in}
+    places{places}
+    contains{{contains}}
+    fulfilled_by{fulfilled_by}
+    references{references}
+
+    %% CONNECTIONS
+    cat_stores ---|Partial| sells
+    sells ---|Total| products
+
+    products ---|Total| categorized_in
+    categorized_in ---|Partial| product_categories
+
+    users ---|Partial| places
+    places ---|Total| orders
+
+    orders ---|Total| fulfilled_by
+    fulfilled_by ---|Partial| cat_stores
+
+    orders ---|Total| contains
+    contains ---|Total| order_items
+
+    order_items ---|Total| references
+    references ---|Partial| products
+
+    %% ATTRIBUTES - cat_stores
+    cat_stores --- A_cs_id([<u>id</u>])
+    cat_stores --- A_cs_name([name])
+    cat_stores --- A_cs_loc([location])
+    cat_stores --- A_cs_hours([operating_hours <<Multi>>])
+    cat_stores --- A_cs_fee([delivery_fee])
+
+    %% ATTRIBUTES - products
+    products --- A_p_id([<u>id</u>])
+    products --- A_p_name([name])
+    products --- A_p_price([price])
+    products --- A_p_stock([stock_quantity])
+    products --- A_p_img([images <<Multi>>])
+
+    %% ATTRIBUTES - product_categories
+    product_categories --- A_pc_id([<u>id</u>])
+    product_categories --- A_pc_name([name])
+
+    %% ATTRIBUTES - orders
+    orders --- A_o_id([<u>id</u>])
+    orders --- A_o_total([total])
+    orders --- A_o_status([status])
+    orders --- A_o_addr([delivery_address])
+
+    %% ATTRIBUTES - order_items
+    order_items --- A_oi_id([<u>id</u>])
+    order_items --- A_oi_qty([quantity])
+    order_items --- A_oi_price([unit_price])
+```
+
+### Subsystem 4: Appointments, Engagements & Payments (Chen ERD)
+```mermaid
+graph LR
+    %% ENTITIES
+    users[users]
+    hospitals[hospitals]
+    cat_stores[cat_stores]
+    appointments[appointments]
+    appointment_slots[appointment_slots]
+    treatments[[treatments]]
+    prescriptions[[prescriptions]]
+    payments[[payments]]
+    reviews[reviews]
+    chat_rooms[chat_rooms]
+    messages[[messages]]
+    review_responses[[review_responses]]
+    offers[offers]
+    ai_consultations[ai_consultations]
+    notifications[notifications]
+
+    %% RELATIONSHIPS
+    books{books}
+    schedules{schedules}
+    uses_slot{uses_slot}
+    follows_up{{follows_up}}
+    prescribes{{prescribes}}
+    pays_for{{pays_for}}
+    writes_review{writes_review}
+    sends_msg{{sends_msg}}
+    has_res{{has_response}}
+    c_ai{consults_ai}
+    r_notif{receives_notif}
+    c_offer{creates_offer}
+
+    %% CONNECTIONS
+    users ---|Partial| books
+    books ---|Total| appointments
+
+    hospitals ---|Partial| schedules
+    schedules ---|Total| appointment_slots
+
+    appointments ---|Total| uses_slot
+    uses_slot ---|Partial| appointment_slots
+
+    appointments ---|Partial| follows_up
+    follows_up ---|Total| treatments
+
+    appointments ---|Partial| prescribes
+    prescribes ---|Total| prescriptions
+
+    appointments ---|Partial| pays_for
+    pays_for ---|Total| payments
+
+    users ---|Partial| writes_review
+    writes_review ---|Total| reviews
+
+    chat_rooms ---|Total| sends_msg
+    sends_msg ---|Total| messages
+    
+    reviews ---|Partial| has_res
+    has_res ---|Total| review_responses
+
+    users ---|Partial| c_ai
+    c_ai ---|Total| ai_consultations
+
+    users ---|Partial| r_notif
+    r_notif ---|Total| notifications
+
+    cat_stores ---|Partial| c_offer
+    c_offer ---|Total| offers
+
+    %% ATTRIBUTES - appointments
+    appointments --- A_app_id([<u>id</u>])
+    appointments --- A_app_date([appointment_date])
+    appointments --- A_app_stat([status])
+    appointments --- A_app_amt([amount_paid])
+
+    %% ATTRIBUTES - appointment_slots
+    appointment_slots --- A_as_id([<u>id</u>])
+    appointment_slots --- A_as_date([slot_date])
+    appointment_slots --- A_as_book([is_booked])
+
+    %% ATTRIBUTES - treatments
+    treatments --- A_t_id([<u>id</u>])
+    treatments --- A_t_diag([diagnosis])
+
+    %% ATTRIBUTES - prescriptions
+    prescriptions --- A_pr_id([<u>id</u>])
+    prescriptions --- A_pr_dose([dosage])
+
+    %% ATTRIBUTES - payments
+    payments --- A_pay_id([<u>id</u>])
+    payments --- A_pay_amt([amount])
+    payments --- A_pay_meth([payment_method])
+
+    %% ATTRIBUTES - reviews
+    reviews --- A_r_id([<u>id</u>])
+    reviews --- A_r_rate([rating])
+    reviews --- A_r_com([comment])
+
+    %% ATTRIBUTES - chat_rooms
+    chat_rooms --- A_cr_id([<u>id</u>])
+    chat_rooms --- A_cr_act([is_active])
+
+    %% ATTRIBUTES - messages
+    messages --- A_msg_id([<u>id</u>])
+    messages --- A_msg_cont([content])
+    messages --- A_msg_read([is_read])
+```
+
 
 ---
 
