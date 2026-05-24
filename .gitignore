@@ -1,0 +1,71 @@
+# ============================================
+# Purrfect Care — .gitignore
+# ============================================
+
+# --- Environment / Secrets ---
+.env
+.env.local
+.env.*.local
+*.env
+firebase-credentials.json
+google-services.json
+GoogleService-Info.plist
+service-account*.json
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+
+# --- Virtual Environments ---
+venv/
+.venv/
+env/
+ENV/
+backend/venv/
+backend/.venv/
+
+# --- Testing ---
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+*.coveragerc
+.tox/
+
+# --- IDEs ---
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Logs ---
+*.log
+logs/
+
+# --- Node (if frontend is added later) ---
+node_modules/
+.next/
+dist/
+.nuxt/
+
+# --- Misc ---
+*.bak
+*.tmp
+*.swp
