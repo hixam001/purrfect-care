@@ -1,0 +1,1074 @@
+{
+  "info": {
+    "_postman_id": "purrfect-care-api-v1",
+    "name": "🐱 Purrfect Care API",
+    "description": "Complete Postman collection for the Purrfect Care FastAPI backend.\n\n## Setup\n1. Set the `base_url` variable to `http://localhost:8000`\n2. Run **Auth → Register** then **Auth → Login** first\n3. The login request auto-saves the `access_token` variable\n4. All protected routes use `{{access_token}}` automatically\n\n## Variables\n- `base_url` — API base URL\n- `access_token` — JWT from login (auto-set)\n- `user_id`, `cat_id`, `hospital_id`, etc. — set manually after creating resources",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",       "value": "http://localhost:8000", "type": "string" },
+    { "key": "access_token",   "value": "",                      "type": "string" },
+    { "key": "user_id",        "value": "",                      "type": "string" },
+    { "key": "cat_id",         "value": "",                      "type": "string" },
+    { "key": "breed_id",       "value": "",                      "type": "string" },
+    { "key": "hospital_id",    "value": "",                      "type": "string" },
+    { "key": "vet_id",         "value": "",                      "type": "string" },
+    { "key": "service_id",     "value": "",                      "type": "string" },
+    { "key": "slot_id",        "value": "",                      "type": "string" },
+    { "key": "appointment_id", "value": "",                      "type": "string" },
+    { "key": "store_id",       "value": "",                      "type": "string" },
+    { "key": "product_id",     "value": "",                      "type": "string" },
+    { "key": "order_id",       "value": "",                      "type": "string" },
+    { "key": "chat_room_id",   "value": "",                      "type": "string" },
+    { "key": "medicine_id",    "value": "",                      "type": "string" },
+    { "key": "prescription_id","value": "",                      "type": "string" },
+    { "key": "review_id",      "value": "",                      "type": "string" },
+    { "key": "offer_id",       "value": "",                      "type": "string" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{access_token}}", "type": "string" }]
+  },
+  "item": [
+
+    {
+      "name": "🟢 System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/health", "host": ["{{base_url}}"], "path": ["api","health"] }
+          }
+        },
+        {
+          "name": "API Docs (Swagger)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/docs", "host": ["{{base_url}}"], "path": ["api","docs"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🔐 Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ali Hassan\",\n  \"email\": \"ali@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"role\": \"cat_owner\",\n  \"phone\": \"+923001234567\",\n  \"city\": \"Lahore\",\n  \"country\": \"Pakistan\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/auth/register", "host": ["{{base_url}}"], "path": ["api","auth","register"] }
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.access_token) {",
+                  "    pm.collectionVariables.set('access_token', json.access_token);",
+                  "    pm.collectionVariables.set('user_id', json.user.id);",
+                  "    console.log('✅ Token saved!');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ali@example.com\",\n  \"password\": \"SecurePass123!\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/auth/login", "host": ["{{base_url}}"], "path": ["api","auth","login"] }
+          }
+        },
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/auth/me", "host": ["{{base_url}}"], "path": ["api","auth","me"] }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"your-refresh-token-here\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/auth/refresh", "host": ["{{base_url}}"], "path": ["api","auth","refresh"] }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/auth/logout", "host": ["{{base_url}}"], "path": ["api","auth","logout"] }
+          }
+        },
+        {
+          "name": "Request Password Reset",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"ali@example.com\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/auth/password-reset", "host": ["{{base_url}}"], "path": ["api","auth","password-reset"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "👤 Users",
+      "item": [
+        {
+          "name": "Update My Profile",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Ali Hassan Updated\",\n  \"phone\": \"+923009876543\",\n  \"city\": \"Karachi\",\n  \"country\": \"Pakistan\",\n  \"latitude\": 24.8607,\n  \"longitude\": 67.0011\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/users/me", "host": ["{{base_url}}"], "path": ["api","users","me"] }
+          }
+        },
+        {
+          "name": "Update Preferences",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"preferences\": { \"theme\": \"dark\", \"language\": \"en\" },\n  \"notification_settings\": \"all\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/users/me/preferences", "host": ["{{base_url}}"], "path": ["api","users","me","preferences"] }
+          }
+        },
+        {
+          "name": "Upload Avatar",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "file", "type": "file", "src": "" }]
+            },
+            "url": { "raw": "{{base_url}}/api/users/me/avatar", "host": ["{{base_url}}"], "path": ["api","users","me","avatar"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🐱 Cats",
+      "item": [
+        {
+          "name": "Register a Cat",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) pm.collectionVariables.set('cat_id', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Whiskers\",\n  \"breed_id\": \"{{breed_id}}\",\n  \"age_months\": 24,\n  \"weight_kg\": 4.5,\n  \"color\": \"orange tabby\",\n  \"gender\": \"male\",\n  \"is_neutered\": true,\n  \"allergies\": [\"fish\"],\n  \"existing_conditions\": [],\n  \"blood_type\": \"A\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/cats", "host": ["{{base_url}}"], "path": ["api","cats"] }
+          }
+        },
+        {
+          "name": "Get My Cats",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/cats", "host": ["{{base_url}}"], "path": ["api","cats"] }
+          }
+        },
+        {
+          "name": "Get Cat by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/cats/{{cat_id}}", "host": ["{{base_url}}"], "path": ["api","cats","{{cat_id}}"] }
+          }
+        },
+        {
+          "name": "Update Cat",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Whiskers Jr\",\n  \"weight_kg\": 5.0\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/cats/{{cat_id}}", "host": ["{{base_url}}"], "path": ["api","cats","{{cat_id}}"] }
+          }
+        },
+        {
+          "name": "Delete Cat",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/cats/{{cat_id}}", "host": ["{{base_url}}"], "path": ["api","cats","{{cat_id}}"] }
+          }
+        },
+        {
+          "name": "Update Medical Record",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"allergies\": [\"fish\", \"dairy\"],\n  \"existing_conditions\": [\"hyperthyroidism\"],\n  \"vaccination_status\": { \"rabies\": \"2025-01-10\", \"FVRCP\": \"2025-01-10\" },\n  \"blood_type\": \"A\",\n  \"notes\": \"Needs monthly checkups\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/cats/{{cat_id}}/medical-record", "host": ["{{base_url}}"], "path": ["api","cats","{{cat_id}}","medical-record"] }
+          }
+        },
+        {
+          "name": "Get Patient History",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/cats/{{cat_id}}/history", "host": ["{{base_url}}"], "path": ["api","cats","{{cat_id}}","history"] }
+          }
+        },
+        {
+          "name": "List Cat Breeds",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/breeds", "host": ["{{base_url}}"], "path": ["api","breeds"] }
+          }
+        },
+        {
+          "name": "Get Breed by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/breeds/{{breed_id}}", "host": ["{{base_url}}"], "path": ["api","breeds","{{breed_id}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🏥 Hospitals",
+      "item": [
+        {
+          "name": "List Hospitals (Near Me)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hospitals?city=Lahore&lat=31.5204&lng=74.3587&radius_km=10",
+              "host": ["{{base_url}}"],
+              "path": ["api","hospitals"],
+              "query": [
+                { "key": "city",      "value": "Lahore" },
+                { "key": "lat",       "value": "31.5204" },
+                { "key": "lng",       "value": "74.3587" },
+                { "key": "radius_km", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Hospital by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/hospitals/{{hospital_id}}", "host": ["{{base_url}}"], "path": ["api","hospitals","{{hospital_id}}"] }
+          }
+        },
+        {
+          "name": "Register Hospital (hospital_admin)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) pm.collectionVariables.set('hospital_id', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Purrfect Vet Clinic\",\n  \"description\": \"Premium cat care clinic\",\n  \"phone\": \"+923001234567\",\n  \"email\": \"clinic@example.com\",\n  \"address\": \"123 Main Street, Gulberg III\",\n  \"city\": \"Lahore\",\n  \"latitude\": 31.5204,\n  \"longitude\": 74.3587,\n  \"operating_hours\": {\n    \"monday\": { \"open\": \"09:00\", \"close\": \"18:00\" },\n    \"tuesday\": { \"open\": \"09:00\", \"close\": \"18:00\" },\n    \"saturday\": { \"open\": \"10:00\", \"close\": \"14:00\" },\n    \"sunday\": \"closed\"\n  }\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/hospitals", "host": ["{{base_url}}"], "path": ["api","hospitals"] }
+          }
+        },
+        {
+          "name": "Update Hospital",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Updated premium cat care clinic\",\n  \"phone\": \"+923009999999\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/hospitals/{{hospital_id}}", "host": ["{{base_url}}"], "path": ["api","hospitals","{{hospital_id}}"] }
+          }
+        },
+        {
+          "name": "Add Hospital Service",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) pm.collectionVariables.set('service_id', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"General Checkup\",\n  \"description\": \"Full physical examination\",\n  \"category\": \"consultation\",\n  \"price\": 1500,\n  \"duration_minutes\": 30\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/hospitals/{{hospital_id}}/services", "host": ["{{base_url}}"], "path": ["api","hospitals","{{hospital_id}}","services"] }
+          }
+        },
+        {
+          "name": "Get Hospital Services",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/hospitals/{{hospital_id}}/services", "host": ["{{base_url}}"], "path": ["api","hospitals","{{hospital_id}}","services"] }
+          }
+        },
+        {
+          "name": "Create Appointment Slot (vet)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) pm.collectionVariables.set('slot_id', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vet_id\": \"{{vet_id}}\",\n  \"slot_date\": \"2026-06-01\",\n  \"start_time\": \"10:00\",\n  \"end_time\": \"10:30\",\n  \"is_recurring\": false\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/hospitals/{{hospital_id}}/slots", "host": ["{{base_url}}"], "path": ["api","hospitals","{{hospital_id}}","slots"] }
+          }
+        },
+        {
+          "name": "Get Available Slots",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/hospitals/{{hospital_id}}/slots?vet_id={{vet_id}}&date=2026-06-01",
+              "host": ["{{base_url}}"],
+              "path": ["api","hospitals","{{hospital_id}}","slots"],
+              "query": [
+                { "key": "vet_id", "value": "{{vet_id}}" },
+                { "key": "date",   "value": "2026-06-01" }
+              ]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "👨‍⚕️ Vets",
+      "item": [
+        {
+          "name": "Register as Vet",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) pm.collectionVariables.set('vet_id', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"license_number\": \"VET-PK-12345\",\n  \"specialization\": \"Feline Medicine\",\n  \"experience_years\": 5,\n  \"bio\": \"Specialist in cat care with 5 years of experience.\",\n  \"qualifications\": [\"DVM\", \"MRCVS\"],\n  \"hospital_id\": \"{{hospital_id}}\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/vets/register", "host": ["{{base_url}}"], "path": ["api","vets","register"] }
+          }
+        },
+        {
+          "name": "Get Vet Profile",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/vets/{{vet_id}}", "host": ["{{base_url}}"], "path": ["api","vets","{{vet_id}}"] }
+          }
+        },
+        {
+          "name": "Update Vet Profile",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bio\": \"Updated bio with 6 years of experience.\",\n  \"experience_years\": 6\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/vets/{{vet_id}}", "host": ["{{base_url}}"], "path": ["api","vets","{{vet_id}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "📅 Appointments",
+      "item": [
+        {
+          "name": "Book Appointment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.appointment_id) pm.collectionVariables.set('appointment_id', json.appointment_id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hospital_id\": \"{{hospital_id}}\",\n  \"vet_id\": \"{{vet_id}}\",\n  \"service_id\": \"{{service_id}}\",\n  \"slot_id\": \"{{slot_id}}\",\n  \"cat_id\": \"{{cat_id}}\",\n  \"notes\": \"Cat has been limping for 2 days\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/appointments", "host": ["{{base_url}}"], "path": ["api","appointments"] }
+          }
+        },
+        {
+          "name": "Get My Appointments",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/appointments?status=pending&page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api","appointments"],
+              "query": [
+                { "key": "status", "value": "pending" },
+                { "key": "page",   "value": "1" },
+                { "key": "limit",  "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Appointment by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/appointments/{{appointment_id}}", "host": ["{{base_url}}"], "path": ["api","appointments","{{appointment_id}}"] }
+          }
+        },
+        {
+          "name": "Confirm Appointment (after payment)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_id\": \"pay_abc123\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/appointments/{{appointment_id}}/confirm", "host": ["{{base_url}}"], "path": ["api","appointments","{{appointment_id}}","confirm"] }
+          }
+        },
+        {
+          "name": "Cancel Appointment",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"cancelled\",\n  \"notes\": \"User requested cancellation\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/appointments/{{appointment_id}}", "host": ["{{base_url}}"], "path": ["api","appointments","{{appointment_id}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "💬 Chat",
+      "item": [
+        {
+          "name": "Start / Get Chat Room",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) pm.collectionVariables.set('chat_room_id', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vet_id\": \"{{vet_id}}\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/chats", "host": ["{{base_url}}"], "path": ["api","chats"] }
+          }
+        },
+        {
+          "name": "Get My Chat Rooms",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/chats", "host": ["{{base_url}}"], "path": ["api","chats"] }
+          }
+        },
+        {
+          "name": "Get Chat Messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/chats/{{chat_room_id}}/messages?page=1&limit=50",
+              "host": ["{{base_url}}"],
+              "path": ["api","chats","{{chat_room_id}}","messages"],
+              "query": [
+                { "key": "page",  "value": "1" },
+                { "key": "limit", "value": "50" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Send Message",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Hello doctor, my cat has been sneezing a lot.\",\n  \"message_type\": \"text\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/chats/{{chat_room_id}}/messages", "host": ["{{base_url}}"], "path": ["api","chats","{{chat_room_id}}","messages"] }
+          }
+        },
+        {
+          "name": "Mark Messages as Read",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/chats/{{chat_room_id}}/read", "host": ["{{base_url}}"], "path": ["api","chats","{{chat_room_id}}","read"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "💊 Medicines",
+      "item": [
+        {
+          "name": "List Medicines",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/medicines?search=amoxicillin&page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["api","medicines"],
+              "query": [
+                { "key": "search", "value": "amoxicillin" },
+                { "key": "page",   "value": "1" },
+                { "key": "limit",  "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Medicine by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/medicines/{{medicine_id}}", "host": ["{{base_url}}"], "path": ["api","medicines","{{medicine_id}}"] }
+          }
+        },
+        {
+          "name": "Check Contraindications",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"medicine_id\": \"{{medicine_id}}\",\n  \"cat_id\": \"{{cat_id}}\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/medicines/contraindication-check", "host": ["{{base_url}}"], "path": ["api","medicines","contraindication-check"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "📋 Prescriptions",
+      "item": [
+        {
+          "name": "Create Prescription (vet only)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) pm.collectionVariables.set('prescription_id', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"appointment_id\": \"{{appointment_id}}\",\n  \"cat_id\": \"{{cat_id}}\",\n  \"medicine_id\": \"{{medicine_id}}\",\n  \"dosage\": \"5mg\",\n  \"frequency\": \"twice daily\",\n  \"duration_days\": 7,\n  \"instructions\": \"Give with food. Do not skip doses.\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/prescriptions", "host": ["{{base_url}}"], "path": ["api","prescriptions"] }
+          }
+        },
+        {
+          "name": "Get My Prescriptions",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/prescriptions", "host": ["{{base_url}}"], "path": ["api","prescriptions"] }
+          }
+        },
+        {
+          "name": "Get Prescription by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/prescriptions/{{prescription_id}}", "host": ["{{base_url}}"], "path": ["api","prescriptions","{{prescription_id}}"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🛒 Stores",
+      "item": [
+        {
+          "name": "List Stores",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/stores?city=Lahore&page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api","stores"],
+              "query": [
+                { "key": "city",  "value": "Lahore" },
+                { "key": "page",  "value": "1" },
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Store by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/stores/{{store_id}}", "host": ["{{base_url}}"], "path": ["api","stores","{{store_id}}"] }
+          }
+        },
+        {
+          "name": "Register Store (store_owner)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) pm.collectionVariables.set('store_id', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Cat Paradise Store\",\n  \"description\": \"Everything your cat needs\",\n  \"phone\": \"+923001234567\",\n  \"email\": \"store@example.com\",\n  \"address\": \"45 Mall Road, Gulberg\",\n  \"city\": \"Lahore\",\n  \"latitude\": 31.5204,\n  \"longitude\": 74.3587,\n  \"delivery_fee\": 150,\n  \"operating_hours\": {\n    \"monday\": { \"open\": \"10:00\", \"close\": \"20:00\" },\n    \"sunday\": \"closed\"\n  }\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/stores", "host": ["{{base_url}}"], "path": ["api","stores"] }
+          }
+        },
+        {
+          "name": "Add Product",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) pm.collectionVariables.set('product_id', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Premium Cat Food\",\n  \"description\": \"High protein kibble for adult cats\",\n  \"price\": 2500,\n  \"discount_price\": 2200,\n  \"stock_quantity\": 50,\n  \"brand\": \"Whiskas\",\n  \"weight\": 2.0,\n  \"unit\": \"kg\",\n  \"images\": [],\n  \"category_id\": null\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/stores/{{store_id}}/products", "host": ["{{base_url}}"], "path": ["api","stores","{{store_id}}","products"] }
+          }
+        },
+        {
+          "name": "Get Store Products",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/stores/{{store_id}}/products", "host": ["{{base_url}}"], "path": ["api","stores","{{store_id}}","products"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "📦 Orders",
+      "item": [
+        {
+          "name": "Place Order",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.order_id) pm.collectionVariables.set('order_id', json.order_id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"store_id\": \"{{store_id}}\",\n  \"items\": [\n    { \"product_id\": \"{{product_id}}\", \"quantity\": 2 }\n  ],\n  \"delivery_address\": \"House 12, Street 5, DHA Phase 5, Lahore\",\n  \"delivery_latitude\": 31.4815,\n  \"delivery_longitude\": 74.4067,\n  \"notes\": \"Please ring the bell twice\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/orders", "host": ["{{base_url}}"], "path": ["api","orders"] }
+          }
+        },
+        {
+          "name": "Get My Orders",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/orders?status=pending&page=1",
+              "host": ["{{base_url}}"],
+              "path": ["api","orders"],
+              "query": [
+                { "key": "status", "value": "pending" },
+                { "key": "page",   "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Get Order by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/orders/{{order_id}}", "host": ["{{base_url}}"], "path": ["api","orders","{{order_id}}"] }
+          }
+        },
+        {
+          "name": "Confirm Order (after payment)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payment_id\": \"pay_xyz789\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/orders/{{order_id}}/confirm", "host": ["{{base_url}}"], "path": ["api","orders","{{order_id}}","confirm"] }
+          }
+        },
+        {
+          "name": "Update Order Status (store owner)",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"out_for_delivery\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/orders/{{order_id}}/status", "host": ["{{base_url}}"], "path": ["api","orders","{{order_id}}","status"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "⭐ Reviews",
+      "item": [
+        {
+          "name": "Create Review",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) pm.collectionVariables.set('review_id', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hospital_id\": \"{{hospital_id}}\",\n  \"rating\": 5,\n  \"comment\": \"Excellent service! The vet was very caring.\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/reviews", "host": ["{{base_url}}"], "path": ["api","reviews"] }
+          }
+        },
+        {
+          "name": "Get Reviews (hospital)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/reviews?hospital_id={{hospital_id}}&page=1",
+              "host": ["{{base_url}}"],
+              "path": ["api","reviews"],
+              "query": [
+                { "key": "hospital_id", "value": "{{hospital_id}}" },
+                { "key": "page",        "value": "1" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Respond to Review",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"response_text\": \"Thank you for your kind words! We look forward to seeing you again.\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/reviews/{{review_id}}/respond", "host": ["{{base_url}}"], "path": ["api","reviews","{{review_id}}","respond"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🎁 Offers",
+      "item": [
+        {
+          "name": "Create Offer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.id) pm.collectionVariables.set('offer_id', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"hospital_id\": \"{{hospital_id}}\",\n  \"title\": \"Summer Sale — 20% Off All Checkups\",\n  \"description\": \"Get 20% off all general checkups this summer!\",\n  \"discount_percent\": 20,\n  \"promo_code\": \"SUMMER20\",\n  \"valid_from\": \"2026-06-01T00:00:00Z\",\n  \"valid_to\": \"2026-08-31T23:59:59Z\"\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/offers", "host": ["{{base_url}}"], "path": ["api","offers"] }
+          }
+        },
+        {
+          "name": "Get Active Offers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/offers?hospital_id={{hospital_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api","offers"],
+              "query": [{ "key": "hospital_id", "value": "{{hospital_id}}" }]
+            }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🔔 Notifications",
+      "item": [
+        {
+          "name": "Get My Notifications",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/notifications?is_read=false&page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["api","notifications"],
+              "query": [
+                { "key": "is_read", "value": "false" },
+                { "key": "page",    "value": "1" },
+                { "key": "limit",   "value": "20" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Mark All as Read",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/notifications/read-all", "host": ["{{base_url}}"], "path": ["api","notifications","read-all"] }
+          }
+        }
+      ]
+    },
+
+    {
+      "name": "🛡️ Admin",
+      "item": [
+        {
+          "name": "Approve Hospital",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/admin/hospitals/{{hospital_id}}/approve", "host": ["{{base_url}}"], "path": ["api","admin","hospitals","{{hospital_id}}","approve"] }
+          }
+        },
+        {
+          "name": "Approve Store",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/admin/stores/{{store_id}}/approve", "host": ["{{base_url}}"], "path": ["api","admin","stores","{{store_id}}","approve"] }
+          }
+        },
+        {
+          "name": "Verify Vet",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "url": { "raw": "{{base_url}}/api/admin/vets/{{vet_id}}/verify", "host": ["{{base_url}}"], "path": ["api","admin","vets","{{vet_id}}","verify"] }
+          }
+        },
+        {
+          "name": "Add Medicine (admin only)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Amoxicillin\",\n  \"generic_name\": \"Amoxicillin Trihydrate\",\n  \"manufacturer\": \"VetPharm\",\n  \"ingredients\": [\"amoxicillin trihydrate\"],\n  \"dosage_form\": \"tablet\",\n  \"description\": \"Broad-spectrum antibiotic for cats\",\n  \"usage_instructions\": \"Give orally with food\",\n  \"contraindications\": [\"penicillin allergy\"],\n  \"allergy_warnings\": [\"penicillin\", \"cephalosporins\"],\n  \"breed_warnings\": [],\n  \"side_effects\": [\"vomiting\", \"diarrhea\"],\n  \"requires_prescription\": true\n}"
+            },
+            "url": { "raw": "{{base_url}}/api/admin/medicines", "host": ["{{base_url}}"], "path": ["api","admin","medicines"] }
+          }
+        },
+        {
+          "name": "List All Users (admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/admin/users?role=vet&page=1",
+              "host": ["{{base_url}}"],
+              "path": ["api","admin","users"],
+              "query": [
+                { "key": "role", "value": "vet" },
+                { "key": "page", "value": "1" }
+              ]
+            }
+          }
+        }
+      ]
+    }
+
+  ]
+}

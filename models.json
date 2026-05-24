@@ -1,0 +1,478 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Purrfect Care — Data Models",
+  "description": "All request/response models for the Purrfect Care API, derived from Pydantic schemas.",
+  "version": "1.0.0",
+  "enums": {
+    "UserRole": ["cat_owner", "vet", "hospital_admin", "store_owner", "admin"],
+    "AppointmentStatus": ["pending", "confirmed", "in_progress", "completed", "cancelled", "no_show"],
+    "OrderStatus": ["pending", "confirmed", "preparing", "ready", "out_for_delivery", "delivered", "cancelled", "refunded"],
+    "PaymentStatus": ["pending", "completed", "failed", "refunded"],
+    "PrescriptionStatus": ["active", "completed", "cancelled"],
+    "MessageType": ["text", "image", "file", "prescription_share"],
+    "NotificationType": [
+      "welcome", "appointment_booked", "appointment_reminder",
+      "new_message", "new_prescription", "order_placed",
+      "order_status_update", "new_review", "system_alert",
+      "appointment_confirmed", "appointment_cancelled",
+      "vet_verified", "hospital_approved", "store_approved"
+    ],
+    "NotificationChannel": ["push", "email", "sms"],
+    "PatientHistoryEntryType": ["appointment", "prescription", "diagnosis", "vaccination", "surgery", "note"]
+  },
+  "models": {
+    "UserCreate": {
+      "description": "POST /api/auth/register — Register a new user",
+      "required": ["name", "email", "password"],
+      "fields": {
+        "name":      { "type": "string", "maxLength": 100 },
+        "email":     { "type": "string", "format": "email" },
+        "password":  { "type": "string", "minLength": 8, "maxLength": 128 },
+        "role":      { "type": "UserRole", "default": "cat_owner" },
+        "phone":     { "type": "string", "maxLength": 20, "optional": true },
+        "avatar_url":{ "type": "string", "optional": true },
+        "address":   { "type": "string", "maxLength": 255, "optional": true },
+        "city":      { "type": "string", "maxLength": 100, "optional": true },
+        "country":   { "type": "string", "maxLength": 100, "optional": true },
+        "latitude":  { "type": "float", "min": -90, "max": 90, "optional": true },
+        "longitude": { "type": "float", "min": -180, "max": 180, "optional": true }
+      }
+    },
+    "UserLoginRequest": {
+      "description": "POST /api/auth/login",
+      "required": ["email", "password"],
+      "fields": {
+        "email":    { "type": "string", "format": "email" },
+        "password": { "type": "string" }
+      }
+    },
+    "UserResponse": {
+      "description": "Returned on GET /api/auth/me and in login response",
+      "fields": {
+        "id":         { "type": "uuid" },
+        "email":      { "type": "string" },
+        "name":       { "type": "string" },
+        "phone":      { "type": "string", "nullable": true },
+        "avatar_url": { "type": "string", "nullable": true },
+        "address":    { "type": "string", "nullable": true },
+        "city":       { "type": "string", "nullable": true },
+        "country":    { "type": "string", "nullable": true },
+        "role":       { "type": "UserRole" },
+        "is_active":  { "type": "boolean" },
+        "created_at": { "type": "datetime" },
+        "updated_at": { "type": "datetime", "nullable": true }
+      }
+    },
+    "UserUpdate": {
+      "description": "PUT /api/users/me — All fields optional",
+      "fields": {
+        "name":      { "type": "string", "optional": true },
+        "phone":     { "type": "string", "optional": true },
+        "avatar_url":{ "type": "string", "optional": true },
+        "address":   { "type": "string", "optional": true },
+        "city":      { "type": "string", "optional": true },
+        "country":   { "type": "string", "optional": true },
+        "latitude":  { "type": "float", "optional": true },
+        "longitude": { "type": "float", "optional": true }
+      }
+    },
+    "CatBreedResponse": {
+      "description": "GET /api/breeds and nested in CatResponse",
+      "fields": {
+        "id":                  { "type": "uuid" },
+        "name":                { "type": "string" },
+        "origin_country":      { "type": "string", "nullable": true },
+        "size_category":       { "type": "string", "nullable": true },
+        "coat_type":           { "type": "string", "nullable": true },
+        "temperament":         { "type": "string", "nullable": true },
+        "description":         { "type": "string", "nullable": true },
+        "avg_lifespan_years":  { "type": "float", "nullable": true },
+        "avg_weight_kg":       { "type": "float", "nullable": true },
+        "common_health_issues":{ "type": "string[]" },
+        "grooming_needs":      { "type": "string[]" },
+        "image_url":           { "type": "string", "nullable": true }
+      }
+    },
+    "MedicalRecordResponse": {
+      "description": "Nested in CatResponse or GET /api/cats/{id}/medical-record",
+      "fields": {
+        "id":                  { "type": "uuid" },
+        "cat_id":              { "type": "uuid" },
+        "allergies":           { "type": "string[]" },
+        "existing_conditions": { "type": "string[]" },
+        "vaccination_status":  { "type": "object" },
+        "blood_type":          { "type": "string", "nullable": true },
+        "notes":               { "type": "string", "nullable": true },
+        "last_updated":        { "type": "datetime", "nullable": true }
+      }
+    },
+    "CatCreate": {
+      "description": "POST /api/cats",
+      "required": ["name"],
+      "fields": {
+        "name":                { "type": "string", "minLength": 1, "maxLength": 100 },
+        "breed_id":            { "type": "uuid", "optional": true },
+        "age_months":          { "type": "integer", "min": 0, "optional": true },
+        "weight_kg":           { "type": "float", "min": 0, "optional": true },
+        "color":               { "type": "string", "maxLength": 50, "optional": true },
+        "gender":              { "type": "enum", "values": ["male","female"], "optional": true },
+        "photo_url":           { "type": "string", "optional": true },
+        "is_neutered":         { "type": "boolean", "default": false },
+        "microchip_id":        { "type": "string", "maxLength": 50, "optional": true },
+        "allergies":           { "type": "string[]", "default": [] },
+        "existing_conditions": { "type": "string[]", "default": [] },
+        "blood_type":          { "type": "string", "optional": true }
+      }
+    },
+    "CatResponse": {
+      "description": "GET /api/cats and GET /api/cats/{id}",
+      "fields": {
+        "id":            { "type": "uuid" },
+        "owner_id":      { "type": "uuid" },
+        "name":          { "type": "string" },
+        "breed_id":      { "type": "uuid", "nullable": true },
+        "age_months":    { "type": "integer", "nullable": true },
+        "weight_kg":     { "type": "float", "nullable": true },
+        "color":         { "type": "string", "nullable": true },
+        "gender":        { "type": "string", "nullable": true },
+        "photo_url":     { "type": "string", "nullable": true },
+        "is_neutered":   { "type": "boolean" },
+        "microchip_id":  { "type": "string", "nullable": true },
+        "registered_at": { "type": "datetime" },
+        "breed":         { "type": "CatBreedResponse", "nullable": true },
+        "medical_record":{ "type": "MedicalRecordResponse", "nullable": true }
+      }
+    },
+    "HospitalCreate": {
+      "description": "POST /api/hospitals",
+      "required": ["name", "address", "latitude", "longitude"],
+      "fields": {
+        "name":            { "type": "string", "maxLength": 200 },
+        "description":     { "type": "string", "optional": true },
+        "phone":           { "type": "string", "maxLength": 20, "optional": true },
+        "email":           { "type": "string", "maxLength": 255, "optional": true },
+        "address":         { "type": "string", "maxLength": 500 },
+        "city":            { "type": "string", "optional": true },
+        "banner_url":      { "type": "string", "optional": true },
+        "operating_hours": { "type": "object", "optional": true },
+        "latitude":        { "type": "float", "min": -90, "max": 90 },
+        "longitude":       { "type": "float", "min": -180, "max": 180 }
+      }
+    },
+    "HospitalResponse": {
+      "description": "GET /api/hospitals and GET /api/hospitals/{id}",
+      "fields": {
+        "id":              { "type": "uuid" },
+        "admin_user_id":   { "type": "uuid" },
+        "name":            { "type": "string" },
+        "description":     { "type": "string", "nullable": true },
+        "phone":           { "type": "string", "nullable": true },
+        "email":           { "type": "string", "nullable": true },
+        "address":         { "type": "string" },
+        "city":            { "type": "string", "nullable": true },
+        "banner_url":      { "type": "string", "nullable": true },
+        "operating_hours": { "type": "object", "nullable": true },
+        "latitude":        { "type": "float" },
+        "longitude":       { "type": "float" },
+        "is_active":       { "type": "boolean" },
+        "is_approved":     { "type": "boolean" },
+        "rating":          { "type": "float" },
+        "total_reviews":   { "type": "integer" },
+        "page_config":     { "type": "object" },
+        "created_at":      { "type": "datetime" },
+        "distance_km":     { "type": "float", "nullable": true, "note": "Populated by PostGIS proximity queries" }
+      }
+    },
+    "HospitalServiceCreate": {
+      "description": "POST /api/hospitals/{id}/services",
+      "required": ["name", "price"],
+      "fields": {
+        "name":             { "type": "string", "maxLength": 200 },
+        "description":      { "type": "string", "optional": true },
+        "category":         { "type": "string", "maxLength": 50, "optional": true },
+        "price":            { "type": "float", "min": 0 },
+        "duration_minutes": { "type": "integer", "min": 5, "default": 30 },
+        "is_active":        { "type": "boolean", "default": true }
+      }
+    },
+    "VetCreate": {
+      "description": "POST /api/vets/register",
+      "required": ["license_number"],
+      "fields": {
+        "license_number":  { "type": "string", "maxLength": 50 },
+        "specialization":  { "type": "string", "maxLength": 100, "optional": true },
+        "experience_years":{ "type": "integer", "min": 0, "optional": true },
+        "bio":             { "type": "string", "optional": true },
+        "qualifications":  { "type": "string[]", "default": [] },
+        "hospital_id":     { "type": "uuid", "optional": true }
+      }
+    },
+    "VetResponse": {
+      "description": "GET /api/vets/{id}",
+      "fields": {
+        "id":               { "type": "uuid" },
+        "user_id":          { "type": "uuid" },
+        "hospital_id":      { "type": "uuid", "nullable": true },
+        "license_number":   { "type": "string" },
+        "specialization":   { "type": "string", "nullable": true },
+        "experience_years": { "type": "integer", "nullable": true },
+        "bio":              { "type": "string", "nullable": true },
+        "qualifications":   { "type": "string[]" },
+        "is_verified":      { "type": "boolean" },
+        "rating":           { "type": "float" },
+        "total_reviews":    { "type": "integer" },
+        "verified_at":      { "type": "datetime", "nullable": true },
+        "user_name":        { "type": "string", "nullable": true },
+        "user_email":       { "type": "string", "nullable": true },
+        "hospital_name":    { "type": "string", "nullable": true }
+      }
+    },
+    "AppointmentCreate": {
+      "description": "POST /api/appointments",
+      "required": ["hospital_id", "vet_id", "service_id", "slot_id", "cat_id"],
+      "fields": {
+        "hospital_id": { "type": "uuid" },
+        "vet_id":      { "type": "uuid" },
+        "service_id":  { "type": "uuid" },
+        "slot_id":     { "type": "uuid" },
+        "cat_id":      { "type": "uuid" },
+        "notes":       { "type": "string", "optional": true }
+      }
+    },
+    "AppointmentResponse": {
+      "description": "GET /api/appointments and GET /api/appointments/{id}",
+      "fields": {
+        "id":               { "type": "uuid" },
+        "user_id":          { "type": "uuid" },
+        "cat_id":           { "type": "uuid" },
+        "vet_id":           { "type": "uuid" },
+        "hospital_id":      { "type": "uuid" },
+        "service_id":       { "type": "uuid" },
+        "slot_id":          { "type": "uuid" },
+        "appointment_date": { "type": "datetime" },
+        "status":           { "type": "AppointmentStatus" },
+        "notes":            { "type": "string", "nullable": true },
+        "amount_paid":      { "type": "float", "nullable": true },
+        "payment_id":       { "type": "string", "nullable": true },
+        "created_at":       { "type": "datetime" },
+        "updated_at":       { "type": "datetime", "nullable": true },
+        "hospital_name":    { "type": "string", "nullable": true },
+        "vet_name":         { "type": "string", "nullable": true },
+        "service_name":     { "type": "string", "nullable": true },
+        "cat_name":         { "type": "string", "nullable": true }
+      }
+    },
+    "ChatRoomCreate": {
+      "description": "POST /api/chats",
+      "required": ["vet_id"],
+      "fields": {
+        "vet_id": { "type": "uuid" }
+      }
+    },
+    "ChatRoomResponse": {
+      "fields": {
+        "id":              { "type": "uuid" },
+        "user_id":         { "type": "uuid" },
+        "vet_id":          { "type": "uuid" },
+        "last_message_at": { "type": "datetime", "nullable": true },
+        "unread_user":     { "type": "integer" },
+        "unread_vet":      { "type": "integer" },
+        "is_active":       { "type": "boolean" },
+        "created_at":      { "type": "datetime" },
+        "vet_name":        { "type": "string", "nullable": true },
+        "user_name":       { "type": "string", "nullable": true },
+        "last_message":    { "type": "string", "nullable": true }
+      }
+    },
+    "MessageCreate": {
+      "description": "POST /api/chats/{id}/messages",
+      "required": ["content"],
+      "fields": {
+        "content":      { "type": "string", "minLength": 1, "maxLength": 5000 },
+        "message_type": { "type": "MessageType", "default": "text" },
+        "media_url":    { "type": "string", "optional": true }
+      }
+    },
+    "MessageResponse": {
+      "fields": {
+        "id":           { "type": "uuid" },
+        "chat_room_id": { "type": "uuid" },
+        "sender_id":    { "type": "uuid" },
+        "content":      { "type": "string" },
+        "message_type": { "type": "MessageType" },
+        "media_url":    { "type": "string", "nullable": true },
+        "is_read":      { "type": "boolean" },
+        "sent_at":      { "type": "datetime" },
+        "sender_name":  { "type": "string", "nullable": true }
+      }
+    },
+    "MedicineResponse": {
+      "fields": {
+        "id":                    { "type": "uuid" },
+        "name":                  { "type": "string" },
+        "generic_name":          { "type": "string", "nullable": true },
+        "manufacturer":          { "type": "string", "nullable": true },
+        "ingredients":           { "type": "string[]" },
+        "dosage_form":           { "type": "string", "nullable": true },
+        "description":           { "type": "string", "nullable": true },
+        "usage_instructions":    { "type": "string", "nullable": true },
+        "contraindications":     { "type": "string[]" },
+        "allergy_warnings":      { "type": "string[]" },
+        "breed_warnings":        { "type": "string[]" },
+        "side_effects":          { "type": "string[]" },
+        "requires_prescription": { "type": "boolean" },
+        "is_active":             { "type": "boolean" },
+        "created_at":            { "type": "datetime", "nullable": true }
+      }
+    },
+    "PrescriptionCreate": {
+      "description": "POST /api/prescriptions — vet only",
+      "required": ["cat_id", "medicine_id", "dosage", "frequency", "duration_days"],
+      "fields": {
+        "appointment_id": { "type": "uuid", "optional": true },
+        "cat_id":         { "type": "uuid" },
+        "medicine_id":    { "type": "uuid" },
+        "dosage":         { "type": "string", "maxLength": 100 },
+        "frequency":      { "type": "string", "maxLength": 100 },
+        "duration_days":  { "type": "integer", "min": 1 },
+        "instructions":   { "type": "string", "optional": true }
+      }
+    },
+    "PrescriptionResponse": {
+      "fields": {
+        "id":             { "type": "uuid" },
+        "appointment_id": { "type": "uuid", "nullable": true },
+        "cat_id":         { "type": "uuid" },
+        "vet_id":         { "type": "uuid" },
+        "medicine_id":    { "type": "uuid" },
+        "dosage":         { "type": "string" },
+        "frequency":      { "type": "string" },
+        "duration_days":  { "type": "integer" },
+        "instructions":   { "type": "string", "nullable": true },
+        "status":         { "type": "PrescriptionStatus" },
+        "prescribed_at":  { "type": "datetime" },
+        "medicine_name":  { "type": "string", "nullable": true },
+        "cat_name":       { "type": "string", "nullable": true },
+        "vet_name":       { "type": "string", "nullable": true }
+      }
+    },
+    "StoreCreate": {
+      "description": "POST /api/stores",
+      "required": ["name", "address", "latitude", "longitude"],
+      "fields": {
+        "name":            { "type": "string", "maxLength": 200 },
+        "description":     { "type": "string", "optional": true },
+        "phone":           { "type": "string", "maxLength": 20, "optional": true },
+        "email":           { "type": "string", "maxLength": 255, "optional": true },
+        "address":         { "type": "string", "maxLength": 500 },
+        "city":            { "type": "string", "optional": true },
+        "banner_url":      { "type": "string", "optional": true },
+        "operating_hours": { "type": "object", "optional": true },
+        "delivery_zones":  { "type": "object", "optional": true },
+        "delivery_fee":    { "type": "float", "min": 0, "default": 0 },
+        "latitude":        { "type": "float", "min": -90, "max": 90 },
+        "longitude":       { "type": "float", "min": -180, "max": 180 }
+      }
+    },
+    "ProductCreate": {
+      "description": "POST /api/stores/{id}/products",
+      "required": ["name", "price"],
+      "fields": {
+        "name":           { "type": "string", "maxLength": 200 },
+        "description":    { "type": "string", "optional": true },
+        "price":          { "type": "float", "min": 0 },
+        "discount_price": { "type": "float", "min": 0, "optional": true },
+        "images":         { "type": "string[]", "default": [] },
+        "stock_quantity": { "type": "integer", "min": 0, "default": 0 },
+        "brand":          { "type": "string", "maxLength": 100, "optional": true },
+        "weight":         { "type": "float", "min": 0, "optional": true },
+        "unit":           { "type": "string", "maxLength": 20, "optional": true },
+        "category_id":    { "type": "uuid", "optional": true }
+      }
+    },
+    "OrderCreate": {
+      "description": "POST /api/orders",
+      "required": ["store_id", "items", "delivery_address"],
+      "fields": {
+        "store_id":           { "type": "uuid" },
+        "items": {
+          "type": "array",
+          "items": {
+            "product_id": { "type": "uuid" },
+            "quantity":   { "type": "integer", "min": 1 }
+          }
+        },
+        "delivery_address":   { "type": "string" },
+        "delivery_latitude":  { "type": "float", "optional": true },
+        "delivery_longitude": { "type": "float", "optional": true },
+        "notes":              { "type": "string", "optional": true }
+      }
+    },
+    "OrderResponse": {
+      "fields": {
+        "id":               { "type": "uuid" },
+        "user_id":          { "type": "uuid" },
+        "store_id":         { "type": "uuid" },
+        "subtotal":         { "type": "float" },
+        "delivery_fee":     { "type": "float" },
+        "total":            { "type": "float" },
+        "status":           { "type": "OrderStatus" },
+        "payment_id":       { "type": "uuid", "nullable": true },
+        "delivery_address": { "type": "string" },
+        "notes":            { "type": "string", "nullable": true },
+        "ordered_at":       { "type": "datetime" },
+        "delivered_at":     { "type": "datetime", "nullable": true },
+        "store_name":       { "type": "string", "nullable": true },
+        "items":            { "type": "OrderItemResponse[]" }
+      }
+    },
+    "ReviewCreate": {
+      "description": "POST /api/reviews — exactly one of hospital_id, store_id, vet_id must be set",
+      "required": ["rating"],
+      "fields": {
+        "hospital_id": { "type": "uuid", "optional": true },
+        "store_id":    { "type": "uuid", "optional": true },
+        "vet_id":      { "type": "uuid", "optional": true },
+        "rating":      { "type": "integer", "min": 1, "max": 5 },
+        "comment":     { "type": "string", "maxLength": 2000, "optional": true }
+      }
+    },
+    "OfferCreate": {
+      "description": "POST /api/offers",
+      "required": ["title", "valid_from", "valid_to"],
+      "fields": {
+        "hospital_id":      { "type": "uuid", "optional": true },
+        "store_id":         { "type": "uuid", "optional": true },
+        "title":            { "type": "string", "maxLength": 200 },
+        "description":      { "type": "string", "optional": true },
+        "discount_percent": { "type": "float", "min": 0, "max": 100, "optional": true },
+        "promo_code":       { "type": "string", "maxLength": 50, "optional": true },
+        "valid_from":       { "type": "datetime" },
+        "valid_to":         { "type": "datetime" },
+        "applicable_items": { "type": "string[]", "default": [] }
+      }
+    },
+    "NotificationResponse": {
+      "fields": {
+        "id":         { "type": "uuid" },
+        "user_id":    { "type": "uuid" },
+        "type":       { "type": "NotificationType" },
+        "title":      { "type": "string", "maxLength": 200 },
+        "body":       { "type": "string", "nullable": true },
+        "channel":    { "type": "NotificationChannel" },
+        "data":       { "type": "object" },
+        "is_read":    { "type": "boolean" },
+        "created_at": { "type": "datetime" }
+      }
+    },
+    "ContraindicationResult": {
+      "description": "POST /api/medicines/contraindication-check — Safety check before prescribing",
+      "fields": {
+        "safe":              { "type": "boolean" },
+        "warnings":          { "type": "string[]" },
+        "allergy_conflicts": { "type": "string[]" },
+        "breed_warnings":    { "type": "string[]" }
+      }
+    }
+  }
+}
