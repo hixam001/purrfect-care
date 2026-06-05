@@ -2,9 +2,15 @@
 Purrfect Care — Test Configuration
 
 Shared fixtures and test client setup for all tests.
+
+All Supabase client calls are mocked globally so no live connections
+are attempted during the test suite. Individual tests can further
+override service dependencies via app.dependency_overrides.
 """
 
 import os
+from unittest.mock import MagicMock, patch
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -21,21 +27,64 @@ os.environ.update({
 })
 
 from app.config import get_settings, Settings
+from app.database import get_supabase_client, get_supabase_anon_client
 from app.main import create_app
 
 
+# ────────────────────────────────────────────────────────────
+# Mock Supabase client factory
+# ────────────────────────────────────────────────────────────
+
+def _make_mock_supabase_client() -> MagicMock:
+    """
+    Return a MagicMock that quacks like a supabase.Client.
+    Table-chained calls (.table().select().eq()...execute()) all
+    return MagicMocks by default, which prevents SupabaseException
+    from being raised when the test doesn't override the service dep.
+    """
+    mock = MagicMock()
+    # .table(...) chain — each call returns a new MagicMock naturally
+    return mock
+
+
+# ────────────────────────────────────────────────────────────
+# Session-level fixtures
+# ────────────────────────────────────────────────────────────
+
 @pytest.fixture(scope="session")
-def app():
-    """Create a fresh FastAPI app for testing."""
-    # Clear the cached settings so test env vars are used
+def _base_app():
+    """Create the FastAPI application once per session."""
     get_settings.cache_clear()
-    test_app = create_app()
-    return test_app
+    # Clear the lru_cache so mock clients are created fresh
+    get_supabase_client.cache_clear()
+    get_supabase_anon_client.cache_clear()
+    return create_app()
 
 
-@pytest.fixture(scope="session")
+# ────────────────────────────────────────────────────────────
+# Function-scoped fixtures (fresh overrides for each test)
+# ────────────────────────────────────────────────────────────
+
+@pytest.fixture
+def app(_base_app):
+    """
+    Provide the app with globally mocked Supabase clients.
+    Overrides are cleared after each test so they don't bleed across tests.
+    """
+    mock_svc_client = _make_mock_supabase_client()
+    mock_anon_client = _make_mock_supabase_client()
+
+    _base_app.dependency_overrides[get_supabase_client] = lambda: mock_svc_client
+    _base_app.dependency_overrides[get_supabase_anon_client] = lambda: mock_anon_client
+
+    yield _base_app
+
+    _base_app.dependency_overrides.clear()
+
+
+@pytest.fixture
 def client(app):
-    """Create a test HTTP client."""
+    """Create a test HTTP client with mocked Supabase."""
     return TestClient(app)
 
 

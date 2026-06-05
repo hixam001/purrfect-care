@@ -1,0 +1,37 @@
+const ITEMS = [
+  '🐱 Veterinary Appointments',
+  '🤖 AI Health Companion',
+  '🏪 Curated Cat Store',
+  '💊 Medicine Database',
+  '📋 Patient History',
+  '🌿 Prescription Tracking',
+  '🏥 340+ Partner Clinics',
+  '🐾 18,000+ Registered Cats',
+  '⭐ 4.9-Star Platform',
+]
+
+export default function MarqueeTicker() {
+  const set = ITEMS.map((item, i) => (
+    <span key={i} className="flex items-center gap-6 pr-6">
+      <span className="t-mono text-[10px] text-clay-muted">{item}</span>
+      <span className="text-clay text-[8px]">◆</span>
+    </span>
+  ))
+
+  return (
+    <div
+      className="overflow-hidden py-3"
+      style={{
+        background:   'rgba(239,229,220,.6)',
+        borderTop:    '1px solid #D7C9BD',
+        borderBottom: '1px solid #D7C9BD',
+      }}
+    >
+      {/* Double the set so the loop is seamless */}
+      <div className="marquee-track">
+        <div className="flex items-center whitespace-nowrap">{set}</div>
+        <div className="flex items-center whitespace-nowrap" aria-hidden>{set}</div>
+      </div>
+    </div>
+  )
+}

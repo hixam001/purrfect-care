@@ -71,8 +71,10 @@ def create_app() -> FastAPI:
 
     # --- API Routers ---
     # Phase 3: Auth & Users
-    # from app.controllers.auth_controller import router as auth_router
-    # app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])
+    from app.controllers.auth_controller import router as auth_router
+    from app.controllers.user_controller import router as user_router
+    app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])
+    app.include_router(user_router, prefix="/api/users", tags=["Users"])
 
     # Phase 4: Cats & Breeds
     # from app.controllers.cat_controller import router as cat_router
