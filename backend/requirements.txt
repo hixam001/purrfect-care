@@ -13,8 +13,7 @@ supabase==2.15.2
 python-jose[cryptography]==3.4.0
 passlib[bcrypt]==1.7.4
 
-# Payments
-stripe==11.5.0
+# Payments — Safepay (uses httpx, already listed below)
 
 # AI / Embeddings
 openai==1.82.0

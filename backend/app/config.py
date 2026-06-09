@@ -27,9 +27,11 @@ class Settings(BaseSettings):
     SUPABASE_SERVICE_ROLE_KEY: str
     SUPABASE_JWT_SECRET: str = ""  # Found in Dashboard > Settings > API > JWT Secret
 
-    # --- Stripe ---
-    STRIPE_SECRET_KEY: str = ""
-    STRIPE_WEBHOOK_SECRET: str = ""
+    # --- Safepay ---
+    SAFEPAY_PUBLIC_KEY: str = ""
+    SAFEPAY_SECRET_KEY: str = ""
+    SAFEPAY_WEBHOOK_SECRET: str = ""
+    SAFEPAY_ENV: str = "sandbox"  # "sandbox" or "production"
 
     # --- OpenAI ---
     OPENAI_API_KEY: str = ""
