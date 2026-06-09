@@ -4,9 +4,9 @@
 
 # --- Environment / Secrets ---
 .env
-.env.local
-.env.*.local
+.env.*
 *.env
+!**/.env.example
 firebase-credentials.json
 google-services.json
 GoogleService-Info.plist
