@@ -30,9 +30,9 @@ export default function RegisterPage() {
     if (password.length < 8)  { setErr('Password must be at least 8 characters.'); return }
 
     const result = await register({
-      full_name: fullName,
+      name: fullName,
       email,
-      phone_number: phone || undefined,
+      phone: phone || undefined,
       password,
       role,
     })

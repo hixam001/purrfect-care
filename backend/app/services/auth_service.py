@@ -59,11 +59,7 @@ class AuthService:
         3. Insert the domain profile into user_profiles.
         4. Return tokens + profile.
         """
-        # 1. Duplicate email check
-        if self.user_repo.email_exists(data.email):
-            raise ConflictException("A user with this email already exists")
-
-        # 2. Supabase Auth sign-up
+        # 1. Supabase Auth sign-up
         try:
             auth_response = self.anon.auth.sign_up(
                 {"email": data.email, "password": data.password}
@@ -81,7 +77,6 @@ class AuthService:
         now = datetime.now(timezone.utc).isoformat()
         profile_data: dict = {
             "user_id": supabase_user_id,
-            "email": data.email,
             "name": data.name,
             "role": data.role.value,
             "phone": data.phone,

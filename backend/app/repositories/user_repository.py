@@ -42,35 +42,6 @@ class UserRepository(BaseRepository):
         )
         return result.data[0] if result.data else None
 
-    def find_by_email(self, email: str, select: str = "*") -> dict | None:
-        """
-        Find a user profile by email address.
-        Returns None if not found.
-
-        Used in registration flow to detect duplicate accounts before
-        calling Supabase Auth sign-up.
-        """
-        result = (
-            self.db.table(self.table_name)
-            .select(select)
-            .eq("email", email)
-            .limit(1)
-            .execute()
-        )
-        return result.data[0] if result.data else None
-
-    def email_exists(self, email: str) -> bool:
-        """
-        Returns True if a profile with the given email already exists.
-        Used for duplicate detection during registration.
-        """
-        count_result = (
-            self.db.table(self.table_name)
-            .select("id", count="exact")
-            .eq("email", email)
-            .execute()
-        )
-        return (count_result.count or 0) > 0
 
     def update_last_login(self, profile_id: str) -> None:
         """

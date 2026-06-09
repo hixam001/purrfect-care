@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     APP_HOST: str = "0.0.0.0"
 
     # --- CORS ---
-    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000"
+    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:3000,https://purrfect-care-app.web.app"
 
     # --- Supabase ---
     SUPABASE_URL: str
@@ -37,12 +37,12 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
 
-    # --- Email (SendGrid) ---
-    SENDGRID_API_KEY: str = ""
-    SENDGRID_FROM_EMAIL: str = "noreply@purrfectcare.com"
+    # --- Email (Resend) ---
+    RESEND_API_KEY: str = ""
+    RESEND_FROM_EMAIL: str = "onboarding@resend.dev"
 
     # --- Firebase ---
-    FIREBASE_CREDENTIALS_PATH: str = ""
+    FBASE_CREDENTIALS_PATH: str = ""
 
     @property
     def cors_origins_list(self) -> list[str]:

@@ -15,8 +15,14 @@ passlib[bcrypt]==1.7.4
 
 # Payments — Safepay (uses httpx, already listed below)
 
+# Firebase Functions
+firebase-functions>=0.1.0
+
 # AI / Embeddings
 openai==1.82.0
+
+# Emails
+resend>=0.8.0
 
 # File uploads
 python-multipart==0.0.20
