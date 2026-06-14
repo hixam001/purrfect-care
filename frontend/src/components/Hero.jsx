@@ -21,10 +21,6 @@ export default function Hero() {
       {/* Status row */}
       <div ref={ref1} className="fade-up flex items-center gap-4 mb-10">
         <Badge>Organic Apothecary · Feline Sanctuary</Badge>
-        <div className="flex items-center gap-2">
-          <PulseDot />
-          <span className="t-mono text-[10px] text-clay-muted">12 Vets Online Now</span>
-        </div>
       </div>
 
       {/* Two-column grid */}
@@ -51,20 +47,19 @@ export default function Hero() {
             <a href="#features"><BtnOutline>Explore Platform →</BtnOutline></a>
           </div>
 
-          {/* Proof chips */}
+          {/* Real feature badges */}
           <div className="flex flex-wrap gap-3">
             <StatChip>
-              <Stars rating={5} className="text-[13px]" />
-              <span className="text-[12px] font-bold text-espresso">4.9 / 5</span>
-              <span className="text-[11px] text-clay-muted">· 2,400+ reviews</span>
+              <span>✅</span>
+              <span className="text-[12px] font-bold text-espresso">Verified Hospitals</span>
             </StatChip>
             <StatChip>
-              <span>🏥</span>
-              <span className="text-[12px] font-bold text-espresso">340+ Clinics</span>
+              <span>🤖</span>
+              <span className="text-[12px] font-bold text-espresso">AI Health Triage</span>
             </StatChip>
             <StatChip>
-              <span>🐱</span>
-              <span className="text-[12px] font-bold text-espresso">18k+ Cats</span>
+              <span>💬</span>
+              <span className="text-[12px] font-bold text-espresso">Real-time Vet Chat</span>
             </StatChip>
           </div>
         </div>
@@ -72,36 +67,26 @@ export default function Hero() {
         {/* ── Right: Mini-dashboard bento ─────────── */}
         <div className="grid grid-cols-2 gap-4">
 
-          {/* Appointment card — spans both columns */}
+          {/* Platform overview card — spans both columns */}
           <GlassCard
             className="col-span-2 p-6 glow-border"
             style={{ borderColor: 'rgba(107,142,35,.35)' }}
           >
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <Badge className="mb-2">Next Appointment</Badge>
-                <div className="font-display font-bold text-[15px] text-espresso mt-1.5">
-                  Dr. Aisha Mirza, DVM
-                </div>
-                <div className="text-[12px] text-clay-muted mt-0.5">
-                  Green Paw Veterinary Clinic · 1.2 km
-                </div>
+            <div className="mb-4">
+              <Badge className="mb-2">All-in-one Cat Care</Badge>
+              <div className="font-display font-bold text-[15px] text-espresso mt-1.5">
+                Everything your cat needs, in one place.
               </div>
-              <div className="text-center flex-shrink-0">
-                <div className="font-mono font-black text-[28px] leading-none text-olive">14</div>
-                <div className="t-mono text-[10px] text-clay-muted">June</div>
+              <div className="text-[12px] text-clay-muted mt-1.5 leading-relaxed">
+                Book appointments with verified vets, chat post-visit,
+                get AI-powered symptom triage, and order from curated cat stores —
+                all from a single platform built for Pakistani cat parents.
               </div>
             </div>
-
-            <div className="flex items-center gap-3 mb-3">
-              <ProgressBar pct={65} className="flex-1" />
-              <span className="t-mono text-[10px] text-olive flex-shrink-0">10:30 AM</span>
-            </div>
-
             <div className="flex flex-wrap gap-2">
-              <Pill variant="green">✓ Confirmed</Pill>
-              <Pill variant="clay">🐱 Luna · Persian · 3y</Pill>
-              <Pill variant="amber">💉 Vaccination</Pill>
+              <Pill variant="green">✅ Verified Hospitals</Pill>
+              <Pill variant="clay">🐱 Cat Health Records</Pill>
+              <Pill variant="amber">🤖 AI Companion</Pill>
             </div>
           </GlassCard>
 

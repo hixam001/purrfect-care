@@ -33,9 +33,10 @@ class Settings(BaseSettings):
     SAFEPAY_WEBHOOK_SECRET: str = ""
     SAFEPAY_ENV: str = "sandbox"  # "sandbox" or "production"
 
-    # --- OpenAI ---
-    OPENAI_API_KEY: str = ""
-    OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
+    # --- Google Gemini AI ---
+    GEMINI_API_KEY: str = ""            # From https://aistudio.google.com
+    GEMINI_EMBEDDING_MODEL: str = "models/gemini-embedding-001"
+    GEMINI_CHAT_MODEL: str = "models/gemini-2.5-flash"
 
     # --- Email (Resend) ---
     RESEND_API_KEY: str = ""

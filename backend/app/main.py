@@ -17,6 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import get_settings
 from app.middleware.error_handler import register_error_handlers
 from app.middleware.rate_limiter import register_rate_limiter
+from app.middleware.security_headers import SecurityHeadersMiddleware
 
 # Configure logging
 logging.basicConfig(
@@ -63,6 +64,9 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    # --- Security Headers ---
+    app.add_middleware(SecurityHeadersMiddleware)
+
     # --- Error Handlers ---
     register_error_handlers(app)
 
@@ -90,10 +94,10 @@ def create_app() -> FastAPI:
 
     # Phase 6: Chat, AI, Prescriptions
     # from app.controllers.chat_controller import router as chat_router
-    # from app.controllers.ai_controller import router as ai_router
+    from app.controllers.ai_controller import router as ai_router
     # from app.controllers.prescription_controller import router as prescription_router
     # app.include_router(chat_router, prefix="/api/chats", tags=["Chat"])
-    # app.include_router(ai_router, prefix="/api/ai", tags=["AI Companion"])
+    app.include_router(ai_router, prefix="/api/ai", tags=["AI Companion"])
     # app.include_router(prescription_router, prefix="/api/prescriptions", tags=["Prescriptions"])
 
     # Phase 7: Stores & Orders

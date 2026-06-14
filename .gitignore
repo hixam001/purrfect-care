@@ -69,3 +69,14 @@ dist/
 *.bak
 *.tmp
 *.swp
+
+# --- PDFs (academic proposals, downloaded reference PDFs) ---
+*.pdf
+backend/rag/pdfs/
+
+# --- Docker (not used in Firebase deployment) ---
+backend/Dockerfile
+
+# --- Frontend build output ---
+frontend/dist/
+frontend/.vite/

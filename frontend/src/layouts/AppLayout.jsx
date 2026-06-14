@@ -55,6 +55,13 @@ export default function AppLayout() {
               {isLoggedIn ? (
                 <>
                   <Link to="/dashboard" className="nav-a text-olive font-semibold">Dashboard</Link>
+                  <Link
+                    to="/settings"
+                    className="btn btn-outline !py-2 !px-4 !text-[11px]"
+                    title="Settings"
+                  >
+                    ⚙ Settings
+                  </Link>
                   <button onClick={logout} className="btn btn-outline !py-2 !px-4 !text-[11px]">Log out</button>
                 </>
               ) : (

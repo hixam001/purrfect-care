@@ -1,10 +1,10 @@
 import { useFadeUp } from '../hooks/useScrollReveal.js'
 
-const STATS = [
-  { value: '18k+', label: 'Cats Registered'  },
-  { value: '340+', label: 'Partner Clinics'  },
-  { value: '200+', label: 'Verified Vets'    },
-  { value: '4.9★', label: 'Average Rating'   },
+const PILLARS = [
+  { icon: '🏥', label: 'Verified Clinics',   desc: 'Every hospital is reviewed and approved before listing.' },
+  { icon: '👨‍⚕️', label: 'Qualified Vets',    desc: 'All vets are registered professionals within partner hospitals.' },
+  { icon: '🔒', label: 'Secure Platform',    desc: 'Your data and your cat\'s health records are always protected.' },
+  { icon: '🌱', label: 'Growing Community', desc: 'Connecting cat families with trusted care across Pakistan.' },
 ]
 
 export default function StatsBand() {
@@ -16,19 +16,24 @@ export default function StatsBand() {
         ref={ref}
         className="fade-up max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center"
       >
-        {STATS.map(s => (
-          <div key={s.label}>
+        {PILLARS.map(p => (
+          <div key={p.label}>
             <div
-              className="font-display font-black tracking-tight leading-none mb-2"
-              style={{ fontSize: 'clamp(2.4rem,4vw,3rem)', color: '#F5EBE6' }}
+              className="text-4xl mb-3"
             >
-              {s.value}
+              {p.icon}
             </div>
             <div
-              className="t-mono text-[11px]"
-              style={{ color: '#6B8E23' }}
+              className="font-display font-bold text-[15px] mb-1"
+              style={{ color: '#F5EBE6' }}
             >
-              {s.label}
+              {p.label}
+            </div>
+            <div
+              className="text-[11px] leading-relaxed"
+              style={{ color: 'rgba(245,235,230,.55)' }}
+            >
+              {p.desc}
             </div>
           </div>
         ))}

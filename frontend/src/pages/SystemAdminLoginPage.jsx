@@ -115,9 +115,9 @@ export default function SystemAdminLoginPage() {
           </div>
         </div>
 
-        {/* Stats */}
+        {/* Security highlights */}
         <div className="flex gap-8">
-          {[['RBAC', 'Role-Based Access'], ['AES-256', 'Encryption'], ['99.9%', 'Uptime SLA']].map(([v, l]) => (
+          {[['RBAC', 'Role-Based Access'], ['AES-256', 'Encryption']].map(([v, l]) => (
             <div key={l}>
               <div className="font-display font-black text-xl" style={{ color: '#E8E8F0' }}>{v}</div>
               <div className="text-[11px] font-mono uppercase tracking-wider" style={{ color: 'rgba(232,232,240,.4)' }}>{l}</div>

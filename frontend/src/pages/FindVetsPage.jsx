@@ -1,47 +1,69 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { useFadeUp } from '../hooks/useScrollReveal.js'
-import { Badge, BtnOlive, BtnOutline, Stars, Pill, PulseDot, Card, GlassCard } from '../components/ui/index.jsx'
-
-const VETS = [
-  { e:'👩‍⚕️', name:'Dr. Aisha Mirza',  spec:'Feline Internist',  stars:5, reviews:148, exp:'8 yrs',  online:true,  clinic:'Green Paw Veterinary Clinic',  dist:'1.2 km', city:'Lahore',    fee:'₨ 1,500', bg:'linear-gradient(135deg,rgba(107,142,35,.14),rgba(107,142,35,.07))' },
-  { e:'👨‍⚕️', name:'Dr. Omar Khalid',  spec:'Feline Surgeon',    stars:5, reviews:92,  exp:'12 yrs', online:false, clinic:'Feline Care Centre',           dist:'2.8 km', city:'Karachi',   fee:'₨ 2,000', bg:'linear-gradient(135deg,rgba(196,140,56,.14),rgba(196,140,56,.07))' },
-  { e:'👩‍⚕️', name:'Dr. Sana Farooq',  spec:'Dermatologist',     stars:4, reviews:67,  exp:'5 yrs',  online:true,  clinic:'PawsFirst Animal Hospital',   dist:'0.9 km', city:'Islamabad', fee:'₨ 1,200', bg:'linear-gradient(135deg,rgba(107,142,35,.14),rgba(107,142,35,.07))' },
-  { e:'👨‍⚕️', name:'Dr. Bilal Raza',   spec:'Nutritionist',      stars:5, reviews:203, exp:'15 yrs', online:false, clinic:'NutriPaws Clinic',             dist:'4.1 km', city:'Lahore',    fee:'₨ 2,500', bg:'linear-gradient(135deg,rgba(160,140,125,.14),rgba(160,140,125,.07))' },
-  { e:'👩‍⚕️', name:'Dr. Nadia Shah',   spec:'Ophthalmologist',   stars:4, reviews:44,  exp:'7 yrs',  online:true,  clinic:'ClearSight Vet Eye Center',   dist:'3.5 km', city:'Karachi',   fee:'₨ 1,800', bg:'linear-gradient(135deg,rgba(107,142,35,.14),rgba(107,142,35,.07))' },
-  { e:'👨‍⚕️', name:'Dr. Fahad Malik',  spec:'Cardiologist',      stars:5, reviews:77,  exp:'10 yrs', online:false, clinic:'HeartPaws Cardiology Clinic', dist:'5.0 km', city:'Islamabad', fee:'₨ 3,000', bg:'linear-gradient(135deg,rgba(196,140,56,.14),rgba(196,140,56,.07))' },
-]
+import { useState, useEffect } from 'react'
+import { Link }               from 'react-router-dom'
+import { supabase }           from '../lib/supabaseClient.js'
+import { useGeolocation, sortByDistance, fmtDist } from '../hooks/useGeolocation.js'
+import { useFadeUp }          from '../hooks/useScrollReveal.js'
+import { Badge, BtnOlive, BtnOutline, Pill, Card, GlassCard } from '../components/ui/index.jsx'
 
 export default function FindVetsPage() {
   const headerRef = useFadeUp(0)
   const listRef   = useFadeUp(0.1)
 
-  const [search,    setSearch]    = useState('')
-  const [specialty, setSpecialty] = useState('All')
-  const [onlineOnly,setOnlineOnly]= useState(false)
+  const { coords, loading: geoLoading, denied: geoDenied } = useGeolocation()
 
-  const specs = ['All', ...new Set(VETS.map(v => v.spec))]
-  const filtered = VETS.filter(v => {
-    const matchName = v.name.toLowerCase().includes(search.toLowerCase()) ||
-                      v.clinic.toLowerCase().includes(search.toLowerCase())
-    const matchSpec = specialty === 'All' || v.spec === specialty
-    const matchOnline = !onlineOnly || v.online
-    return matchName && matchSpec && matchOnline
+  const [hospitals,  setHospitals]  = useState([])
+  const [dbLoading,  setDbLoading]  = useState(true)
+  const [search,     setSearch]     = useState('')
+  const [cityFilter, setCityFilter] = useState('All')
+
+  /* ── Fetch approved hospitals ── */
+  useEffect(() => {
+    supabase
+      .from('hospitals')
+      .select('id, name, description, city, address, phone, latitude, longitude, rating, total_reviews, is_active, is_approved, page_config')
+      .eq('is_active',   true)
+      .eq('is_approved', true)
+      .then(({ data, error }) => {
+        if (!error && data) setHospitals(data)
+        setDbLoading(false)
+      })
+  }, [])
+
+  /* ── Sorted + filtered list ── */
+  const sorted = sortByDistance(hospitals, coords)
+
+  const cities = ['All', ...new Set(hospitals.map(h => h.city).filter(Boolean))]
+
+  const filtered = sorted.filter(h => {
+    const q = search.toLowerCase()
+    const matchSearch = h.name?.toLowerCase().includes(q) || h.city?.toLowerCase().includes(q)
+    const matchCity   = cityFilter === 'All' || h.city === cityFilter
+    return matchSearch && matchCity
   })
+
+  const loading = dbLoading || geoLoading
 
   return (
     <section className="max-w-7xl mx-auto px-4 md:px-8 py-16">
 
       {/* Header */}
       <div ref={headerRef} className="fade-up mb-10">
-        <Badge className="mb-3">UC-A2 · Veterinarians</Badge>
+        <Badge className="mb-3">Find Hospitals</Badge>
         <h1 className="font-display font-black text-espresso tracking-tight mb-3"
             style={{ fontSize:'clamp(2rem,4vw,3rem)' }}>
-          Find & book a vet.
+          Find a hospital near you.
         </h1>
         <p className="text-clay-muted text-[15px] max-w-lg">
-          Browse 200+ verified feline specialists. Check real-time availability and confirm in seconds.
+          Browse verified veterinary hospitals. {!geoDenied
+            ? 'Sorted by your location — nearest first.'
+            : 'Allow location access to sort by distance.'}
         </p>
+        {geoDenied && (
+          <div className="mt-3 inline-flex items-center gap-2 px-3 py-2 rounded-xl text-[12px]"
+               style={{ background:'rgba(196,140,56,.1)', border:'1px solid rgba(196,140,56,.3)', color:'#8B6A14' }}>
+            📍 Location access denied — showing all hospitals
+          </div>
+        )}
       </div>
 
       {/* Filters */}
@@ -52,86 +74,108 @@ export default function FindVetsPage() {
                style={{ background:'rgba(255,255,255,.8)', border:'1.5px solid #D7C9BD' }}>
             <span className="text-clay-muted">🔍</span>
             <input value={search} onChange={e => setSearch(e.target.value)}
-                   placeholder="Search by name or clinic…"
+                   placeholder="Search hospitals or cities…"
                    className="flex-1 bg-transparent outline-none text-[14px] text-espresso" />
           </div>
-          {/* Specialty pills */}
+          {/* City pills */}
           <div className="flex flex-wrap gap-2">
-            {specs.map(s => (
-              <button key={s} onClick={() => setSpecialty(s)}
+            {cities.map(c => (
+              <button key={c} onClick={() => setCityFilter(c)}
                       className="pill transition-all"
                       style={{
-                        background: specialty === s ? '#556B2F' : 'rgba(255,255,255,.7)',
-                        color:      specialty === s ? '#fff'    : '#4E342E',
-                        border:     specialty === s ? 'none'    : '1px solid #D7C9BD',
+                        background: cityFilter === c ? '#556B2F' : 'rgba(255,255,255,.7)',
+                        color:      cityFilter === c ? '#fff'    : '#4E342E',
+                        border:     cityFilter === c ? 'none'    : '1px solid #D7C9BD',
                       }}>
-                {s}
+                {c}
               </button>
             ))}
           </div>
-          {/* Online toggle */}
-          <button onClick={() => setOnlineOnly(o => !o)}
-                  className="pill transition-all"
-                  style={{
-                    background: onlineOnly ? '#556B2F' : 'rgba(255,255,255,.7)',
-                    color:      onlineOnly ? '#fff'    : '#4E342E',
-                    border:     onlineOnly ? 'none'    : '1px solid #D7C9BD',
-                  }}>
-            <PulseDot size="sm" /> Online now
-          </button>
         </div>
 
         {/* Results count */}
         <p className="text-[12px] text-clay-muted mb-4 t-mono">
-          SHOWING {filtered.length} OF {VETS.length} VETS
+          {loading ? 'LOCATING HOSPITALS…' : `SHOWING ${filtered.length} HOSPITAL${filtered.length !== 1 ? 'S' : ''}`}
         </p>
 
-        {/* Vet cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filtered.map(v => (
-            <GlassCard key={v.name} className="p-6 text-center">
-              <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-4xl mx-auto mb-3"
-                   style={{ background: v.bg, ...(v.online ? { boxShadow:'0 0 0 5px rgba(107,142,35,.12),0 0 0 10px rgba(107,142,35,.06)' } : {}) }}>
-                {v.e}
+        {/* Loading skeleton */}
+        {loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1,2,3].map(i => (
+              <div key={i} className="card p-6 animate-pulse">
+                <div className="w-16 h-16 rounded-2xl bg-clay mb-4" />
+                <div className="h-4 bg-clay rounded w-3/4 mb-2" />
+                <div className="h-3 bg-clay rounded w-1/2" />
               </div>
-              <div className="font-bold text-[15px] text-espresso mb-0.5">{v.name}</div>
-              <div className="t-mono text-[10px] text-olive mb-2">{v.spec}</div>
+            ))}
+          </div>
+        )}
 
-              <div className="flex items-center justify-center gap-2 mb-3">
-                <Stars rating={v.stars} />
-                <span className="text-[11px] text-clay-muted">({v.reviews})</span>
-              </div>
+        {/* Hospital cards */}
+        {!loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filtered.map(h => {
+              const dist = fmtDist(h.distKm)
+              const stars = Math.round(h.rating ?? 0)
+              return (
+                <GlassCard key={h.id} className="p-6 flex flex-col">
+                  {/* Top */}
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0"
+                         style={{ background:'linear-gradient(135deg,rgba(107,142,35,.18),rgba(107,142,35,.08))' }}>
+                      🏥
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-[15px] text-espresso leading-snug">{h.name}</div>
+                      <div className="text-[12px] text-clay-muted mt-0.5">{h.address}</div>
+                    </div>
+                  </div>
 
-              <div className="text-[12px] text-clay-muted mb-1">{v.clinic}</div>
-              <div className="flex items-center justify-center gap-3 mb-3 flex-wrap">
-                <Pill variant="green"><span className="text-[9px]">✓ Verified</span></Pill>
-                <Pill variant="clay"><span className="text-[9px]">{v.exp} exp</span></Pill>
-                <Pill variant="clay"><span className="text-[9px]">📍 {v.dist}</span></Pill>
-              </div>
+                  {/* Meta row */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <Pill variant="green"><span className="text-[9px]">✓ Verified</span></Pill>
+                    {h.city && (
+                      <Pill variant="clay"><span className="text-[9px]">📍 {h.city}</span></Pill>
+                    )}
+                    {dist && (
+                      <Pill variant="amber"><span className="text-[9px]">🗺 {dist} away</span></Pill>
+                    )}
+                  </div>
 
-              <div className="flex items-center justify-center gap-2 mb-4">
-                {v.online
-                  ? <><PulseDot size="sm" /><span className="t-mono text-[10px] text-olive">Online Now</span></>
-                  : <span className="t-mono text-[10px] text-clay-muted">Available later today</span>}
-              </div>
+                  {/* Rating */}
+                  {h.total_reviews > 0 && (
+                    <div className="flex items-center gap-1.5 mb-4">
+                      <span className="text-amber-500 text-[13px]">{'★'.repeat(stars)}{'☆'.repeat(5 - stars)}</span>
+                      <span className="text-[11px] text-clay-muted">({h.total_reviews} reviews)</span>
+                    </div>
+                  )}
 
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[12px] text-clay-muted">Consultation fee</span>
-                <span className="font-bold text-[14px] text-espresso">{v.fee}</span>
-              </div>
+                  {/* Description */}
+                  {h.description && (
+                    <p className="text-[12px] text-clay-muted mb-4 flex-1 line-clamp-2">{h.description}</p>
+                  )}
 
-              {v.online
-                ? <BtnOlive className="w-full justify-center !py-2.5">Book Consult</BtnOlive>
-                : <BtnOutline className="w-full justify-center !py-2.5" style={{ borderColor:'#D7C9BD', color:'#A08C7D' }}>Schedule →</BtnOutline>}
-            </GlassCard>
-          ))}
-        </div>
+                  {/* CTA */}
+                  <Link to={`/hospital/${h.id}`} className="no-underline mt-auto">
+                    <BtnOlive className="w-full justify-center !py-2.5">
+                      View Vets & Book →
+                    </BtnOlive>
+                  </Link>
+                </GlassCard>
+              )
+            })}
+          </div>
+        )}
 
-        {filtered.length === 0 && (
+        {!loading && filtered.length === 0 && (
           <div className="text-center py-20">
-            <div className="text-5xl mb-4">🔍</div>
-            <div className="font-bold text-espresso mb-2">No vets found</div>
-            <div className="text-clay-muted text-[13px]">Try adjusting your filters</div>
+            <div className="text-5xl mb-4">🏥</div>
+            <div className="font-bold text-espresso mb-2">No hospitals found</div>
+            <div className="text-clay-muted text-[13px]">
+              {hospitals.length === 0
+                ? 'No registered hospitals yet. Check back soon!'
+                : 'Try adjusting your search or city filter.'}
+            </div>
           </div>
         )}
       </div>

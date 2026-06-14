@@ -15,12 +15,13 @@ making them trivially testable by overriding the get_auth_service dep.
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 
 from app.database import get_supabase_client, get_supabase_anon_client
 from app.middleware.auth_middleware import AuthenticatedUser, get_current_user
+from app.middleware.rate_limiter import limit_auth, limit_strict
 from app.models.user import UserCreate, UserLoginRequest, UserLoginResponse, UserResponse
 from app.services.auth_service import AuthService
 from app.utils.exceptions import (
@@ -32,7 +33,7 @@ from app.utils.exceptions import (
 
 logger = logging.getLogger("purrfect_care.auth_controller")
 
-router = APIRouter()
+router   = APIRouter()
 security = HTTPBearer()
 
 
@@ -77,7 +78,10 @@ class PasswordResetRequest(BaseModel):
         "Returns JWT access + refresh tokens alongside the created user profile."
     ),
 )
+@limit_auth
 async def register(
+    request: Request,
+    response: Response,
     body: UserCreate,
     service: AuthService = Depends(get_auth_service),
 ) -> UserLoginResponse:
@@ -90,7 +94,10 @@ async def register(
     summary="Login with email and password",
     description="Authenticates the user against Supabase and returns JWT tokens.",
 )
+@limit_auth
 async def login(
+    request: Request,
+    response: Response,
     body: UserLoginRequest,
     service: AuthService = Depends(get_auth_service),
 ) -> UserLoginResponse:
@@ -120,7 +127,10 @@ async def logout(
     summary="Refresh access token",
     description="Exchanges a valid refresh token for a new access token and refresh token pair.",
 )
+@limit_auth
 async def refresh(
+    request: Request,
+    response: Response,
     body: RefreshRequest,
     service: AuthService = Depends(get_auth_service),
 ) -> UserLoginResponse:
@@ -137,7 +147,10 @@ async def refresh(
         "(prevents account enumeration)."
     ),
 )
+@limit_strict
 async def password_reset(
+    request: Request,
+    response: Response,
     body: PasswordResetRequest,
     service: AuthService = Depends(get_auth_service),
 ) -> dict:

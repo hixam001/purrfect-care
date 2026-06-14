@@ -19,7 +19,7 @@ passlib[bcrypt]==1.7.4
 firebase-functions>=0.1.0
 
 # AI / Embeddings
-openai==1.82.0
+google-genai>=1.0.0            # Gemini chat + text-embedding-004 (new unified SDK)
 
 # Emails
 resend>=0.8.0
@@ -31,7 +31,7 @@ python-multipart==0.0.20
 httpx==0.28.1
 
 # Rate limiting
-slowapi==0.1.9
+# Rate limiting handled by custom in-memory ASGI middleware (app/middleware/rate_limiter.py)
 
 # Testing
 pytest==8.3.5

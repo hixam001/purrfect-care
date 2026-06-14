@@ -5,9 +5,9 @@ const ITEMS = [
   '💊 Medicine Database',
   '📋 Patient History',
   '🌿 Prescription Tracking',
-  '🏥 340+ Partner Clinics',
-  '🐾 18,000+ Registered Cats',
-  '⭐ 4.9-Star Platform',
+  '🏥 Verified Partner Clinics',
+  '🐾 Growing Cat Community',
+  '✅ Fully Verified Platform',
 ]
 
 export default function MarqueeTicker() {
