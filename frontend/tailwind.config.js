@@ -4,15 +4,21 @@ export default {
   theme: {
     extend: {
       colors: {
-        cream:    { DEFAULT: '#F5EBE6', soft: '#FAF5F2', oat: '#EFE5DC' },
-        clay:     { DEFAULT: '#D7C9BD', muted: '#A08C7D' },
-        espresso: { DEFAULT: '#3D2616', soft: '#4E342E' },
-        olive:    { DEFAULT: '#556B2F', light: '#6B8E23', dark: '#3D4F21' },
-        amber:    { DEFAULT: '#C48C38', light: '#F0C46A' },
+        // Mint green — light base colour
+        mint:       { DEFAULT: '#dbe8d8', soft: '#eef4ec', deep: '#c9dbc6' },
+        // Carafe — dark primary / brand colour
+        carafe:     { DEFAULT: '#5e4749', light: '#7a5e60', dark: '#4a373a' },
+        // Semantic aliases kept for backward-compat with existing class names
+        cream:      { DEFAULT: '#dbe8d8', soft: '#eef4ec', oat: '#c9dbc6' },
+        clay:       { DEFAULT: '#b8ceb5', muted: '#7a5e60' },
+        espresso:   { DEFAULT: '#3a2c2d', soft: '#4a373a' },
+        olive:      { DEFAULT: '#5e4749', light: '#7a5e60', dark: '#4a373a' },
+        amber:      { DEFAULT: '#B87C2A', light: '#E0A84A' },
+        terracotta: { DEFAULT: '#B85C38', light: '#D4714A', muted: '#8C4229' },
       },
       fontFamily: {
-        display: ['"Space Grotesk"', 'sans-serif'],
-        body:    ['"Inter"', 'sans-serif'],
+        display: ['"Fraunces"', 'Georgia', 'serif'],
+        body:    ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
         mono:    ['"JetBrains Mono"', 'monospace'],
       },
       borderRadius: {
@@ -21,9 +27,12 @@ export default {
       },
       backgroundImage: {
         'mesh': `
-          radial-gradient(ellipse 700px 500px at 85% 10%, rgba(107,142,35,.13) 0%, transparent 70%),
-          radial-gradient(ellipse 500px 400px at 5%  90%, rgba(196,140,56,.10) 0%, transparent 70%)
+          radial-gradient(ellipse 700px 500px at 85% 10%, rgba(94,71,73,.09) 0%, transparent 70%),
+          radial-gradient(ellipse 500px 400px at 5%  90%, rgba(94,71,73,.06) 0%, transparent 70%)
         `,
+      },
+      lineHeight: {
+        'relaxed': '1.7',
       },
     },
   },

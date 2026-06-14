@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Purrfect Care",
+    "slug": "purrfect-care",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F5EBE6",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F5EBE6"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.purrfectcare.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png"
+      },
+      "package": "com.purrfectcare.app"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "scheme": "purrfectcare",
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Purrfect Care needs photo access to set your cat's profile picture.",
+          "cameraPermission": "Purrfect Care needs camera access to take your cat's photo."
+        }
+      ],
+      "expo-font",
+      "expo-splash-screen",
+      "expo-status-bar"
+    ],
+    "experiments": {
+      "typedRoutes": false,
+      "baseUrl": "/app"
+    }
+  }
+}

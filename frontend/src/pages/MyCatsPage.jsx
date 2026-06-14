@@ -115,11 +115,11 @@ function CatDrawer({ open, onClose, onSaved, editing }) {
   const inputCls = `w-full px-4 py-3 rounded-xl text-[14px] outline-none transition-all`
   const inputStyle = {
     background: 'rgba(255,255,255,.9)',
-    border: '1.5px solid #D7C9BD',
+    border: '1.5px solid #b8ceb5',
     color: '#2C1810',
   }
-  const focusIn  = e => { e.target.style.borderColor = '#556B2F'; e.target.style.boxShadow = '0 0 0 3px rgba(85,107,47,.12)' }
-  const focusOut = e => { e.target.style.borderColor = '#D7C9BD'; e.target.style.boxShadow = 'none' }
+  const focusIn  = e => { e.target.style.borderColor = '#5e4749'; e.target.style.boxShadow = '0 0 0 3px rgba(85,107,47,.12)' }
+  const focusOut = e => { e.target.style.borderColor = '#b8ceb5'; e.target.style.boxShadow = 'none' }
 
   return (
     <>
@@ -143,13 +143,13 @@ function CatDrawer({ open, onClose, onSaved, editing }) {
           background: '#FBF5F0',
           boxShadow: '-8px 0 40px rgba(44,24,16,.15)',
           transform: open ? 'translateX(0)' : 'translateX(100%)',
-          borderLeft: '1px solid #D7C9BD',
+          borderLeft: '1px solid #b8ceb5',
         }}
       >
         {/* Drawer header */}
         <div
           className="sticky top-0 z-10 flex items-center justify-between px-6 py-4"
-          style={{ background: 'rgba(251,245,240,.95)', backdropFilter: 'blur(12px)', borderBottom: '1px solid #D7C9BD' }}
+          style={{ background: 'rgba(251,245,240,.95)', backdropFilter: 'blur(12px)', borderBottom: '1px solid #b8ceb5' }}
         >
           <div>
             <div className="font-display font-bold text-[17px] text-espresso">
@@ -174,7 +174,7 @@ function CatDrawer({ open, onClose, onSaved, editing }) {
           <div
             onClick={() => fileRef.current?.click()}
             className="relative mx-auto w-28 h-28 rounded-3xl flex items-center justify-center cursor-pointer overflow-hidden transition-all group"
-            style={{ background: preview ? 'transparent' : 'rgba(107,142,35,.1)', border: '2px dashed rgba(107,142,35,.4)' }}
+            style={{ background: preview ? 'transparent' : 'rgba(94,71,73,.1)', border: '2px dashed rgba(94,71,73,.4)' }}
           >
             {preview
               ? <img src={preview} alt="cat" className="w-full h-full object-cover rounded-3xl" />
@@ -303,7 +303,7 @@ function CatDrawer({ open, onClose, onSaved, editing }) {
           {/* Neutered toggle */}
           <div
             className="flex items-center justify-between px-4 py-3 rounded-xl cursor-pointer"
-            style={{ background: 'rgba(107,142,35,.08)', border: '1px solid rgba(107,142,35,.2)' }}
+            style={{ background: 'rgba(94,71,73,.08)', border: '1px solid rgba(94,71,73,.2)' }}
             onClick={() => set('is_neutered', !form.is_neutered)}
           >
             <div>
@@ -312,7 +312,7 @@ function CatDrawer({ open, onClose, onSaved, editing }) {
             </div>
             <div
               className="w-11 h-6 rounded-full relative transition-all flex-shrink-0"
-              style={{ background: form.is_neutered ? '#556B2F' : '#D7C9BD' }}
+              style={{ background: form.is_neutered ? '#5e4749' : '#b8ceb5' }}
             >
               <div
                 className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all"
@@ -338,7 +338,7 @@ function CatDrawer({ open, onClose, onSaved, editing }) {
             disabled={saving}
             className="w-full py-3.5 rounded-xl font-bold text-[14px] tracking-wide transition-all"
             style={{
-              background: saving ? 'rgba(85,107,47,.5)' : 'linear-gradient(135deg,#556B2F,#3D4F21)',
+              background: saving ? 'rgba(85,107,47,.5)' : 'linear-gradient(135deg,#5e4749,#4a373a)',
               color: '#fff',
               border: 'none',
               cursor: saving ? 'not-allowed' : 'pointer',
@@ -365,14 +365,14 @@ function CatCard({ cat, onEdit, onDelete }) {
   }
 
   const genderIcon  = cat.gender === 'female' ? '♀' : '♂'
-  const genderColor = cat.gender === 'female' ? '#C47F6A' : '#556B2F'
+  const genderColor = cat.gender === 'female' ? '#C47F6A' : '#5e4749'
 
   return (
     <GlassCard className="p-5 flex flex-col group">
       {/* Photo */}
       <div
         className="w-full h-40 rounded-2xl mb-4 flex items-center justify-center overflow-hidden flex-shrink-0"
-        style={{ background: 'linear-gradient(135deg,rgba(107,142,35,.12),rgba(196,140,56,.08))' }}
+        style={{ background: 'linear-gradient(135deg,rgba(94,71,73,.12),rgba(196,140,56,.08))' }}
       >
         {cat.photo_url
           ? <img src={cat.photo_url} alt={cat.name} className="w-full h-full object-cover" />
@@ -419,7 +419,7 @@ function CatCard({ cat, onEdit, onDelete }) {
         <button
           onClick={() => onEdit(cat)}
           className="flex-1 py-2 rounded-xl text-[12px] font-bold transition-all"
-          style={{ background: 'rgba(85,107,47,.1)', color: '#556B2F', border: '1px solid rgba(85,107,47,.25)' }}
+          style={{ background: 'rgba(85,107,47,.1)', color: '#5e4749', border: '1px solid rgba(85,107,47,.25)' }}
         >
           Edit
         </button>
@@ -484,42 +484,7 @@ export default function MyCatsPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: '#F5EBE6' }}>
-
-      {/* ── Navbar ── */}
-      <header
-        className="sticky top-0 z-30 transition-shadow"
-        style={{ background: 'rgba(245,235,230,.92)', backdropFilter: 'blur(18px)', borderBottom: '1px solid #D7C9BD' }}
-      >
-        <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-6">
-          <Link to="/dashboard" className="flex items-center gap-2.5 no-underline flex-shrink-0">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
-                 style={{ background: 'linear-gradient(135deg,#556B2F,#3D4F21)' }}>🐱</div>
-            <span className="font-display font-black text-[18px] tracking-tight text-espresso">
-              Purrfect<span className="text-olive">Care</span>
-            </span>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-1">
-            {[
-              { label: 'Dashboard',     href: '/dashboard'    },
-              { label: 'Find Hospitals',href: '/find-vets'    },
-              { label: 'AI Companion',  href: '/ai-companion' },
-            ].map(l => (
-              <Link key={l.href} to={l.href} className="nav-a">{l.label}</Link>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <Link to="/settings" className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full no-underline"
-                  style={{ background: 'rgba(107,142,35,.1)', border: '1px solid rgba(107,142,35,.2)' }}>
-              <span className="text-[13px]">👤</span>
-              <span className="text-[12px] font-semibold text-olive">{displayName.split(' ')[0]}</span>
-            </Link>
-            <button onClick={logout} className="btn btn-outline !py-2 !px-4 !text-[11px]">Log out</button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen">
 
       {/* ── Main ── */}
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-10">
@@ -588,11 +553,11 @@ export default function MyCatsPage() {
             <button
               onClick={openAdd}
               className="card p-5 border-2 border-dashed flex flex-col items-center justify-center text-center transition-all cursor-pointer group min-h-[220px]"
-              style={{ borderColor: 'rgba(107,142,35,.35)', background: 'rgba(107,142,35,.04)' }}
+              style={{ borderColor: 'rgba(94,71,73,.35)', background: 'rgba(94,71,73,.04)' }}
             >
               <div
                 className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl mb-3 transition-transform group-hover:scale-110"
-                style={{ background: 'rgba(107,142,35,.12)' }}
+                style={{ background: 'rgba(94,71,73,.12)' }}
               >
                 ➕
               </div>

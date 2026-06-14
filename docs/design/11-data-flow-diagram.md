@@ -22,9 +22,9 @@ rectangle "👨‍⚕️ Veterinarian" as VT
 rectangle "🏥 Hospital Admin" as HA
 rectangle "🏪 Store Owner" as SO
 rectangle "🔑 System Admin" as SA
-rectangle "💳 Stripe API" as STRIPE
-rectangle "🤖 OpenAI API" as OPENAI
-rectangle "📧 SendGrid" as SENDGRID
+rectangle "💳 Safepay API" as STRIPE
+rectangle "🤖 Gemini API" as GEMINI
+rectangle "📧 Resend" as SENDGRID
 rectangle "🔔 Firebase CM" as FIREBASE
 
 usecase "<size:24><b>0</b></size>\n<size:20>Purrfect Care</size>\n<size:20>System</size>" as PC
@@ -41,14 +41,14 @@ PC --> HA : Dashboard Stats,\nAppointment Data, Reviews,\nNotifications
 SO --> PC : Store Info, Products,\nOffers, Order Updates,\nReview Responses
 PC --> SO : Order Queue, Analytics,\nReviews, Notifications
 
-SA --> PC : Approvals, Verifications,\nMedicine Data, Breed Data,\nIllness Data
+SA --> PC : Approvals, Verifications,\nMedicine Data, Breed Data,\nHealth Knowledge
 PC --> SA : Pending Approvals, KPIs,\nUser Reports, System Alerts
 
 PC --> STRIPE : Payment Intents, Refunds
 STRIPE --> PC : Payment Confirmations,\nWebhook Events
 
-PC --> OPENAI : Embedding Requests
-OPENAI --> PC : Vector Embeddings
+PC --> GEMINI : Embedding Requests (768-dim),\nChat Generation Requests
+GEMINI --> PC : Vector Embeddings,\nGrounded AI Answers
 
 PC --> SENDGRID : Email Requests
 PC --> FIREBASE : Push Notifications
@@ -83,14 +83,14 @@ skinparam rectangle<<DataStore>> {
 '''' External Entities
 rectangle "👤 Cat Owner" as CO
 rectangle "👨‍⚕️ Veterinarian" as VT
-rectangle "🤖 OpenAI" as OPENAI
+rectangle "🤖 Gemini API" as GEMINI
 
 '''' Processes
 usecase "1\nAuth &\nUser Mgmt" as P1
 usecase "2\nCat\nManagement" as P2
 usecase "3\nHospital &\nAppointment" as P3
 usecase "5\nChat\nSystem" as P5
-usecase "6\nAI Health\nCompanion" as P6
+usecase "6\nAI Health\nCompanion\n(RAG)" as P6
 usecase "7\nPrescription\n& Medicine" as P7
 
 '''' Data Stores (DeMarco-Yourdon Horizontal Lines via Unicode Box Drawing)
@@ -108,7 +108,7 @@ rectangle "━━━━━━━━━━━━━━━\n D11 appointments \n�
 rectangle "━━━━━━━━━━━━━━━\n  D17 chat_rooms  \n━━━━━━━━━━━━━━━" <<DataStore>> as D17
 rectangle "━━━━━━━━━━━━━━━\n   D18 messages   \n━━━━━━━━━━━━━━━" <<DataStore>> as D18
 rectangle "━━━━━━━━━━━━━━━\n D19 ai_consultations \n━━━━━━━━━━━━━━━" <<DataStore>> as D19
-rectangle "━━━━━━━━━━━━━━━\n D20 illness_records \n━━━━━━━━━━━━━━━" <<DataStore>> as D20
+rectangle "━━━━━━━━━━━━━━━\n D20 cat_health_knowledge \n━━━━━━━━━━━━━━━" <<DataStore>> as D20
 rectangle "━━━━━━━━━━━━━━━\n  D21 medicines  \n━━━━━━━━━━━━━━━" <<DataStore>> as D21
 rectangle "━━━━━━━━━━━━━━━\n D22 prescriptions \n━━━━━━━━━━━━━━━" <<DataStore>> as D22
 rectangle "━━━━━━━━━━━━━━━\n  D23 treatments  \n━━━━━━━━━━━━━━━" <<DataStore>> as D23
@@ -146,14 +146,14 @@ VT --> P5 : message
 P5 --> D17
 P5 --> D18
 
-'''' P6 AI Companion
-CO --> P6 : symptoms
-P6 --> OPENAI : embedding request
-OPENAI --> P6 : vectors
-P6 --> D3 : cat context
-P6 --> D20 : similarity search
-P6 --> D19
-P6 --> CO : recommendations
+'''' P6 AI Companion (RAG)
+CO --> P6 : symptoms / question
+P6 --> GEMINI : embed question (768-dim)
+GEMINI --> P6 : query vector
+P6 --> D20 : cosine similarity search
+GEMINI --> P6 : grounded answer
+P6 --> D19 : log consultation
+P6 --> CO : AI recommendations
 
 '''' P7 Prescription & Medicine
 VT --> P7 : prescription
@@ -189,7 +189,7 @@ skinparam rectangle<<DataStore>> {
 rectangle "👤 Cat Owner" as CO
 rectangle "🏥 Hospital Admin" as HA
 rectangle "🏪 Store Owner" as SO
-rectangle "💳 Stripe" as STRIPE
+rectangle "💳 Safepay" as STRIPE
 
 '''' Processes
 usecase "4\nStore &\nOrder" as P4
@@ -208,9 +208,9 @@ rectangle "━━━━━━━━━━━━━━━\n D25 review_responses 
 rectangle "━━━━━━━━━━━━━━━\n    D26 offers    \n━━━━━━━━━━━━━━━" <<DataStore>> as D26
 rectangle "━━━━━━━━━━━━━━━\n   D27 payments   \n━━━━━━━━━━━━━━━" <<DataStore>> as D27
 
-'''' P4 Store & Order
+'''' P4 Store & Order (incl. mobile store dashboard product management)
 CO --> P4 : order
-SO --> P4 : store/product data
+SO --> P4 : store/product data, stock updates
 P4 --> D12
 P4 --> D13
 P4 --> D14
@@ -262,7 +262,7 @@ rectangle "👤 Cat Owner" as CO
 rectangle "👨‍⚕️ Veterinarian" as VT
 rectangle "🏥 Hospital Admin" as HA
 rectangle "🏪 Store Owner" as SO
-rectangle "📧 SendGrid" as SG
+rectangle "📧 Resend" as SG
 rectangle "🔔 Firebase CM" as FB
 
 '''' Processes
@@ -275,7 +275,7 @@ rectangle "━━━━━━━━━━━━━━━\n  D4 cat_breeds  \n━
 rectangle "━━━━━━━━━━━━━━━\n   D7 vets   \n━━━━━━━━━━━━━━━" <<DataStore>> as D7
 rectangle "━━━━━━━━━━━━━━━\n  D8 hospitals  \n━━━━━━━━━━━━━━━" <<DataStore>> as D8
 rectangle "━━━━━━━━━━━━━━━\n  D12 cat_stores  \n━━━━━━━━━━━━━━━" <<DataStore>> as D12
-rectangle "━━━━━━━━━━━━━━━\n D20 illness_records \n━━━━━━━━━━━━━━━" <<DataStore>> as D20
+rectangle "━━━━━━━━━━━━━━━\n D20 cat_health_knowledge \n━━━━━━━━━━━━━━━" <<DataStore>> as D20
 rectangle "━━━━━━━━━━━━━━━\n  D21 medicines  \n━━━━━━━━━━━━━━━" <<DataStore>> as D21
 rectangle "━━━━━━━━━━━━━━━\n D28 notifications \n━━━━━━━━━━━━━━━" <<DataStore>> as D28
 
@@ -296,7 +296,6 @@ P11 --> D8
 P11 --> D12
 P11 --> D21
 P11 --> D4
-P11 --> D20
 P11 --> SA : reports
 @enduml
 ```
@@ -326,7 +325,7 @@ P11 --> SA : reports
 | D17 | `chat_rooms` | Transaction | P5 |
 | D18 | `messages` | Line Item | P5 |
 | D19 | `ai_consultations` | Transaction | P6 |
-| D20 | `illness_records` | Item | P6, P11 |
+| D20 | `cat_health_knowledge` | RAG Knowledge Base | P6 |
 | D21 | `medicines` | Item | P7, P11 |
 | D22 | `prescriptions` | Subsequent Tx | P7 |
 | D23 | `treatments` | Subsequent Tx | P7 |
@@ -337,3 +336,5 @@ P11 --> SA : reports
 | D28 | `notifications` | System | P10 |
 
 **Coverage: 28/28 data stores • 11 processes • 5 external entities • 4 external systems**
+
+> **Note — External Systems**: Safepay replaces Stripe for payments; Resend replaces SendGrid for email; Google Gemini API (gemini-embedding-001 + gemini-2.0-flash) replaces OpenAI for all AI workloads.

@@ -32,12 +32,12 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex" style={{ background: 'linear-gradient(135deg,#F5EBE6 0%,#EFE5DC 100%)' }}>
+    <div className="min-h-screen flex" style={{ background: 'linear-gradient(135deg,#dbe8d8 0%,#EFE5DC 100%)' }}>
 
       {/* ── Left panel ───────────────────────────────── */}
       <div
         className="hidden lg:flex flex-col justify-between w-[44%] p-14 relative overflow-hidden"
-        style={{ background: 'linear-gradient(160deg,#3D4F21 0%,#556B2F 60%,#6B8E23 100%)' }}
+        style={{ background: 'linear-gradient(160deg,#4a373a 0%,#5e4749 60%,#7a5e60 100%)' }}
       >
         {/* Decorative blobs */}
         <div className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-10 pointer-events-none"
@@ -82,7 +82,7 @@ export default function LoginPage() {
         {/* Mobile logo */}
         <Link to="/" className="flex items-center gap-2 no-underline mb-10 lg:hidden">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
-               style={{ background: 'linear-gradient(135deg,#556B2F,#3D4F21)' }}>🐱</div>
+               style={{ background: 'linear-gradient(135deg,#5e4749,#4a373a)' }}>🐱</div>
           <span className="font-display font-black text-lg text-espresso">
             Purrfect<span className="text-olive">Care</span>
           </span>
@@ -106,10 +106,10 @@ export default function LoginPage() {
                 className="w-full px-4 py-3 rounded-xl text-[14px] text-espresso outline-none transition-all"
                 style={{
                   background: 'rgba(255,255,255,.8)',
-                  border: '1.5px solid #D7C9BD',
+                  border: '1.5px solid #b8ceb5',
                 }}
-                onFocus={e => { e.target.style.borderColor = '#556B2F'; e.target.style.boxShadow = '0 0 0 3px rgba(85,107,47,.12)' }}
-                onBlur={e  => { e.target.style.borderColor = '#D7C9BD'; e.target.style.boxShadow = 'none' }}
+                onFocus={e => { e.target.style.borderColor = '#5e4749'; e.target.style.boxShadow = '0 0 0 3px rgba(85,107,47,.12)' }}
+                onBlur={e  => { e.target.style.borderColor = '#b8ceb5'; e.target.style.boxShadow = 'none' }}
               />
             </div>
 
@@ -129,9 +129,9 @@ export default function LoginPage() {
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className="w-full px-4 py-3 rounded-xl text-[14px] text-espresso outline-none transition-all"
-                style={{ background: 'rgba(255,255,255,.8)', border: '1.5px solid #D7C9BD' }}
-                onFocus={e => { e.target.style.borderColor = '#556B2F'; e.target.style.boxShadow = '0 0 0 3px rgba(85,107,47,.12)' }}
-                onBlur={e  => { e.target.style.borderColor = '#D7C9BD'; e.target.style.boxShadow = 'none' }}
+                style={{ background: 'rgba(255,255,255,.8)', border: '1.5px solid #b8ceb5' }}
+                onFocus={e => { e.target.style.borderColor = '#5e4749'; e.target.style.boxShadow = '0 0 0 3px rgba(85,107,47,.12)' }}
+                onBlur={e  => { e.target.style.borderColor = '#b8ceb5'; e.target.style.boxShadow = 'none' }}
               />
             </div>
 
@@ -157,9 +157,9 @@ export default function LoginPage() {
 
           {/* Divider */}
           <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px" style={{ background: '#D7C9BD' }} />
+            <div className="flex-1 h-px" style={{ background: '#b8ceb5' }} />
             <span className="text-[11px] text-clay-muted font-mono uppercase tracking-widest">or</span>
-            <div className="flex-1 h-px" style={{ background: '#D7C9BD' }} />
+            <div className="flex-1 h-px" style={{ background: '#b8ceb5' }} />
           </div>
 
           {/* Register link */}

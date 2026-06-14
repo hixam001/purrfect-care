@@ -12,7 +12,9 @@
         "tests",
         ".pytest_cache",
         "Dockerfile",
-        ".dockerignore"
+        ".dockerignore",
+        ".env",
+        ".env.*"
       ]
     }
   ],
@@ -23,7 +25,19 @@
       "**/.*",
       "**/node_modules/**"
     ],
+    "headers": [
+      {
+        "source": "**/*.@(js|css|png|jpg|svg|ico|woff2|ttf)",
+        "headers": [
+          { "key": "Cache-Control", "value": "public,max-age=31536000,immutable" }
+        ]
+      }
+    ],
     "rewrites": [
+      {
+        "source": "/app/**",
+        "destination": "/app/index.html"
+      },
       {
         "source": "**",
         "destination": "/index.html"

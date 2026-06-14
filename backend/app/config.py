@@ -59,7 +59,7 @@ class Settings(BaseSettings):
         return self.APP_ENV == "production"
 
     model_config = {
-        "env_file": ".env",
+        "env_file": [".env.local", ".env"],  # .env.local = local secrets (not read by Firebase CLI)
         "env_file_encoding": "utf-8",
         "case_sensitive": True,
     }

@@ -119,9 +119,9 @@ export default function ChatPage() {
   /* ── Blocked / case closed ── */
   if (!loading && blocked) return (
     <div className="min-h-screen flex items-center justify-center px-4"
-         style={{ background:'linear-gradient(135deg,#F5EBE6,#EFE5DC)' }}>
+         style={{ background:'linear-gradient(135deg,#dbe8d8,#EFE5DC)' }}>
       <div className="max-w-md w-full rounded-3xl p-10 text-center"
-           style={{ background:'rgba(255,255,255,.85)', backdropFilter:'blur(12px)', border:'1px solid #D7C9BD' }}>
+           style={{ background:'rgba(255,255,255,.85)', backdropFilter:'blur(12px)', border:'1px solid #b8ceb5' }}>
         <div className="text-5xl mb-4">🔒</div>
         <h2 className="font-display font-black text-[1.5rem] text-espresso mb-3">
           {!appointment ? 'Appointment not found' : 'Case is Closed'}
@@ -139,7 +139,7 @@ export default function ChatPage() {
   )
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background:'#F5EBE6' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background:'#dbe8d8' }}>
       <div className="text-clay-muted">Connecting…</div>
     </div>
   )
@@ -149,27 +149,25 @@ export default function ChatPage() {
   const hospName = appointment?.hospitals?.name ?? 'Hospital'
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ background:'linear-gradient(135deg,#F5EBE6,#EFE5DC)' }}>
+    <div className="min-h-screen flex flex-col" style={{ background:'linear-gradient(135deg,#dbe8d8,#EFE5DC)' }}>
 
-      {/* Header */}
-      <header className="sticky top-0 z-50"
-              style={{ background:'rgba(245,235,230,.92)', backdropFilter:'blur(18px)', borderBottom:'1px solid #D7C9BD' }}>
-        <div className="max-w-3xl mx-auto px-4 md:px-6 h-16 flex items-center gap-4">
-          <Link to="/dashboard" className="text-clay-muted hover:text-olive text-[13px]">←</Link>
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-2xl"
-               style={{ background:'linear-gradient(135deg,rgba(107,142,35,.18),rgba(107,142,35,.08))' }}>
+      {/* Vet sub-header — sits below AppLayout navbar */}
+      <div style={{ background:'rgba(219,232,216,.80)', backdropFilter:'blur(12px)', borderBottom:'1px solid #b8ceb5' }}>
+        <div className="max-w-3xl mx-auto px-4 md:px-6 h-14 flex items-center gap-4">
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
+               style={{ background:'linear-gradient(135deg,rgba(94,71,73,.18),rgba(94,71,73,.08))' }}>
             👨‍⚕️
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-bold text-[15px] text-espresso truncate">{vetName}</div>
+            <div className="font-bold text-[14px] text-espresso truncate">{vetName}</div>
             <div className="text-[11px] text-clay-muted truncate">{hospName} · 🐱 {catName}</div>
           </div>
           <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-olive-light" />
-            <span className="text-[11px] text-olive font-mono">Case Open</span>
+            <span className="w-2 h-2 rounded-full" style={{ background:'#5e4749' }} />
+            <span className="text-[11px] font-mono" style={{ color:'#5e4749' }}>Case Open</span>
           </div>
         </div>
-      </header>
+      </div>
 
       {/* Messages */}
       <main className="flex-1 overflow-y-auto max-w-3xl w-full mx-auto px-4 md:px-6 py-6 flex flex-col gap-3">
@@ -203,7 +201,7 @@ export default function ChatPage() {
       <div className="sticky bottom-0 max-w-3xl w-full mx-auto px-4 md:px-6 pb-6">
         <form onSubmit={sendMessage}
               className="flex items-center gap-3 p-3 rounded-2xl"
-              style={{ background:'rgba(255,255,255,.85)', backdropFilter:'blur(12px)', border:'1px solid #D7C9BD' }}>
+              style={{ background:'rgba(255,255,255,.85)', backdropFilter:'blur(12px)', border:'1px solid #b8ceb5' }}>
           <input value={input} onChange={e => setInput(e.target.value)}
                  placeholder={`Message ${vetName}…`}
                  className="flex-1 bg-transparent outline-none text-[14px] text-espresso px-2" />

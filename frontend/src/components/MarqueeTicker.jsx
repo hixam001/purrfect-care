@@ -1,13 +1,13 @@
 const ITEMS = [
-  '🐱 Veterinary Appointments',
-  '🤖 AI Health Companion',
+  'Veterinary Appointments',
+  'AI Health Companion',
   '🏪 Curated Cat Store',
-  '💊 Medicine Database',
+  'Medicine Database',
   '📋 Patient History',
-  '🌿 Prescription Tracking',
-  '🏥 Verified Partner Clinics',
-  '🐾 Growing Cat Community',
-  '✅ Fully Verified Platform',
+  'Prescription Tracking',
+  'Verified Partner Clinics',
+  'Growing Cat Community',
+  'Fully Verified Platform',
 ]
 
 export default function MarqueeTicker() {
@@ -23,8 +23,8 @@ export default function MarqueeTicker() {
       className="overflow-hidden py-3"
       style={{
         background:   'rgba(239,229,220,.6)',
-        borderTop:    '1px solid #D7C9BD',
-        borderBottom: '1px solid #D7C9BD',
+        borderTop:    '1px solid #b8ceb5',
+        borderBottom: '1px solid #b8ceb5',
       }}
     >
       {/* Double the set so the loop is seamless */}

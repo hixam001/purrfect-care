@@ -41,17 +41,17 @@ export default function RegisterPage() {
   }
 
   const inputCls = "w-full px-4 py-3 rounded-xl text-[14px] text-espresso outline-none transition-all"
-  const inputStyle = { background: 'rgba(255,255,255,.8)', border: '1.5px solid #D7C9BD' }
-  const focusIn  = e => { e.target.style.borderColor = '#556B2F'; e.target.style.boxShadow = '0 0 0 3px rgba(85,107,47,.12)' }
-  const focusOut = e => { e.target.style.borderColor = '#D7C9BD'; e.target.style.boxShadow = 'none' }
+  const inputStyle = { background: 'rgba(255,255,255,.8)', border: '1.5px solid #b8ceb5' }
+  const focusIn  = e => { e.target.style.borderColor = '#5e4749'; e.target.style.boxShadow = '0 0 0 3px rgba(85,107,47,.12)' }
+  const focusOut = e => { e.target.style.borderColor = '#b8ceb5'; e.target.style.boxShadow = 'none' }
 
   return (
-    <div className="min-h-screen flex" style={{ background: 'linear-gradient(135deg,#F5EBE6 0%,#EFE5DC 100%)' }}>
+    <div className="min-h-screen flex" style={{ background: 'linear-gradient(135deg,#dbe8d8 0%,#EFE5DC 100%)' }}>
 
       {/* ── Left branding ────────────────────────────── */}
       <div
         className="hidden lg:flex flex-col justify-between w-[44%] p-14 relative overflow-hidden"
-        style={{ background: 'linear-gradient(160deg,#3D4F21 0%,#556B2F 60%,#6B8E23 100%)' }}
+        style={{ background: 'linear-gradient(160deg,#4a373a 0%,#5e4749 60%,#7a5e60 100%)' }}
       >
         <div className="absolute top-0 right-0 w-80 h-80 rounded-full pointer-events-none"
              style={{ background: 'rgba(255,255,255,.08)', transform: 'translate(30%,-30%)' }} />
@@ -89,7 +89,7 @@ export default function RegisterPage() {
         {/* Mobile logo */}
         <Link to="/" className="flex items-center gap-2 no-underline mb-8 lg:hidden">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
-               style={{ background: 'linear-gradient(135deg,#556B2F,#3D4F21)' }}>🐱</div>
+               style={{ background: 'linear-gradient(135deg,#5e4749,#4a373a)' }}>🐱</div>
           <span className="font-display font-black text-lg text-espresso">
             Purrfect<span className="text-olive">Care</span>
           </span>
@@ -101,7 +101,7 @@ export default function RegisterPage() {
           <div className="flex items-center gap-2 mb-6">
             {[1,2].map(n => (
               <div key={n} className="h-1.5 rounded-full transition-all duration-300"
-                   style={{ width: step >= n ? 48 : 24, background: step >= n ? '#556B2F' : '#D7C9BD' }} />
+                   style={{ width: step >= n ? 48 : 24, background: step >= n ? '#5e4749' : '#b8ceb5' }} />
             ))}
             <span className="text-[11px] text-clay-muted font-mono ml-2">Step {step} of 2</span>
           </div>
@@ -121,7 +121,7 @@ export default function RegisterPage() {
                     className="text-left px-5 py-4 rounded-2xl transition-all duration-200"
                     style={{
                       background:   role === r.value ? 'rgba(85,107,47,.08)' : 'rgba(255,255,255,.7)',
-                      border:       role === r.value ? '2px solid #556B2F'   : '1.5px solid #D7C9BD',
+                      border:       role === r.value ? '2px solid #5e4749'   : '1.5px solid #b8ceb5',
                     }}
                   >
                     <div className="font-bold text-[14px] text-espresso mb-0.5">{r.label}</div>
@@ -132,7 +132,7 @@ export default function RegisterPage() {
 
               {/* Hospital / Store / Vet info banners */}
               <div className="rounded-2xl p-4 mb-5 flex flex-col gap-2"
-                   style={{ background: 'rgba(107,142,35,.07)', border: '1px solid rgba(107,142,35,.2)' }}>
+                   style={{ background: 'rgba(94,71,73,.07)', border: '1px solid rgba(94,71,73,.2)' }}>
 
                 {/* Hospital */}
                 <div className="flex items-start gap-2.5">
@@ -147,7 +147,7 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                <div className="h-px mx-1" style={{ background: 'rgba(107,142,35,.15)' }} />
+                <div className="h-px mx-1" style={{ background: 'rgba(94,71,73,.15)' }} />
 
                 {/* Store */}
                 <div className="flex items-start gap-2.5">
@@ -162,7 +162,7 @@ export default function RegisterPage() {
                   </div>
                 </div>
 
-                <div className="h-px mx-1" style={{ background: 'rgba(107,142,35,.15)' }} />
+                <div className="h-px mx-1" style={{ background: 'rgba(94,71,73,.15)' }} />
 
                 {/* Vet */}
                 <div className="flex items-start gap-2.5">
@@ -193,7 +193,7 @@ export default function RegisterPage() {
               <div className="flex items-center gap-2 mb-6">
                 <button type="button" onClick={() => setStep(1)}
                         className="w-8 h-8 rounded-lg flex items-center justify-center text-clay-muted transition-colors"
-                        style={{ background: '#D7C9BD' }}>←</button>
+                        style={{ background: '#b8ceb5' }}>←</button>
                 <h1 className="font-display font-black text-[1.6rem] text-espresso tracking-tight">Your details</h1>
               </div>
 

@@ -10,7 +10,7 @@ export default function CTABanner() {
       <div
         ref={ref}
         className="fade-up rounded-[28px] px-10 py-20 md:px-16 text-center relative overflow-hidden"
-        style={{ background: 'linear-gradient(135deg,#556B2F 0%,#3D4F21 100%)' }}
+        style={{ background: 'linear-gradient(135deg,#5e4749 0%,#4a373a 100%)' }}
       >
         {/* Decorative circles */}
         <div
@@ -23,15 +23,15 @@ export default function CTABanner() {
         />
         <div
           className="absolute top-1/2 left-1/2 w-[600px] h-[600px] rounded-full pointer-events-none"
-          style={{ background: 'rgba(107,142,35,.15)', transform: 'translate(-50%,-50%)' }}
+          style={{ background: 'rgba(94,71,73,.15)', transform: 'translate(-50%,-50%)' }}
         />
 
         {/* Eyebrow label */}
         <span
           className="inline-block px-3.5 py-1.5 rounded-lg font-mono text-[10px] font-bold uppercase tracking-[.1em] mb-6 relative"
-          style={{ background: 'rgba(255,255,255,.14)', color: 'rgba(245,235,230,.9)' }}
+          style={{ background: 'rgba(255,255,255,.14)', color: 'rgba(219,232,216,.95)' }}
         >
-          🌿 Organic Apothecary · Feline Sanctuary
+          Organic Apothecary · Feline Sanctuary
         </span>
 
         {/* Headline */}
@@ -39,7 +39,7 @@ export default function CTABanner() {
           className="font-display font-black tracking-tight leading-[1.05] relative mb-4"
           style={{
             fontSize: 'clamp(2rem,4vw,3.4rem)',
-            color: '#F5EBE6',
+            color: '#dbe8d8',
           }}
         >
           Your cat's health.<br />Finally, simplified.
@@ -47,7 +47,7 @@ export default function CTABanner() {
 
         <p
           className="text-[16px] max-w-lg mx-auto leading-[1.7] mb-9 relative"
-          style={{ color: 'rgba(245,235,230,.72)' }}
+          style={{ color: 'rgba(219,232,216,.75)' }}
         >
           Join 18,000+ cat families who trust Purrfect Care for every paw, purr, and prescription.
         </p>
@@ -57,9 +57,9 @@ export default function CTABanner() {
           <Link
             to="/register"
             className="btn"
-            style={{ background: '#F5EBE6', color: '#3D2616' }}
+            style={{ background: '#dbe8d8', color: '#3a2c2d' }}
           >
-            🐾 Register your cat — it's free
+            Register your cat — it's free
           </Link>
           <Link to="/login"><BtnGhostLight>Learn more →</BtnGhostLight></Link>
         </div>

@@ -28,22 +28,22 @@ export default function Testimonials() {
       >
         {[
           {
-            icon: '🐱',
+            icon: '',
             title: 'For Cat Parents',
             desc: 'Book vet appointments, track your cat\'s health records, and get instant AI-powered guidance — all in one place.',
-            bg: 'rgba(107,142,35,.1)',
+            bg: 'rgba(94,71,73,.1)',
           },
           {
-            icon: '👨‍⚕️',
+            icon: '',
             title: 'For Veterinarians',
             desc: 'Manage appointments, view full patient history, issue digital prescriptions, and communicate with clients seamlessly.',
             bg: 'rgba(196,140,56,.1)',
           },
           {
-            icon: '🏥',
+            icon: '',
             title: 'For Hospitals',
             desc: 'Register your clinic, manage your vet team, handle appointment approvals, and grow your client base online.',
-            bg: 'rgba(107,142,35,.1)',
+            bg: 'rgba(94,71,73,.1)',
           },
         ].map(f => (
           <Card key={f.title} className="p-6">

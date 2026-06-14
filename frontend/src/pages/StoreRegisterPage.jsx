@@ -23,12 +23,12 @@ const CATEGORIES = ['Food & Treats','Beds & Furniture','Wellness','Grooming','To
 const PLANS = [
   {
     id:'starter', name:'Starter',    price:'₨ 500/mo',   yearly:'₨ 5,000/yr', commission:'8%',
-    color:'rgba(160,140,125,.1)', border:'#D7C9BD',
+    color:'rgba(160,140,125,.1)', border:'#b8ceb5',
     features:['Up to 30 products', '₨ 50,000 monthly orders', '8% commission per order', 'Standard delivery integration','Email support'],
   },
   {
     id:'growth',  name:'Growth',     price:'₨ 1,500/mo', yearly:'₨ 15,000/yr', commission:'5%', badge:'Best Value',
-    color:'rgba(107,142,35,.1)', border:'rgba(107,142,35,.35)',
+    color:'rgba(94,71,73,.1)', border:'rgba(94,71,73,.35)',
     features:['Up to 200 products','Unlimited orders','5% commission per order','Priority listing in search','Real-time analytics','Dedicated support'],
   },
   {
@@ -39,9 +39,9 @@ const PLANS = [
 ]
 
 const inputCls = "w-full px-4 py-3 rounded-xl text-[14px] text-espresso outline-none transition-all"
-const inputSty = { background:'rgba(255,255,255,.8)', border:'1.5px solid #D7C9BD' }
-const fi = e => { e.target.style.borderColor='#556B2F'; e.target.style.boxShadow='0 0 0 3px rgba(85,107,47,.12)' }
-const fo = e => { e.target.style.borderColor='#D7C9BD'; e.target.style.boxShadow='none' }
+const inputSty = { background:'rgba(255,255,255,.8)', border:'1.5px solid #b8ceb5' }
+const fi = e => { e.target.style.borderColor='#5e4749'; e.target.style.boxShadow='0 0 0 3px rgba(85,107,47,.12)' }
+const fo = e => { e.target.style.borderColor='#b8ceb5'; e.target.style.boxShadow='none' }
 
 function Label({ children }) {
   return <label className="t-mono text-[10px] text-espresso-soft block mb-1.5">{children}</label>
@@ -97,13 +97,13 @@ export default function StoreRegisterPage() {
   function back() { setErr(''); setStep(s => s-1) }
 
   return (
-    <div className="min-h-screen" style={{ background:'linear-gradient(135deg,#F5EBE6 0%,#EFE5DC 100%)' }}>
+    <div className="min-h-screen" style={{ background:'linear-gradient(135deg,#dbe8d8 0%,#EFE5DC 100%)' }}>
       <div className="max-w-3xl mx-auto px-4 py-10">
 
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 no-underline mb-8 w-fit">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
-               style={{ background:'linear-gradient(135deg,#556B2F,#3D4F21)' }}>🐱</div>
+               style={{ background:'linear-gradient(135deg,#5e4749,#4a373a)' }}>🐱</div>
           <span className="font-display font-black text-lg text-espresso">
             Purrfect<span className="text-olive">Care</span>
           </span>
@@ -141,7 +141,7 @@ export default function StoreRegisterPage() {
 
         {/* Card */}
         {step < 6 && (
-          <div className="rounded-3xl p-8" style={{ background:'rgba(255,255,255,.75)', backdropFilter:'blur(12px)', border:'1px solid #D7C9BD' }}>
+          <div className="rounded-3xl p-8" style={{ background:'rgba(255,255,255,.75)', backdropFilter:'blur(12px)', border:'1px solid #b8ceb5' }}>
 
             {/* ── STEP 0: Store Type ── */}
             {step === 0 && (
@@ -154,7 +154,7 @@ export default function StoreRegisterPage() {
                             className="flex items-center gap-4 px-5 py-4 rounded-2xl text-left transition-all"
                             style={{
                               background: storeType===t.value ? 'rgba(85,107,47,.08)' : 'rgba(255,255,255,.7)',
-                              border:     storeType===t.value ? '2px solid #556B2F'  : '1.5px solid #D7C9BD',
+                              border:     storeType===t.value ? '2px solid #5e4749'  : '1.5px solid #b8ceb5',
                             }}>
                       <span className="text-3xl">{t.icon}</span>
                       <div>
@@ -194,9 +194,9 @@ export default function StoreRegisterPage() {
                       <button key={c} type="button" onClick={() => toggleCat(c)}
                               className="pill transition-all"
                               style={{
-                                background: selCats.includes(c) ? '#556B2F' : 'rgba(255,255,255,.7)',
+                                background: selCats.includes(c) ? '#5e4749' : 'rgba(255,255,255,.7)',
                                 color:      selCats.includes(c) ? '#fff'    : '#4E342E',
-                                border:     selCats.includes(c) ? 'none'    : '1px solid #D7C9BD',
+                                border:     selCats.includes(c) ? 'none'    : '1px solid #b8ceb5',
                               }}>
                         {c}
                       </button>
@@ -285,12 +285,12 @@ export default function StoreRegisterPage() {
                   { label:'Product Source / Supplier Agreement', hint:'Invoice, supplier contract, or import documents (optional but recommended)' },
                 ].map(doc => (
                   <div key={doc.label} className="p-5 rounded-2xl cursor-pointer transition-all"
-                       style={{ background:'rgba(255,255,255,.6)', border:'2px dashed #D7C9BD' }}
-                       onMouseOver={e=>e.currentTarget.style.borderColor='#556B2F'}
-                       onMouseOut={e=>e.currentTarget.style.borderColor='#D7C9BD'}>
+                       style={{ background:'rgba(255,255,255,.6)', border:'2px dashed #b8ceb5' }}
+                       onMouseOver={e=>e.currentTarget.style.borderColor='#5e4749'}
+                       onMouseOut={e=>e.currentTarget.style.borderColor='#b8ceb5'}>
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-                           style={{ background:'rgba(107,142,35,.1)' }}>📄</div>
+                           style={{ background:'rgba(94,71,73,.1)' }}>📄</div>
                       <div className="flex-1">
                         <div className="font-semibold text-[14px] text-espresso">{doc.label}</div>
                         <div className="text-[12px] text-clay-muted">{doc.hint}</div>
@@ -319,8 +319,8 @@ export default function StoreRegisterPage() {
                   {['monthly','yearly'].map(b => (
                     <button key={b} type="button" onClick={()=>setBilling(b)}
                             className="flex-1 py-2 rounded-xl text-[12px] font-bold transition-all"
-                            style={{ background: billing===b ? '#556B2F' : 'rgba(255,255,255,.7)',
-                                     color: billing===b ? '#fff' : '#4E342E', border: billing===b ? 'none' : '1.5px solid #D7C9BD' }}>
+                            style={{ background: billing===b ? '#5e4749' : 'rgba(255,255,255,.7)',
+                                     color: billing===b ? '#fff' : '#4E342E', border: billing===b ? 'none' : '1.5px solid #b8ceb5' }}>
                       {b === 'monthly' ? 'Monthly' : 'Yearly (2 months free)'}
                     </button>
                   ))}
@@ -330,7 +330,7 @@ export default function StoreRegisterPage() {
                   {PLANS.map(p => (
                     <div key={p.id} onClick={()=>setPlan(p.id)}
                          className="relative p-5 rounded-2xl cursor-pointer transition-all"
-                         style={{ background:p.color, border:`2px solid ${plan===p.id ? '#556B2F' : p.border}` }}>
+                         style={{ background:p.color, border:`2px solid ${plan===p.id ? '#5e4749' : p.border}` }}>
                       {p.badge && (
                         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                           <span className="t-label text-[9px]">{p.badge}</span>
@@ -349,7 +349,7 @@ export default function StoreRegisterPage() {
                         ))}
                       </div>
                       {plan===p.id && (
-                        <div className="mt-3 pt-2 border-t" style={{ borderColor:'rgba(107,142,35,.2)' }}>
+                        <div className="mt-3 pt-2 border-t" style={{ borderColor:'rgba(94,71,73,.2)' }}>
                           <span className="t-mono text-[9px] text-olive">✓ Selected</span>
                         </div>
                       )}
@@ -358,7 +358,7 @@ export default function StoreRegisterPage() {
                 </div>
 
                 <div className="mt-4 p-3 rounded-xl text-[12px] text-clay-muted"
-                     style={{ background:'rgba(107,142,35,.07)', border:'1px solid rgba(107,142,35,.18)' }}>
+                     style={{ background:'rgba(94,71,73,.07)', border:'1px solid rgba(94,71,73,.18)' }}>
                   ℹ️ Your subscription will only be activated once your store application has been <strong className="text-espresso">approved by a System Admin</strong>. No charges are made during the review period.
                 </div>
               </div>
@@ -407,8 +407,8 @@ export default function StoreRegisterPage() {
 
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5"
                  style={{ background:'rgba(196,140,56,.1)', border:'1px solid rgba(196,140,56,.25)' }}>
-              <div className="w-2 h-2 rounded-full animate-pulse" style={{ background:'#C48C38' }} />
-              <span className="text-[11px] font-mono tracking-widest uppercase" style={{ color:'#C48C38' }}>
+              <div className="w-2 h-2 rounded-full animate-pulse" style={{ background:'#b87c2a' }} />
+              <span className="text-[11px] font-mono tracking-widest uppercase" style={{ color:'#b87c2a' }}>
                 Pending Review
               </span>
             </div>
@@ -423,7 +423,7 @@ export default function StoreRegisterPage() {
 
             {/* What happens next */}
             <div className="max-w-md mx-auto mb-8 text-left rounded-2xl p-5 flex flex-col gap-3"
-                 style={{ background:'rgba(107,142,35,.06)', border:'1px solid rgba(107,142,35,.18)' }}>
+                 style={{ background:'rgba(94,71,73,.06)', border:'1px solid rgba(94,71,73,.18)' }}>
               <div className="font-bold text-[13px] text-espresso mb-1">📋 What happens next?</div>
               {[
                 { step:'1', text:'Our team reviews your submitted documents (24–48 hours)' },
@@ -432,7 +432,7 @@ export default function StoreRegisterPage() {
               ].map(s => (
                 <div key={s.step} className="flex items-start gap-3">
                   <div className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold flex-shrink-0"
-                       style={{ background:'rgba(107,142,35,.15)', color:'#556B2F' }}>{s.step}</div>
+                       style={{ background:'rgba(94,71,73,.15)', color:'#5e4749' }}>{s.step}</div>
                   <span className="text-[13px] text-clay-muted">{s.text}</span>
                 </div>
               ))}
@@ -448,7 +448,7 @@ export default function StoreRegisterPage() {
               <Link to="/" className="btn btn-olive justify-center !py-3 w-full no-underline">
                 ← Back to Purrfect Care
               </Link>
-              <Link to="/login" className="text-[13px] text-clay-muted hover:text-olive">
+              <Link to="/login" className="text-[13px] font-semibold" style={{ color:"#5e4749" }}>
                 Already have an account? Sign in
               </Link>
             </div>

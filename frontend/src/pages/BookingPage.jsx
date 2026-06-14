@@ -34,7 +34,7 @@ function Calendar({ selected, onSelect }) {
   }
 
   return (
-    <div className="rounded-2xl p-5" style={{ background:'rgba(255,255,255,.7)', border:'1px solid #D7C9BD' }}>
+    <div className="rounded-2xl p-5" style={{ background:'rgba(255,255,255,.7)', border:'1px solid #b8ceb5' }}>
       <div className="flex items-center justify-between mb-4">
         <button type="button" onClick={() => { if (month===0) { setMonth(11); setYear(y=>y-1) } else setMonth(m=>m-1) }}
                 className="w-8 h-8 rounded-lg flex items-center justify-center text-clay-muted hover:bg-clay">‹</button>
@@ -50,7 +50,7 @@ function Calendar({ selected, onSelect }) {
           <button key={i} type="button" onClick={() => pick(d)} disabled={!d || isPast(d)}
                   className="aspect-square w-full rounded-xl text-[13px] font-medium transition-all"
                   style={{
-                    background: isSel(d) ? '#556B2F' : 'transparent',
+                    background: isSel(d) ? '#5e4749' : 'transparent',
                     color:      isSel(d) ? '#fff' : (isPast(d)||!d) ? '#C4B5AC' : '#4E342E',
                     cursor:     (!d||isPast(d)) ? 'default' : 'pointer',
                   }}
@@ -160,13 +160,13 @@ export default function BookingPage() {
   }
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background:'#F5EBE6' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background:'#dbe8d8' }}>
       <div className="text-clay-muted">Loading…</div>
     </div>
   )
 
   if (!vet) return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background:'#F5EBE6' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{ background:'#dbe8d8' }}>
       <div className="text-center">
         <div className="text-4xl mb-3">👨‍⚕️</div>
         <div className="font-bold text-espresso mb-2">Vet not found</div>
@@ -180,15 +180,15 @@ export default function BookingPage() {
   /* ── Confirmed screen ── */
   if (done) return (
     <div className="min-h-screen flex items-center justify-center px-4"
-         style={{ background:'linear-gradient(135deg,#F5EBE6,#EFE5DC)' }}>
+         style={{ background:'linear-gradient(135deg,#dbe8d8,#EFE5DC)' }}>
       <div className="max-w-md w-full rounded-3xl p-10 text-center"
-           style={{ background:'rgba(255,255,255,.85)', backdropFilter:'blur(12px)', border:'1px solid rgba(107,142,35,.25)' }}>
+           style={{ background:'rgba(255,255,255,.85)', backdropFilter:'blur(12px)', border:'1px solid rgba(94,71,73,.25)' }}>
         <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl mx-auto mb-5"
-             style={{ background:'rgba(107,142,35,.15)', border:'2px solid rgba(107,142,35,.3)' }}>📅</div>
+             style={{ background:'rgba(94,71,73,.15)', border:'2px solid rgba(94,71,73,.3)' }}>📅</div>
         <div className="t-label mb-3 inline-block">Booking Confirmed</div>
         <h2 className="font-display font-black text-[1.8rem] text-espresso mb-3">You're booked!</h2>
         <div className="flex flex-col gap-2 mb-5 p-4 rounded-2xl text-left"
-             style={{ background:'rgba(107,142,35,.07)', border:'1px solid rgba(107,142,35,.18)' }}>
+             style={{ background:'rgba(94,71,73,.07)', border:'1px solid rgba(94,71,73,.18)' }}>
           {[
             ['Reference', bookingRef],
             ['Vet',       vetName],
@@ -211,17 +211,17 @@ export default function BookingPage() {
           <button onClick={() => navigate('/dashboard')} className="btn btn-olive justify-center w-full !py-3">
             Go to Dashboard
           </button>
-          <Link to="/find-vets" className="text-[13px] text-clay-muted hover:text-olive">← Book another</Link>
+          <Link to="/find-vets" className="text-[13px] font-semibold" style={{ color:"#5e4749" }}>← Book another</Link>
         </div>
       </div>
     </div>
   )
 
   return (
-    <div className="min-h-screen" style={{ background:'linear-gradient(135deg,#F5EBE6,#EFE5DC)' }}>
+    <div className="min-h-screen" style={{ background:'linear-gradient(135deg,#dbe8d8,#EFE5DC)' }}>
       <div className="max-w-4xl mx-auto px-4 py-10">
         <Link to={hospitalId ? `/hospital/${hospitalId}` : '/find-vets'}
-              className="flex items-center gap-2 no-underline mb-8 text-clay-muted hover:text-olive text-[13px] w-fit">
+              className="inline-flex items-center gap-1.5 no-underline mb-8 font-semibold text-[13px] px-4 py-2 rounded-xl w-fit" style={{ color:"#5e4749", background:"rgba(94,71,73,.09)", border:"1px solid rgba(94,71,73,.18)" }}>
           ← Back
         </Link>
 
@@ -241,7 +241,7 @@ export default function BookingPage() {
 
             <Stepper steps={STEPS} current={step} />
 
-            <div className="rounded-3xl p-6" style={{ background:'rgba(255,255,255,.75)', backdropFilter:'blur(12px)', border:'1px solid #D7C9BD' }}>
+            <div className="rounded-3xl p-6" style={{ background:'rgba(255,255,255,.75)', backdropFilter:'blur(12px)', border:'1px solid #b8ceb5' }}>
 
               {/* STEP 0: Date & Time */}
               {step === 0 && (
@@ -258,9 +258,9 @@ export default function BookingPage() {
                           <button key={t} type="button" onClick={() => setTime(t)}
                                   className="py-2.5 rounded-xl text-[12px] font-semibold transition-all"
                                   style={{
-                                    background: time===t ? '#556B2F' : 'rgba(255,255,255,.7)',
+                                    background: time===t ? '#5e4749' : 'rgba(255,255,255,.7)',
                                     color:      time===t ? '#fff'    : '#4E342E',
-                                    border:     time===t ? 'none'    : '1px solid #D7C9BD',
+                                    border:     time===t ? 'none'    : '1px solid #b8ceb5',
                                   }}>
                             {t}
                           </button>
@@ -291,10 +291,10 @@ export default function BookingPage() {
                                 className="flex items-center gap-4 px-5 py-4 rounded-2xl text-left transition-all"
                                 style={{
                                   background: catId===c.id ? 'rgba(85,107,47,.08)' : 'rgba(255,255,255,.7)',
-                                  border:     catId===c.id ? '2px solid #556B2F'   : '1.5px solid #D7C9BD',
+                                  border:     catId===c.id ? '2px solid #5e4749'   : '1.5px solid #b8ceb5',
                                 }}>
                           <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0"
-                               style={{ background:'rgba(107,142,35,.1)' }}>🐱</div>
+                               style={{ background:'rgba(94,71,73,.1)' }}>🐱</div>
                           <div>
                             <div className="font-bold text-[15px] text-espresso">{c.name}</div>
                             {c.age_months && (
@@ -314,7 +314,7 @@ export default function BookingPage() {
                     <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3}
                               placeholder="Describe symptoms, reason for visit…"
                               className="w-full px-4 py-3 rounded-xl text-[14px] text-espresso outline-none"
-                              style={{ background:'rgba(255,255,255,.8)', border:'1.5px solid #D7C9BD', resize:'none' }} />
+                              style={{ background:'rgba(255,255,255,.8)', border:'1.5px solid #b8ceb5', resize:'none' }} />
                   </div>
 
                   <div className="flex gap-3">
@@ -333,7 +333,7 @@ export default function BookingPage() {
                 <div>
                   <h2 className="font-bold text-[1rem] text-espresso mb-4">Review & Complete Payment</h2>
                   <div className="p-4 rounded-2xl mb-5"
-                       style={{ background:'rgba(107,142,35,.07)', border:'1px solid rgba(107,142,35,.2)' }}>
+                       style={{ background:'rgba(94,71,73,.07)', border:'1px solid rgba(94,71,73,.2)' }}>
                     <div className="t-mono text-[10px] text-olive mb-3">BOOKING SUMMARY</div>
                     {[
                       ['Vet',      vetName],
@@ -344,7 +344,7 @@ export default function BookingPage() {
                       ['Fee',      feeDisplay],
                     ].map(([k, v]) => (
                       <div key={k} className="flex justify-between py-1.5 text-[13px] border-b last:border-0"
-                           style={{ borderColor:'rgba(107,142,35,.15)' }}>
+                           style={{ borderColor:'rgba(94,71,73,.15)' }}>
                         <span className="text-clay-muted">{k}</span>
                         <span className="font-semibold text-espresso">{v}</span>
                       </div>
@@ -367,8 +367,8 @@ export default function BookingPage() {
           <div className="lg:sticky lg:top-24 h-fit">
             <GlassCard className="p-6">
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-4xl mx-auto mb-4"
-                   style={{ background:'linear-gradient(135deg,rgba(107,142,35,.18),rgba(107,142,35,.08))',
-                            boxShadow:'0 0 0 6px rgba(107,142,35,.1)' }}>
+                   style={{ background:'linear-gradient(135deg,rgba(94,71,73,.18),rgba(94,71,73,.08))',
+                            boxShadow:'0 0 0 6px rgba(94,71,73,.1)' }}>
                 👨‍⚕️
               </div>
               <div className="text-center mb-4">
@@ -398,7 +398,7 @@ export default function BookingPage() {
               </div>
 
               <div className="flex items-center justify-between p-3 rounded-xl mb-4"
-                   style={{ background:'rgba(107,142,35,.08)', border:'1px solid rgba(107,142,35,.2)' }}>
+                   style={{ background:'rgba(94,71,73,.08)', border:'1px solid rgba(94,71,73,.2)' }}>
                 <span className="text-[13px] text-clay-muted">Consultation Fee</span>
                 <span className="font-black text-[18px] text-olive">{feeDisplay}</span>
               </div>

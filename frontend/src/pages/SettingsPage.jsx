@@ -33,8 +33,8 @@ function FieldLabel({ children }) {
 }
 
 function InputField({ id, type = 'text', value, onChange, placeholder, disabled }) {
-  const focusIn  = e => { e.target.style.borderColor = '#556B2F'; e.target.style.boxShadow = '0 0 0 3px rgba(85,107,47,.12)' }
-  const focusOut = e => { e.target.style.borderColor = '#D7C9BD'; e.target.style.boxShadow = 'none' }
+  const focusIn  = e => { e.target.style.borderColor = '#5e4749'; e.target.style.boxShadow = '0 0 0 3px rgba(85,107,47,.12)' }
+  const focusOut = e => { e.target.style.borderColor = '#b8ceb5'; e.target.style.boxShadow = 'none' }
   return (
     <input
       id={id}
@@ -46,7 +46,7 @@ function InputField({ id, type = 'text', value, onChange, placeholder, disabled 
       className="w-full px-4 py-3 rounded-xl text-[14px] outline-none transition-all"
       style={{
         background:  disabled ? 'rgba(0,0,0,.03)' : 'rgba(255,255,255,.9)',
-        border:      '1.5px solid #D7C9BD',
+        border:      '1.5px solid #b8ceb5',
         color:       disabled ? '#A08C7D' : '#2C1810',
         cursor:      disabled ? 'not-allowed' : 'text',
       }}
@@ -68,7 +68,7 @@ function Toast({ message, type = 'success', onDone }) {
   const border = type === 'success'
     ? 'rgba(85,107,47,.3)'
     : 'rgba(220,80,80,.3)'
-  const color = type === 'success' ? '#3D4F21' : '#C0392B'
+  const color = type === 'success' ? '#4a373a' : '#C0392B'
 
   return (
     <div
@@ -157,8 +157,8 @@ function ProfileSection({ user }) {
           onClick={() => fileRef.current?.click()}
           className="relative w-20 h-20 rounded-2xl flex items-center justify-center cursor-pointer overflow-hidden flex-shrink-0 group"
           style={{
-            background: avatarSrc ? 'transparent' : 'rgba(107,142,35,.1)',
-            border: '2px dashed rgba(107,142,35,.4)',
+            background: avatarSrc ? 'transparent' : 'rgba(94,71,73,.1)',
+            border: '2px dashed rgba(94,71,73,.4)',
           }}
         >
           {avatarSrc
@@ -334,8 +334,8 @@ function NotificationsSection({ user }) {
           onClick={() => toggle(r.key)}
           className="flex items-center justify-between px-5 py-4 rounded-2xl cursor-pointer transition-all"
           style={{
-            background: notif[r.key] ? 'rgba(107,142,35,.08)' : 'rgba(255,255,255,.7)',
-            border: `1px solid ${notif[r.key] ? 'rgba(107,142,35,.25)' : '#D7C9BD'}`,
+            background: notif[r.key] ? 'rgba(94,71,73,.08)' : 'rgba(255,255,255,.7)',
+            border: `1px solid ${notif[r.key] ? 'rgba(94,71,73,.25)' : '#b8ceb5'}`,
           }}
         >
           <div>
@@ -344,7 +344,7 @@ function NotificationsSection({ user }) {
           </div>
           <div
             className="w-11 h-6 rounded-full relative transition-all flex-shrink-0 ml-4"
-            style={{ background: notif[r.key] ? '#556B2F' : '#D7C9BD' }}
+            style={{ background: notif[r.key] ? '#5e4749' : '#b8ceb5' }}
           >
             <div
               className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all"
@@ -398,42 +398,7 @@ export default function SettingsPage() {
   const displayName = user?.full_name ?? user?.email ?? 'Cat Parent'
 
   return (
-    <div className="min-h-screen" style={{ background: '#F5EBE6' }}>
-
-      {/* ── Navbar ── */}
-      <header
-        className="sticky top-0 z-30 transition-shadow"
-        style={{ background: 'rgba(245,235,230,.92)', backdropFilter: 'blur(18px)', borderBottom: '1px solid #D7C9BD' }}
-      >
-        <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-6">
-          <Link to="/dashboard" className="flex items-center gap-2.5 no-underline flex-shrink-0">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
-                 style={{ background: 'linear-gradient(135deg,#556B2F,#3D4F21)' }}>🐱</div>
-            <span className="font-display font-black text-[18px] tracking-tight text-espresso">
-              Purrfect<span className="text-olive">Care</span>
-            </span>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-1">
-            {[
-              { label: 'Dashboard',     href: '/dashboard'    },
-              { label: 'My Cats',       href: '/my-cats'      },
-              { label: 'Find Hospitals',href: '/find-vets'    },
-            ].map(l => (
-              <Link key={l.href} to={l.href} className="nav-a">{l.label}</Link>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full"
-                 style={{ background: 'rgba(107,142,35,.1)', border: '1px solid rgba(107,142,35,.2)' }}>
-              <span className="text-[13px]">⚙</span>
-              <span className="text-[12px] font-semibold text-olive">Settings</span>
-            </div>
-            <button onClick={logout} className="btn btn-outline !py-2 !px-4 !text-[11px]">Log out</button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen">
 
       {/* ── Main ── */}
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-10">
@@ -460,9 +425,9 @@ export default function SettingsPage() {
                   onClick={() => setActiveTab(t.id)}
                   className="flex items-center gap-3 px-4 py-3 rounded-xl text-[13px] font-semibold text-left transition-all whitespace-nowrap flex-shrink-0"
                   style={{
-                    background: activeTab === t.id ? '#556B2F'             : 'rgba(255,255,255,.7)',
+                    background: activeTab === t.id ? '#5e4749'             : 'rgba(255,255,255,.7)',
                     color:      activeTab === t.id ? '#fff'                : '#4E342E',
-                    border:     activeTab === t.id ? 'none'                : '1px solid #D7C9BD',
+                    border:     activeTab === t.id ? 'none'                : '1px solid #b8ceb5',
                     boxShadow:  activeTab === t.id ? '0 4px 16px rgba(85,107,47,.25)' : 'none',
                   }}
                 >

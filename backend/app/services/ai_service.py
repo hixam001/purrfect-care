@@ -40,8 +40,8 @@ def get_gemini_client() -> genai.Client:
 
 EMBEDDING_MODEL  = settings.GEMINI_EMBEDDING_MODEL   # gemini-embedding-001
 CHAT_MODEL       = settings.GEMINI_CHAT_MODEL         # gemini-2.5-flash
-MATCH_THRESHOLD  = 0.70
-MATCH_COUNT      = 4
+MATCH_THRESHOLD  = 0.55   # gemini-embedding-001 cosine similarities are typically 0.55-0.70
+MATCH_COUNT      = 6      # More context chunks = better answers
 
 SYSTEM_INSTRUCTION = """You are PurrfectAI, a friendly and knowledgeable cat health assistant for the Purrfect Care app.
 

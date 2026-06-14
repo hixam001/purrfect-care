@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
+import { useIsMobile } from './hooks/useIsMobile.js'
 
 /* Layouts */
 import AppLayout from './layouts/AppLayout.jsx'
@@ -16,10 +17,14 @@ import StatsBand     from './components/StatsBand.jsx'
 import Testimonials  from './components/Testimonials.jsx'
 import CTABanner     from './components/CTABanner.jsx'
 
-/* Auth pages */
+/* Auth pages — desktop */
 import LoginPage            from './pages/LoginPage.jsx'
 import RegisterPage         from './pages/RegisterPage.jsx'
 import SystemAdminLoginPage from './pages/SystemAdminLoginPage.jsx'
+
+/* Mobile auth pages */
+import MobileLogin    from './pages/mobile/MobileLogin.jsx'
+import MobileRegister from './pages/mobile/MobileRegister.jsx'
 
 /* Dashboards */
 import DashboardPage          from './pages/DashboardPage.jsx'
@@ -30,7 +35,7 @@ import SystemAdminDashboard   from './pages/SystemAdminDashboard.jsx'
 import HospitalRegisterPage from './pages/HospitalRegisterPage.jsx'
 import StoreRegisterPage    from './pages/StoreRegisterPage.jsx'
 
-/* App pages */
+/* App pages — desktop */
 import FindVetsPage       from './pages/FindVetsPage.jsx'
 import HospitalDetailPage from './pages/HospitalDetailPage.jsx'
 import BookingPage        from './pages/BookingPage.jsx'
@@ -39,8 +44,16 @@ import StoreDetailPage    from './pages/StoreDetailPage.jsx'
 import AICompanionPage    from './pages/AICompanionPage.jsx'
 import MedicinesPage      from './pages/MedicinesPage.jsx'
 import ChatPage           from './pages/ChatPage.jsx'
-import MyCatsPage        from './pages/MyCatsPage.jsx'
-import SettingsPage      from './pages/SettingsPage.jsx'
+import MyCatsPage         from './pages/MyCatsPage.jsx'
+import SettingsPage       from './pages/SettingsPage.jsx'
+
+/* App pages — mobile */
+import MobileDashboard from './pages/mobile/MobileDashboard.jsx'
+import MobileMyCats    from './pages/mobile/MobileMyCats.jsx'
+import MobileFindVets  from './pages/mobile/MobileFindVets.jsx'
+import MobileAIChat    from './pages/mobile/MobileAIChat.jsx'
+import MobileStore     from './pages/mobile/MobileStore.jsx'
+import MobileSettings  from './pages/mobile/MobileSettings.jsx'
 
 /* ── Landing home ── */
 function HomePage() {
@@ -60,20 +73,18 @@ function HomePage() {
   )
 }
 
-/* ── Protected route wrapper ── */
+/* ── Route guards ── */
 function RequireAuth({ children }) {
   const { isLoggedIn } = useAuth()
   return isLoggedIn ? children : <Navigate to="/login" replace />
 }
 
-/* ── Admin-only route wrapper ── */
 function RequireAdmin({ children }) {
   const isAdminSession = sessionStorage.getItem('pc_admin_session') === 'true'
   if (!isAdminSession) return <Navigate to="/admin/login" replace />
   return children
 }
 
-/* ── Hospital Admin route wrapper ── */
 function RequireHospitalAdmin({ children }) {
   const { isLoggedIn, user } = useAuth()
   if (!isLoggedIn) return <Navigate to="/login" replace />
@@ -81,73 +92,100 @@ function RequireHospitalAdmin({ children }) {
   return children
 }
 
+/* ── Root router ── */
+function AppRoutes() {
+  const mobile = useIsMobile()
+
+  return (
+    <Routes>
+      {/* ── Auth — mobile/desktop conditional ── */}
+      <Route path="/login"    element={mobile ? <MobileLogin />    : <LoginPage />} />
+      <Route path="/register" element={mobile ? <MobileRegister /> : <RegisterPage />} />
+
+      {/* ── Onboarding (always desktop, no AppLayout) ── */}
+      <Route path="/hospital/register" element={<HospitalRegisterPage />} />
+      <Route path="/store/register"    element={<StoreRegisterPage />} />
+
+      {/* ── System admin (always desktop, no AppLayout) ── */}
+      <Route path="/admin/login"     element={<SystemAdminLoginPage />} />
+      <Route path="/admin/dashboard" element={<RequireAdmin><SystemAdminDashboard /></RequireAdmin>} />
+
+      {/* ── Hospital admin (always desktop, no AppLayout) ── */}
+      <Route path="/hospital/dashboard" element={<RequireHospitalAdmin><HospitalAdminDashboard /></RequireHospitalAdmin>} />
+
+      {/* ══════════════════════════════════════════
+          MOBILE ROUTES — use MobileLayout internally
+          ══════════════════════════════════════════ */}
+      {mobile && (
+        <>
+          <Route path="/"              element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard"     element={<RequireAuth><MobileDashboard /></RequireAuth>} />
+          <Route path="/my-cats"       element={<RequireAuth><MobileMyCats /></RequireAuth>} />
+          <Route path="/find-vets"     element={<MobileFindVets />} />
+          <Route path="/hospital/:id"  element={<HospitalDetailPage />} />
+          <Route path="/book/:vetId"   element={<RequireAuth><BookingPage /></RequireAuth>} />
+          <Route path="/ai-companion"  element={<RequireAuth><MobileAIChat /></RequireAuth>} />
+          <Route path="/chat/:appointmentId" element={<RequireAuth><ChatPage /></RequireAuth>} />
+          <Route path="/store"         element={<MobileStore />} />
+          <Route path="/store/:storeId" element={<StoreDetailPage />} />
+          <Route path="/medicines"     element={<MedicinesPage />} />
+          <Route path="/settings"      element={<RequireAuth><MobileSettings /></RequireAuth>} />
+          <Route path="*"              element={<Navigate to="/dashboard" replace />} />
+        </>
+      )}
+
+      {/* ══════════════════════════════════════════
+          DESKTOP ROUTES — ALL inside AppLayout
+          (gives every page the Navbar + Footer)
+          ══════════════════════════════════════════ */}
+      {!mobile && (
+        <Route element={<AppLayout />}>
+          {/* Landing */}
+          <Route path="/"                    element={<HomePage />} />
+
+          {/* Dashboard */}
+          <Route path="/dashboard"           element={<RequireAuth><DashboardPage /></RequireAuth>} />
+
+          {/* My Cats */}
+          <Route path="/my-cats"             element={<RequireAuth><MyCatsPage /></RequireAuth>} />
+
+          {/* Find Vets + Hospital detail */}
+          <Route path="/find-vets"           element={<FindVetsPage />} />
+          <Route path="/hospital/:id"        element={<HospitalDetailPage />} />
+
+          {/* Booking */}
+          <Route path="/book/:vetId"         element={<RequireAuth><BookingPage /></RequireAuth>} />
+
+          {/* AI Companion */}
+          <Route path="/ai-companion"        element={<RequireAuth><AICompanionPage /></RequireAuth>} />
+
+          {/* Chat */}
+          <Route path="/chat/:appointmentId" element={<RequireAuth><ChatPage /></RequireAuth>} />
+
+          {/* Store */}
+          <Route path="/store"               element={<StorePage />} />
+          <Route path="/store/:storeId"      element={<StoreDetailPage />} />
+
+          {/* Medicines */}
+          <Route path="/medicines"           element={<MedicinesPage />} />
+
+          {/* Settings */}
+          <Route path="/settings"            element={<RequireAuth><SettingsPage /></RequireAuth>} />
+
+          {/* Catch-all → home */}
+          <Route path="*"                    element={<Navigate to="/" replace />} />
+        </Route>
+      )}
+    </Routes>
+  )
+}
+
 /* ── App ── */
 export default function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Routes>
-          {/* ── Public auth pages ── */}
-          <Route path="/login"    element={<LoginPage />} />
-          <Route path="/register" element={<RegisterPage />} />
-
-          {/* ── Onboarding (public) ── */}
-          <Route path="/hospital/register" element={<HospitalRegisterPage />} />
-          <Route path="/store/register"    element={<StoreRegisterPage />} />
-
-          {/* ── System admin ── */}
-          <Route path="/admin/login" element={<SystemAdminLoginPage />} />
-          <Route path="/admin/dashboard" element={
-            <RequireAdmin><SystemAdminDashboard /></RequireAdmin>
-          } />
-
-          {/* ── Hospital admin dashboard ── */}
-          <Route path="/hospital/dashboard" element={
-            <RequireHospitalAdmin><HospitalAdminDashboard /></RequireHospitalAdmin>
-          } />
-
-          {/* ── Cat owner / vet dashboard ── */}
-          <Route path="/dashboard" element={
-            <RequireAuth><DashboardPage /></RequireAuth>
-          } />
-
-          {/* ── AI Companion (own page, no shared layout) ── */}
-          <Route path="/ai-companion" element={
-            <RequireAuth><AICompanionPage /></RequireAuth>
-          } />
-
-          {/* ── Chat page (own page, no shared layout) ── */}
-          <Route path="/chat/:appointmentId" element={
-            <RequireAuth><ChatPage /></RequireAuth>
-          } />
-
-          {/* ── My Cats page ── */}
-          <Route path="/my-cats" element={
-            <RequireAuth><MyCatsPage /></RequireAuth>
-          } />
-
-          {/* ── Settings page ── */}
-          <Route path="/settings" element={
-            <RequireAuth><SettingsPage /></RequireAuth>
-          } />
-
-          {/* ── Booking page (own page, no shared layout) ── */}
-          <Route path="/book/:vetId" element={
-            <RequireAuth><BookingPage /></RequireAuth>
-          } />
-
-          {/* ── Main app with shared Navbar + Footer ── */}
-          <Route element={<AppLayout />}>
-            <Route path="/"                    element={<HomePage />} />
-            <Route path="/find-vets"           element={<FindVetsPage />} />
-            <Route path="/hospital/:id"        element={<HospitalDetailPage />} />
-            <Route path="/store"               element={<StorePage />} />
-            <Route path="/store/:storeId"      element={<StoreDetailPage />} />
-            <Route path="/medicines"           element={<MedicinesPage />} />
-            {/* Catch-all → home */}
-            <Route path="*"                    element={<Navigate to="/" replace />} />
-          </Route>
-        </Routes>
+        <AppRoutes />
       </BrowserRouter>
     </AuthProvider>
   )

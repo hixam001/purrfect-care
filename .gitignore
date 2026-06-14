@@ -3,10 +3,15 @@
 # ============================================
 
 # --- Environment / Secrets ---
-.env
-.env.*
+# backend/.env is safe to track — contains ONLY non-secret vars (model names, ports, CORS)
+# backend/.env.local contains secrets and must NEVER be committed
+.env.local
+backend/.env.local
 *.env
 !**/.env.example
+!backend/.env
+!frontend/.env
+!frontend/.env.production
 firebase-credentials.json
 google-services.json
 GoogleService-Info.plist
@@ -76,7 +81,27 @@ backend/rag/pdfs/
 
 # --- Docker (not used in Firebase deployment) ---
 backend/Dockerfile
+backend/.dockerignore
+
+# --- Firebase deploy cache (auto-generated, not needed in git) ---
+.firebase/
 
 # --- Frontend build output ---
 frontend/dist/
 frontend/.vite/
+
+# --- Mobile (Expo / React Native) ---
+mobile/node_modules/
+mobile/.expo/
+mobile/android/build/
+mobile/android/app/build/
+mobile/android/.gradle/
+mobile/android/app/debug.keystore
+mobile/ios/
+mobile/dist/
+mobile/*.jks
+mobile/*.keystore
+mobile/.claude/
+
+# --- One-off SQL scripts (already applied, not part of schema migration chain) ---
+backend/migrations/fix_rag_index.sql

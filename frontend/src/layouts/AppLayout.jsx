@@ -19,23 +19,24 @@ export default function AppLayout() {
   const { pathname } = useLocation()
 
   return (
-    <div className="relative overflow-x-hidden" style={{ backgroundColor: '#F5EBE6' }}>
+    <div className="relative overflow-x-hidden" style={{ backgroundColor: '#dbe8d8' }}>
       {/* Ambient blobs */}
       <div className="fixed top-0 right-0 pointer-events-none" style={{ width:600, height:600, borderRadius:'50%',
-           background:'radial-gradient(circle, rgba(107,142,35,.13), transparent 70%)', transform:'translate(30%,-30%)', zIndex:0 }} />
+           background:'radial-gradient(circle, rgba(94,71,73,.13), transparent 70%)', transform:'translate(30%,-30%)', zIndex:0 }} />
       <div className="fixed bottom-0 left-0 pointer-events-none" style={{ width:500, height:500, borderRadius:'50%',
            background:'radial-gradient(circle, rgba(196,140,56,.1), transparent 70%)', transform:'translate(-30%,30%)', zIndex:0 }} />
 
       <div className="relative z-10">
         {/* ── Navbar ── */}
         <header id="navbar" className="sticky top-0 z-50"
-                style={{ background:'rgba(245,235,230,.88)', backdropFilter:'blur(18px)',
-                         WebkitBackdropFilter:'blur(18px)', borderBottom:'1px solid #D7C9BD' }}>
+                style={{ background:'rgba(219,232,216,.92)', backdropFilter:'blur(18px)',
+                         WebkitBackdropFilter:'blur(18px)', borderBottom:'1px solid #b8ceb5',
+                         boxShadow:'0 1px 0 rgba(94,71,73,.06)' }}>
           <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-6">
 
             <Link to="/" className="flex items-center gap-2.5 no-underline flex-shrink-0">
               <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
-                   style={{ background:'linear-gradient(135deg,#556B2F,#3D4F21)' }}>🐱</div>
+                   style={{ background:'linear-gradient(135deg,#5e4749,#4a373a)' }}>🐱</div>
               <span className="font-display font-black text-[18px] tracking-tight text-espresso">
                 Purrfect<span className="text-olive">Care</span>
               </span>
@@ -51,7 +52,7 @@ export default function AppLayout() {
             </nav>
 
             <div className="flex items-center gap-3">
-              <span className="t-label hidden sm:inline-block">Beta v1.0</span>
+
               {isLoggedIn ? (
                 <>
                   <Link to="/dashboard" className="nav-a text-olive font-semibold">Dashboard</Link>
@@ -60,7 +61,7 @@ export default function AppLayout() {
                     className="btn btn-outline !py-2 !px-4 !text-[11px]"
                     title="Settings"
                   >
-                    ⚙ Settings
+                    Settings
                   </Link>
                   <button onClick={logout} className="btn btn-outline !py-2 !px-4 !text-[11px]">Log out</button>
                 </>

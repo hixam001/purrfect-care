@@ -7,11 +7,11 @@ import { useFadeUp } from '../hooks/useScrollReveal.js'
 
 /* ── Quick-access feature tiles ── */
 const TILES = [
-  { icon:'📅', label:'Appointments',  desc:'Book & manage vet visits',        href:'/find-vets',    color:'rgba(107,142,35,.1)'  },
+  { icon:'📅', label:'Appointments',  desc:'Book & manage vet visits',        href:'/find-vets',    color:'rgba(94,71,73,.1)'  },
   { icon:'🐱', label:'My Cats',       desc:'Cat profiles & health records',   href:'/my-cats',      color:'rgba(196,140,56,.1)'  },
   { icon:'🤖', label:'AI Companion',  desc:'Instant symptom triage',          href:'/ai-companion', color:'rgba(160,140,125,.1)' },
   { icon:'🏪', label:'Cat Store',     desc:'Organic food & accessories',      href:'/store',        color:'rgba(196,140,56,.1)'  },
-  { icon:'💊', label:'Medicine DB',   desc:'Drug info & dosage guides',       href:'/medicines',    color:'rgba(107,142,35,.1)'  },
+  { icon:'💊', label:'Medicine DB',   desc:'Drug info & dosage guides',       href:'/medicines',    color:'rgba(94,71,73,.1)'  },
 ]
 
 export default function DashboardPage() {
@@ -67,47 +67,7 @@ export default function DashboardPage() {
     s === 'confirmed' ? 'green' : s === 'in_progress' ? 'amber' : 'clay'
 
   return (
-    <div className="min-h-screen" style={{ background: '#F5EBE6' }}>
-
-      {/* ── Dashboard Navbar ── */}
-      <header className="sticky top-0 z-50 transition-shadow"
-              style={{ background: 'rgba(245,235,230,.92)', backdropFilter: 'blur(18px)',
-                       borderBottom: '1px solid #D7C9BD' }}>
-        <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-6">
-          <Link to="/" className="flex items-center gap-2.5 no-underline flex-shrink-0">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
-                 style={{ background: 'linear-gradient(135deg,#556B2F,#3D4F21)' }}>🐱</div>
-            <span className="font-display font-black text-[18px] tracking-tight text-espresso">
-              Purrfect<span className="text-olive">Care</span>
-            </span>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-1">
-            {[
-              { label:'Find Hospitals', href:'/find-vets'    },
-              { label:'My Cats',        href:'/my-cats'      },
-              { label:'AI Companion',   href:'/ai-companion' },
-              { label:'Medicines',      href:'/medicines'    },
-            ].map(l => (
-              <Link key={l.href} to={l.href} className="nav-a">{l.label}</Link>
-            ))}
-          </nav>
-
-          <div className="flex items-center gap-3">
-            <Link
-              to="/settings"
-              className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full no-underline"
-              style={{ background: 'rgba(107,142,35,.1)', border: '1px solid rgba(107,142,35,.2)' }}
-            >
-              <span className="text-[13px]">👤</span>
-              <span className="text-[12px] font-semibold text-olive">{displayName.split(' ')[0]}</span>
-            </Link>
-            <button onClick={logout} className="btn btn-outline !py-2 !px-4 !text-[11px]">
-              Log out
-            </button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen">
 
       {/* ── Main ── */}
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-10">
@@ -178,7 +138,7 @@ export default function DashboardPage() {
                       </div>
                       <div className="text-[10px] text-clay-muted mt-1">{fmtTime(a.appointment_date)}</div>
                     </div>
-                    <div className="w-px self-stretch" style={{ background: '#D7C9BD' }} />
+                    <div className="w-px self-stretch" style={{ background: '#b8ceb5' }} />
                     <div className="flex-1 min-w-0">
                       <div className="font-bold text-[14px] text-espresso">{vetName}</div>
                       <div className="text-[12px] text-clay-muted">{hospitalName}</div>
@@ -195,7 +155,7 @@ export default function DashboardPage() {
                         </Link>
                       ) : (
                         <span className="text-[10px] text-clay-muted px-2 py-1 rounded-lg"
-                              style={{ background:'rgba(0,0,0,.04)', border:'1px solid #D7C9BD' }}>
+                              style={{ background:'rgba(0,0,0,.04)', border:'1px solid #b8ceb5' }}>
                           Case Closed
                         </span>
                       )}

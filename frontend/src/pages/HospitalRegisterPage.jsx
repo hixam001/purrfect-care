@@ -15,12 +15,12 @@ const HOSPITAL_TYPES = [
 const PLANS = [
   {
     id:'basic', name:'Basic',      price:'₨ 1,500/mo', yearly:'₨ 15,000/yr',
-    color:'rgba(160,140,125,.12)', border:'#D7C9BD',
+    color:'rgba(160,140,125,.12)', border:'#b8ceb5',
     features:['Up to 3 vets', '50 appointments/mo', 'Basic analytics', 'Email support'],
   },
   {
     id:'pro',   name:'Professional', price:'₨ 3,500/mo', yearly:'₨ 35,000/yr',
-    color:'rgba(107,142,35,.1)',   border:'rgba(107,142,35,.35)', badge:'Most Popular',
+    color:'rgba(94,71,73,.1)',   border:'rgba(94,71,73,.35)', badge:'Most Popular',
     features:['Up to 15 vets', 'Unlimited appointments', 'Advanced analytics', 'Priority support', 'Digital prescriptions', 'Patient history'],
   },
   {
@@ -31,9 +31,9 @@ const PLANS = [
 ]
 
 const inputCls = "w-full px-4 py-3 rounded-xl text-[14px] text-espresso outline-none transition-all"
-const inputSty = { background:'rgba(255,255,255,.8)', border:'1.5px solid #D7C9BD' }
-const fi = e => { e.target.style.borderColor='#556B2F'; e.target.style.boxShadow='0 0 0 3px rgba(85,107,47,.12)' }
-const fo = e => { e.target.style.borderColor='#D7C9BD'; e.target.style.boxShadow='none' }
+const inputSty = { background:'rgba(255,255,255,.8)', border:'1.5px solid #b8ceb5' }
+const fi = e => { e.target.style.borderColor='#5e4749'; e.target.style.boxShadow='0 0 0 3px rgba(85,107,47,.12)' }
+const fo = e => { e.target.style.borderColor='#b8ceb5'; e.target.style.boxShadow='none' }
 
 function Label({ children }) {
   return <label className="t-mono text-[10px] text-espresso-soft block mb-1.5">{children}</label>
@@ -87,13 +87,13 @@ export default function HospitalRegisterPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background:'linear-gradient(135deg,#F5EBE6 0%,#EFE5DC 100%)' }}>
+    <div className="min-h-screen" style={{ background:'linear-gradient(135deg,#dbe8d8 0%,#EFE5DC 100%)' }}>
       <div className="max-w-3xl mx-auto px-4 py-10">
 
         {/* Back to home */}
         <Link to="/" className="flex items-center gap-2 no-underline mb-8 w-fit">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
-               style={{ background:'linear-gradient(135deg,#556B2F,#3D4F21)' }}>🐱</div>
+               style={{ background:'linear-gradient(135deg,#5e4749,#4a373a)' }}>🐱</div>
           <span className="font-display font-black text-lg text-espresso">
             Purrfect<span className="text-olive">Care</span>
           </span>
@@ -118,7 +118,7 @@ export default function HospitalRegisterPage() {
 
         {/* Card */}
         {step < 5 && (
-          <div className="rounded-3xl p-8" style={{ background:'rgba(255,255,255,.75)', backdropFilter:'blur(12px)', border:'1px solid #D7C9BD' }}>
+          <div className="rounded-3xl p-8" style={{ background:'rgba(255,255,255,.75)', backdropFilter:'blur(12px)', border:'1px solid #b8ceb5' }}>
 
             {/* ── STEP 0: Hospital Info ── */}
             {step === 0 && (
@@ -139,7 +139,7 @@ export default function HospitalRegisterPage() {
                               className="flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all"
                               style={{
                                 background: hospType===t.value ? 'rgba(85,107,47,.1)' : 'rgba(255,255,255,.6)',
-                                border:     hospType===t.value ? '2px solid #556B2F'  : '1.5px solid #D7C9BD',
+                                border:     hospType===t.value ? '2px solid #5e4749'  : '1.5px solid #b8ceb5',
                               }}>
                         <span className="text-xl">{t.icon}</span>
                         <span className="text-[13px] font-semibold text-espresso">{t.label}</span>
@@ -230,12 +230,12 @@ export default function HospitalRegisterPage() {
                   { label:'Proof of Address',                    hint:'Utility bill or tenancy agreement (last 3 months)' },
                 ].map(doc => (
                   <div key={doc.label} className="p-5 rounded-2xl cursor-pointer transition-all"
-                       style={{ background:'rgba(255,255,255,.6)', border:'2px dashed #D7C9BD' }}
-                       onMouseOver={e=>e.currentTarget.style.borderColor='#556B2F'}
-                       onMouseOut={e=>e.currentTarget.style.borderColor='#D7C9BD'}>
+                       style={{ background:'rgba(255,255,255,.6)', border:'2px dashed #b8ceb5' }}
+                       onMouseOver={e=>e.currentTarget.style.borderColor='#5e4749'}
+                       onMouseOut={e=>e.currentTarget.style.borderColor='#b8ceb5'}>
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-                           style={{ background:'rgba(107,142,35,.1)' }}>📄</div>
+                           style={{ background:'rgba(94,71,73,.1)' }}>📄</div>
                       <div className="flex-1">
                         <div className="font-semibold text-[14px] text-espresso">{doc.label}</div>
                         <div className="text-[12px] text-clay-muted">{doc.hint}</div>
@@ -260,8 +260,8 @@ export default function HospitalRegisterPage() {
                   {['monthly','yearly'].map(b => (
                     <button key={b} type="button" onClick={()=>setBilling(b)}
                             className="flex-1 py-2 rounded-xl text-[12px] font-bold transition-all"
-                            style={{ background: billing===b ? '#556B2F' : 'rgba(255,255,255,.7)',
-                                     color: billing===b ? '#fff' : '#4E342E', border: billing===b ? 'none' : '1.5px solid #D7C9BD' }}>
+                            style={{ background: billing===b ? '#5e4749' : 'rgba(255,255,255,.7)',
+                                     color: billing===b ? '#fff' : '#4E342E', border: billing===b ? 'none' : '1.5px solid #b8ceb5' }}>
                       {b === 'monthly' ? 'Monthly' : 'Yearly (2 months free)'}
                     </button>
                   ))}
@@ -271,7 +271,7 @@ export default function HospitalRegisterPage() {
                   {PLANS.map(p => (
                     <div key={p.id} onClick={()=>setPlan(p.id)}
                          className="relative p-5 rounded-2xl cursor-pointer transition-all"
-                         style={{ background:p.color, border:`2px solid ${plan===p.id ? '#556B2F' : p.border}` }}>
+                         style={{ background:p.color, border:`2px solid ${plan===p.id ? '#5e4749' : p.border}` }}>
                       {p.badge && (
                         <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                           <span className="t-label text-[9px]">{p.badge}</span>
@@ -289,7 +289,7 @@ export default function HospitalRegisterPage() {
                         ))}
                       </div>
                       {plan===p.id && (
-                        <div className="mt-3 pt-3 border-t" style={{ borderColor:'rgba(107,142,35,.2)' }}>
+                        <div className="mt-3 pt-3 border-t" style={{ borderColor:'rgba(94,71,73,.2)' }}>
                           <span className="t-mono text-[9px] text-olive">✓ Selected</span>
                         </div>
                       )}
@@ -336,9 +336,9 @@ export default function HospitalRegisterPage() {
         {/* ── STEP 5: SUCCESS ── */}
         {step === 5 && (
           <div className="text-center py-16 px-8 rounded-3xl"
-               style={{ background:'rgba(255,255,255,.75)', backdropFilter:'blur(12px)', border:'1px solid rgba(107,142,35,.25)' }}>
+               style={{ background:'rgba(255,255,255,.75)', backdropFilter:'blur(12px)', border:'1px solid rgba(94,71,73,.25)' }}>
             <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl mx-auto mb-6"
-                 style={{ background:'rgba(107,142,35,.15)', border:'2px solid rgba(107,142,35,.3)' }}>🏥</div>
+                 style={{ background:'rgba(94,71,73,.15)', border:'2px solid rgba(94,71,73,.3)' }}>🏥</div>
             <div className="t-label mb-4 inline-block">Registration Complete</div>
             <h2 className="font-display font-black text-[2rem] text-espresso tracking-tight mb-3">
               Welcome to Purrfect Care!
@@ -352,7 +352,7 @@ export default function HospitalRegisterPage() {
                       className="btn btn-olive justify-center !py-3 w-full">
                 Go to Hospital Dashboard →
               </button>
-              <Link to="/" className="text-[13px] text-clay-muted hover:text-olive">← Back to home</Link>
+              <Link to="/" className="text-[13px] font-semibold" style={{ color:"#5e4749" }}>← Back to home</Link>
             </div>
           </div>
         )}

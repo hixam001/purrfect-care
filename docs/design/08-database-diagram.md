@@ -85,7 +85,7 @@ graph LR
     medical_records[[medical_records]]
     patient_history[[patient_history]]
     medicines[medicines]
-    illness_records[illness_records]
+    cat_health_knowledge[cat_health_knowledge]
 
     %% RELATIONSHIPS
     owns{owns}
@@ -136,11 +136,13 @@ graph LR
     medicines --- A_m_ingr([ingredients <<Multi>>])
     medicines --- A_m_req([requires_prescription])
 
-    %% ATTRIBUTES - illness_records
-    illness_records --- A_ir_id([<u>id</u>])
-    illness_records --- A_ir_name([illness_name])
-    illness_records --- A_ir_symp([symptoms <<Multi>>])
-    illness_records --- A_ir_sev([severity_level])
+    %% ATTRIBUTES - cat_health_knowledge (RAG chunks)
+    cat_health_knowledge --- A_chk_id([<u>id</u>])
+    cat_health_knowledge --- A_chk_sf([source_file])
+    cat_health_knowledge --- A_chk_title([title])
+    cat_health_knowledge --- A_chk_sec([section])
+    cat_health_knowledge --- A_chk_cont([content])
+    cat_health_knowledge --- A_chk_emb([embedding <<768-dim>>])
 ```
 
 ### Subsystem 3: Commerce (Chen ERD)
@@ -551,7 +553,7 @@ graph LR
 | `side_effects` | TEXT[] | DEFAULT '{}' | Possible side effects |
 | `requires_prescription` | BOOLEAN | DEFAULT true | Prescription-only flag |
 | `is_active` | BOOLEAN | DEFAULT true | Available in database |
-| `embedding` | VECTOR(1536) | | OpenAI embedding for AI search |
+| `embedding` | VECTOR(768) | | Gemini embedding for AI search (gemini-embedding-001, reserved) |
 
 **Indexes**: `idx_medicines_name` (GIN trigram), `idx_medicines_embedding` (ivfflat for vector search)
 
@@ -798,22 +800,25 @@ graph LR
 
 ---
 
-### 26. `illness_records` — AI knowledge base / vector DB *(Item)*
+### 26. `cat_health_knowledge` — RAG knowledge base chunks *(Item)*
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
-| `id` | UUID | PK | Record ID |
-| `illness_name` | VARCHAR(200) | NOT NULL | Illness name |
-| `description` | TEXT | NOT NULL | Detailed description |
-| `symptoms` | TEXT[] | NOT NULL | Symptom list |
-| `affected_breeds` | TEXT[] | DEFAULT '{}' | Breeds commonly affected |
-| `severity_level` | VARCHAR(20) | CHECK IN ('low','moderate','high','critical') | Typical severity |
-| `home_remedies` | TEXT | | At-home treatment suggestions |
-| `when_to_see_vet` | TEXT | | When professional help is needed |
-| `related_medicines` | TEXT[] | DEFAULT '{}' | Common medicines used |
-| `embedding` | VECTOR(1536) | NOT NULL | OpenAI embedding of symptoms+description |
+| `id` | UUID | PK, DEFAULT uuid_generate_v4() | Chunk ID |
+| `source_file` | TEXT | NOT NULL | Source markdown filename (e.g. `feline_ckd.md`) |
+| `title` | TEXT | NOT NULL | Section heading used as chunk title |
+| `section` | TEXT | | Section tag from metadata (e.g. `symptoms`, `treatment`) |
+| `content` | TEXT | NOT NULL | Full text content of the chunk |
+| `source` | TEXT | | Human-readable source name (e.g. `International Cat Care`) |
+| `source_url` | TEXT | | Original URL of the veterinary article |
+| `embedding` | VECTOR(768) | NOT NULL | Gemini `gemini-embedding-001` embedding (`RETRIEVAL_DOCUMENT`, 768-dim) |
+| `created_at` | TIMESTAMPTZ | DEFAULT now() | Ingestion timestamp |
 
-**Indexes**: `idx_illness_embedding` (ivfflat, lists=100, for cosine similarity search)
+**Indexes**: `idx_cat_health_embedding` (ivfflat, lists=12, ops=vector_cosine_ops)
+
+**RPC**: `match_cat_health(query_embedding vector, match_threshold float, match_count int)` — cosine similarity search with `SET LOCAL enable_indexscan = OFF` for exact sequential scan.
+
+> **RAG Pipeline**: 21 Markdown files in `backend/rag/knowledge/` are chunked into 155 rows by `backend/rag/ingest.py`. Embeddings use `gemini-embedding-001` at 768 dimensions. The query pipeline: embed question → call `match_cat_health` RPC → inject top-6 chunks into Gemini chat prompt.
 
 ---
 
@@ -876,6 +881,8 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";         -- Trigram search for medicine
 | treatments | SELECT vet + owner | Treating vet and cat owner |
 | payments | SELECT payer + admin | Payer and system admin |
 | review_responses | SELECT all | Public like reviews |
+| products | SELECT public (active only); INSERT/UPDATE/DELETE store owner | Store owners manage their own store's products (migration 004) |
+| product_categories | INSERT authenticated | Any authenticated user can add categories |
 
 ## Table Count: **28 tables**
 
@@ -887,7 +894,7 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";         -- Trigram search for medicine
 |-------------|----------------|
 | **Participant** | `users`, `user_profiles`, `vets` |
 | **SpecificItem** | `cats`, `medical_records` |
-| **Item** | `cat_breeds`, `medicines`, `hospital_services`, `products`, `product_categories`, `illness_records` |
+| **Item** | `cat_breeds`, `medicines`, `hospital_services`, `products`, `product_categories`, `cat_health_knowledge` |
 | **Place** | `hospitals`, `cat_stores` |
 | **Transaction** | `appointments`, `appointment_slots`, `orders`, `chat_rooms`, `ai_consultations`, `reviews`, `offers` |
 | **TransactionLineItem** | `order_items`, `messages` |

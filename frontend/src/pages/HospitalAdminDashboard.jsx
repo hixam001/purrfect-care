@@ -24,9 +24,9 @@ function VetRegisterModal({ hospitalId, onClose, onRegister }) {
   const [success, setSuccess] = useState(false)
 
   const inputCls = "w-full px-4 py-3 rounded-xl text-[14px] text-espresso outline-none transition-all"
-  const inputSty = { background:'rgba(255,255,255,.9)', border:'1.5px solid #D7C9BD' }
-  const fi = e => { e.target.style.borderColor='#556B2F'; e.target.style.boxShadow='0 0 0 3px rgba(85,107,47,.12)' }
-  const fo = e => { e.target.style.borderColor='#D7C9BD'; e.target.style.boxShadow='none' }
+  const inputSty = { background:'rgba(255,255,255,.9)', border:'1.5px solid #b8ceb5' }
+  const fi = e => { e.target.style.borderColor='#5e4749'; e.target.style.boxShadow='0 0 0 3px rgba(85,107,47,.12)' }
+  const fo = e => { e.target.style.borderColor='#b8ceb5'; e.target.style.boxShadow='none' }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -42,9 +42,9 @@ function VetRegisterModal({ hospitalId, onClose, onRegister }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
          style={{ background:'rgba(61,38,22,.45)', backdropFilter:'blur(6px)' }}>
       <div className="w-full max-w-lg rounded-3xl overflow-hidden"
-           style={{ background:'#F5EBE6', maxHeight:'90vh', overflowY:'auto' }}>
+           style={{ background:'#dbe8d8', maxHeight:'90vh', overflowY:'auto' }}>
         <div className="px-6 py-5 flex items-center justify-between"
-             style={{ borderBottom:'1px solid #D7C9BD', background:'rgba(255,255,255,.6)' }}>
+             style={{ borderBottom:'1px solid #b8ceb5', background:'rgba(255,255,255,.6)' }}>
           <div>
             <div className="font-display font-black text-[1.2rem] text-espresso">Register New Vet</div>
             <div className="text-[12px] text-clay-muted">This vet will be linked to your hospital</div>
@@ -55,7 +55,7 @@ function VetRegisterModal({ hospitalId, onClose, onRegister }) {
           {success ? (
             <div className="text-center py-8">
               <div className="w-16 h-16 rounded-full flex items-center justify-center text-3xl mx-auto mb-4"
-                   style={{ background:'rgba(107,142,35,.15)' }}>✅</div>
+                   style={{ background:'rgba(94,71,73,.15)' }}>✅</div>
               <div className="font-bold text-espresso text-[1.1rem] mb-2">Vet Invite Sent!</div>
               <p className="text-clay-muted text-[13px]">
                 An invitation email will be sent to <strong>{email}</strong>.<br />
@@ -210,9 +210,9 @@ export default function HospitalAdminDashboard() {
   ]
 
   const stats = [
-    { icon:'👨‍⚕️', label:'Total Vets',        value: vets.length,                              color:'rgba(107,142,35,.12)' },
+    { icon:'👨‍⚕️', label:'Total Vets',        value: vets.length,                              color:'rgba(94,71,73,.12)' },
     { icon:'📅',  label:'Total Appointments', value: appts.length,                             color:'rgba(196,140,56,.12)' },
-    { icon:'💬',  label:'Open Cases',         value: appts.filter(a=>a.case_status==='open').length, color:'rgba(107,142,35,.12)' },
+    { icon:'💬',  label:'Open Cases',         value: appts.filter(a=>a.case_status==='open').length, color:'rgba(94,71,73,.12)' },
     { icon:'⭐',  label:'Avg. Rating',        value: hospital?.rating ? hospital.rating.toFixed(1)+'/5' : 'N/A', color:'rgba(160,140,125,.12)'},
   ]
 
@@ -224,7 +224,7 @@ export default function HospitalAdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background:'#F5EBE6' }}>
+    <div className="min-h-screen" style={{ background:'#dbe8d8' }}>
 
       {showModal && (
         <VetRegisterModal
@@ -236,11 +236,11 @@ export default function HospitalAdminDashboard() {
 
       {/* Header */}
       <header className="sticky top-0 z-40"
-              style={{ background:'rgba(245,235,230,.92)', backdropFilter:'blur(18px)', borderBottom:'1px solid #D7C9BD' }}>
+              style={{ background:'rgba(219,232,216,.92)', backdropFilter:'blur(18px)', borderBottom:'1px solid #b8ceb5' }}>
         <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between gap-6">
           <Link to="/" className="flex items-center gap-2.5 no-underline flex-shrink-0">
             <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
-                 style={{ background:'linear-gradient(135deg,#556B2F,#3D4F21)' }}>🐱</div>
+                 style={{ background:'linear-gradient(135deg,#5e4749,#4a373a)' }}>🐱</div>
             <span className="font-display font-black text-[17px] tracking-tight text-espresso">
               Purrfect<span className="text-olive">Care</span>
               <span className="text-[11px] text-clay-muted ml-2 font-mono font-normal">Hospital Admin</span>
@@ -250,7 +250,7 @@ export default function HospitalAdminDashboard() {
           <nav className="hidden md:flex items-center gap-0.5">
             {TABS.map(t => (
               <button key={t.id} onClick={() => setTab(t.id)} className="nav-a"
-                      style={tab===t.id ? { background:'rgba(85,107,47,.1)', color:'#556B2F' } : {}}>
+                      style={tab===t.id ? { background:'rgba(85,107,47,.1)', color:'#5e4749' } : {}}>
                 {t.label}
               </button>
             ))}
@@ -309,7 +309,7 @@ export default function HospitalAdminDashboard() {
                         <div className="font-mono font-black text-xl text-olive leading-none">{fmtDate(a.appointment_date).split(' ')[0]}</div>
                         <div className="t-mono text-[9px] text-clay-muted">{fmtDate(a.appointment_date).split(' ')[1]}</div>
                       </div>
-                      <div className="w-px self-stretch" style={{ background:'#D7C9BD' }} />
+                      <div className="w-px self-stretch" style={{ background:'#b8ceb5' }} />
                       <div className="flex-1 min-w-0">
                         <div className="font-bold text-[14px] text-espresso">
                           {a.cats?.name} · {a.user_profiles?.name}
@@ -342,7 +342,7 @@ export default function HospitalAdminDashboard() {
                   {vets.slice(0,3).map(v => (
                     <GlassCard key={v.id} className="p-5 text-center">
                       <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-3"
-                           style={{ background:'rgba(107,142,35,.1)' }}>👨‍⚕️</div>
+                           style={{ background:'rgba(94,71,73,.1)' }}>👨‍⚕️</div>
                       <div className="font-bold text-[14px] text-espresso">{v.user_profiles?.name}</div>
                       <div className="t-mono text-[10px] text-olive mb-2">{v.specialization}</div>
                       <Pill variant={v.is_verified ? 'green' : 'amber'}>
@@ -371,7 +371,7 @@ export default function HospitalAdminDashboard() {
                   {vets.map(v => (
                     <GlassCard key={v.id} className="p-5 flex items-center gap-5">
                       <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
-                           style={{ background:'rgba(107,142,35,.1)' }}>👨‍⚕️</div>
+                           style={{ background:'rgba(94,71,73,.1)' }}>👨‍⚕️</div>
                       <div className="flex-1 min-w-0">
                         <div className="font-bold text-[15px] text-espresso">{v.user_profiles?.name}</div>
                         <div className="text-[12px] text-clay-muted">
@@ -389,7 +389,7 @@ export default function HospitalAdminDashboard() {
                 </div>
 
                 <div className="mt-6 p-4 rounded-2xl text-[13px] text-clay-muted"
-                     style={{ background:'rgba(107,142,35,.07)', border:'1px solid rgba(107,142,35,.18)' }}>
+                     style={{ background:'rgba(94,71,73,.07)', border:'1px solid rgba(94,71,73,.18)' }}>
                   🔒 Vets registered here are exclusively linked to <strong className="text-espresso">{hospital.name}</strong>.
                   Each vet must have a valid PVMC license to be approved on the platform.
                 </div>
@@ -436,7 +436,7 @@ export default function HospitalAdminDashboard() {
                             className="btn !py-1.5 !px-3 !text-[10px]"
                             style={a.case_status === 'open'
                               ? { background:'rgba(196,56,56,.08)', color:'#9B2020', border:'1px solid rgba(196,56,56,.2)' }
-                              : { background:'rgba(107,142,35,.1)',  color:'#556B2F', border:'1px solid rgba(107,142,35,.3)' }
+                              : { background:'rgba(94,71,73,.1)',  color:'#5e4749', border:'1px solid rgba(94,71,73,.3)' }
                             }>
                             {a.case_status === 'open' ? '🔒 Close Case' : '💬 Open Chat'}
                           </button>
@@ -478,7 +478,7 @@ export default function HospitalAdminDashboard() {
                     { label:'Email',         val: hospital.email  ?? '—' },
                     { label:'Status',        val: hospital.is_approved ? 'Approved ✓' : 'Pending Review' },
                   ].map(r => (
-                    <div key={r.label} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor:'#D7C9BD' }}>
+                    <div key={r.label} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor:'#b8ceb5' }}>
                       <span className="text-[13px] text-clay-muted">{r.label}</span>
                       <span className="text-[13px] font-semibold text-espresso">{r.val}</span>
                     </div>

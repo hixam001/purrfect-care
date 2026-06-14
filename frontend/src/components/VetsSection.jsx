@@ -10,8 +10,8 @@ export default function VetsSection() {
     <section
       id="vets"
       style={{
-        background:  'linear-gradient(180deg,#EFE5DC,#F5EBE6)',
-        borderTop:   '1px solid #D7C9BD',
+        background:  'linear-gradient(180deg,#EFE5DC,#dbe8d8)',
+        borderTop:   '1px solid #b8ceb5',
       }}
       className="py-24 px-4 md:px-8"
     >
@@ -44,9 +44,9 @@ export default function VetsSection() {
           className="fade-up grid grid-cols-1 sm:grid-cols-3 gap-4"
         >
           {[
-            { icon: '✅', title: 'Verified & Approved',    desc: 'Every vet is manually reviewed before being listed on the platform.' },
+            { icon: '', title: 'Verified & Approved',    desc: 'Every vet is manually reviewed before being listed on the platform.' },
             { icon: '📋', title: 'Full Patient History',   desc: 'Vets access your cat\'s complete records and prescription history during consultations.' },
-            { icon: '💬', title: 'Post-Appointment Chat',  desc: 'Stay in touch with your vet after the visit — chat is open while your case is active.' },
+            { icon: '', title: 'Post-Appointment Chat',  desc: 'Stay in touch with your vet after the visit — chat is open while your case is active.' },
           ].map(f => (
             <div key={f.title}
               className="card p-6"

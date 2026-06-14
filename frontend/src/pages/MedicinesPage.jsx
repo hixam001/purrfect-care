@@ -7,12 +7,12 @@ const MEDICINES = [
     desc:'Antibiotic · Oral · 5–12.5 mg/kg q12h · Duration: 7–14 days',
     warn:'⚠ Penicillin allergy risk · Avoid in rabbits',
     details:'Broad-spectrum antibiotic effective against gram-positive and some gram-negative bacteria. Commonly used for URIs, skin infections, and dental abscesses in cats.',
-    bg:'rgba(107,142,35,.06)', bd:'rgba(107,142,35,.18)' },
+    bg:'rgba(94,71,73,.06)', bd:'rgba(94,71,73,.18)' },
   { name:'Metronidazole',     tag:'OTC',          tv:'green', cat:'Antiprotozoal',
     desc:'Antiprotozoal / Antibiotic · Oral · 7.5 mg/kg q12h · Duration: 5–7 days',
     warn:null,
     details:'Used for gastrointestinal infections, giardia, and inflammatory bowel disease. Also has anti-inflammatory effects on the gut.',
-    bg:'rgba(255,255,255,.5)', bd:'#D7C9BD' },
+    bg:'rgba(255,255,255,.5)', bd:'#b8ceb5' },
   { name:'Prednisolone',      tag:'Rx Required', tv:'clay',  cat:'Corticosteroid',
     desc:'Corticosteroid · Oral/Injectable · 1–2 mg/kg q24h',
     warn:'⚠ Do not use long-term without monitoring · Risk of diabetes',
@@ -27,12 +27,12 @@ const MEDICINES = [
     desc:'NSAID · Oral/Injectable · 1–2.4 mg/kg q24h · Max 3 days oral',
     warn:'⚠ Do not use with other NSAIDs or steroids · Monitor kidney function',
     details:'Feline-specific NSAID for short-term pain relief post-surgery or injury. Safe for short duration in healthy cats.',
-    bg:'rgba(107,142,35,.06)', bd:'rgba(107,142,35,.18)' },
+    bg:'rgba(94,71,73,.06)', bd:'rgba(94,71,73,.18)' },
   { name:'Doxycycline',       tag:'Rx Required', tv:'clay',  cat:'Antibiotic',
     desc:'Antibiotic · Oral · 5–10 mg/kg q12-24h · Duration: 14–28 days',
     warn:'⚠ Always give with water/food · Risk of esophageal stricture if dry',
     details:'Used for respiratory infections, Mycoplasma, Chlamydia, and vector-borne diseases. Must always be followed with water.',
-    bg:'rgba(107,142,35,.06)', bd:'rgba(107,142,35,.18)' },
+    bg:'rgba(94,71,73,.06)', bd:'rgba(94,71,73,.18)' },
 ]
 
 const CATEGORIES = ['All', ...new Set(MEDICINES.map(m => m.cat))]
@@ -68,7 +68,7 @@ export default function MedicinesPage() {
         {/* Filters */}
         <div className="flex flex-wrap gap-3 mb-6">
           <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl flex-1 min-w-[220px]"
-               style={{ background:'rgba(255,255,255,.8)', border:'1.5px solid #D7C9BD' }}>
+               style={{ background:'rgba(255,255,255,.8)', border:'1.5px solid #b8ceb5' }}>
             <span className="text-clay-muted">🔍</span>
             <input value={search} onChange={e => setSearch(e.target.value)}
                    placeholder="Search medicines…"
@@ -78,9 +78,9 @@ export default function MedicinesPage() {
             <button key={c} onClick={() => setCat(c)}
                     className="pill transition-all"
                     style={{
-                      background: cat === c ? '#556B2F' : 'rgba(255,255,255,.7)',
+                      background: cat === c ? '#5e4749' : 'rgba(255,255,255,.7)',
                       color:      cat === c ? '#fff'    : '#4E342E',
-                      border:     cat === c ? 'none'    : '1px solid #D7C9BD',
+                      border:     cat === c ? 'none'    : '1px solid #b8ceb5',
                     }}>
               {c}
             </button>
@@ -124,12 +124,12 @@ export default function MedicinesPage() {
                   <p className="text-[13px] text-espresso-soft leading-relaxed">{m.details}</p>
                   <div className="flex gap-2 mt-4">
                     <div className="flex-1 p-3 rounded-xl text-center"
-                         style={{ background:'rgba(255,255,255,.5)', border:'1px solid #D7C9BD' }}>
+                         style={{ background:'rgba(255,255,255,.5)', border:'1px solid #b8ceb5' }}>
                       <div className="t-mono text-[9px] text-clay-muted mb-1">ROUTE</div>
                       <div className="text-[12px] font-bold text-espresso">Oral / Injectable</div>
                     </div>
                     <div className="flex-1 p-3 rounded-xl text-center"
-                         style={{ background:'rgba(255,255,255,.5)', border:'1px solid #D7C9BD' }}>
+                         style={{ background:'rgba(255,255,255,.5)', border:'1px solid #b8ceb5' }}>
                       <div className="t-mono text-[9px] text-clay-muted mb-1">SPECIES</div>
                       <div className="text-[12px] font-bold text-espresso">Feline ✓</div>
                     </div>

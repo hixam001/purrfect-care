@@ -41,10 +41,10 @@ export default function Navbar() {
       id="navbar"
       className="sticky top-0 z-50 transition-shadow duration-300"
       style={{
-        background:      'rgba(245,235,230,.88)',
+        background:      'rgba(219,232,216,.92)',
         backdropFilter:  'blur(18px)',
         WebkitBackdropFilter: 'blur(18px)',
-        borderBottom:    '1px solid #D7C9BD',
+        borderBottom:    '1px solid #b8ceb5',
         boxShadow:       scrolled ? '0 4px 24px rgba(61,38,22,.09)' : 'none',
       }}
     >
@@ -53,7 +53,7 @@ export default function Navbar() {
         {/* Logo */}
         <a href="#" className="flex items-center gap-2.5 no-underline flex-shrink-0">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
-               style={{ background: 'linear-gradient(135deg,#556B2F,#3D4F21)' }}>
+               style={{ background: 'linear-gradient(135deg,#5e4749,#4a373a)' }}>
             🐱
           </div>
           <span className="font-display font-black text-[18px] tracking-tight text-espresso">
@@ -76,7 +76,7 @@ export default function Navbar() {
 
         {/* Actions */}
         <div className="flex items-center gap-3">
-          <Badge className="hidden sm:inline-block">Beta v1.0</Badge>
+          
           <a href="#" className="nav-a text-olive font-semibold">Log in</a>
           <BtnOlive className="!py-2 !px-4 !text-[11px]">
             Get Started

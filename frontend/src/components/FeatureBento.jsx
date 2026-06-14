@@ -14,7 +14,7 @@ function ClinicMap() {
       {/* Decorative circle */}
       <div
         className="absolute top-0 right-0 w-48 h-48 rounded-full pointer-events-none opacity-[.07]"
-        style={{ background: '#556B2F', transform: 'translate(30%,-30%)' }}
+        style={{ background: '#5e4749', transform: 'translate(30%,-30%)' }}
       />
 
       <Badge className="mb-4">UC-1.4 · Nearby Hospitals</Badge>
@@ -29,11 +29,11 @@ function ClinicMap() {
       <div
         className="rounded-2xl p-4 relative"
         style={{
-          background: 'rgba(107,142,35,.06)',
-          border: '1px solid #D7C9BD',
+          background: 'rgba(94,71,73,.06)',
+          border: '1px solid #b8ceb5',
           minHeight: '140px',
           backgroundImage:
-            'linear-gradient(rgba(107,142,35,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(107,142,35,.07) 1px,transparent 1px)',
+            'linear-gradient(rgba(94,71,73,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(94,71,73,.07) 1px,transparent 1px)',
           backgroundSize: '32px 32px',
         }}
       >
@@ -45,7 +45,7 @@ function ClinicMap() {
           <div className="map-pin" style={{ background: '#A08C7D', boxShadow: '0 0 0 5px rgba(160,140,125,.2)' }} />
         </div>
         <div className="absolute" style={{ top: '18%', left: '72%' }}>
-          <div className="map-pin" style={{ background: '#C48C38', boxShadow: '0 0 0 5px rgba(196,140,56,.2)' }} />
+          <div className="map-pin" style={{ background: '#b87c2a', boxShadow: '0 0 0 5px rgba(196,140,56,.2)' }} />
         </div>
 
         {/* Clinic cards */}
@@ -55,7 +55,7 @@ function ClinicMap() {
             { name: 'Feline Care Centre', dist: '2.8 km', rating: 4 },
           ].map(c => (
             <GlassCard key={c.name} className="flex-shrink-0 px-3 py-2 flex items-center gap-2.5" style={{ minWidth: 180 }}>
-              <span className="text-[22px]">🏥</span>
+              
               <div>
                 <div className="text-[12px] font-bold text-espresso">{c.name}</div>
                 <div className="flex items-center gap-1">
@@ -73,8 +73,8 @@ function ClinicMap() {
 
 function CatProfiles() {
   const cats = [
-    { emoji: '🐱', name: 'Luna',  desc: 'Persian · 3y · ♀ · Spayed',  pill: 'Active',   variant: 'green', bg: 'rgba(107,142,35,.1)'  },
-    { emoji: '🐈', name: 'Mochi', desc: 'Bengal · 1y · ♂ · Neutered', pill: 'Due shot', variant: 'amber', bg: 'rgba(196,140,56,.1)'  },
+    { icon: 'cat', name: 'Luna',  desc: 'Persian · 3y · ♀ · Spayed',  pill: 'Active',   variant: 'green', bg: 'rgba(94,71,73,.1)'  },
+    { icon: 'cat', name: 'Mochi', desc: 'Bengal · 1y · ♂ · Neutered', pill: 'Due shot', variant: 'amber', bg: 'rgba(196,140,56,.1)'  },
   ]
 
   return (
@@ -92,13 +92,13 @@ function CatProfiles() {
           <div
             key={c.name}
             className="flex items-center gap-3 p-3 rounded-[14px]"
-            style={{ background: 'rgba(255,255,255,.65)', border: '1px solid #D7C9BD' }}
+            style={{ background: 'rgba(255,255,255,.65)', border: '1px solid #b8ceb5' }}
           >
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center text-[22px] flex-shrink-0"
               style={{ background: c.bg }}
             >
-              {c.emoji}
+              {c.icon}
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-bold text-[13px] text-espresso">{c.name}</div>
@@ -110,9 +110,9 @@ function CatProfiles() {
 
         <button
           className="w-full py-2.5 rounded-xl text-[10px] t-mono text-clay-muted transition-all duration-200"
-          style={{ border: '1.5px dashed #D7C9BD', background: 'transparent', cursor: 'pointer' }}
-          onMouseOver={e => { e.currentTarget.style.borderColor = '#556B2F'; e.currentTarget.style.color = '#556B2F' }}
-          onMouseOut={e  => { e.currentTarget.style.borderColor = '#D7C9BD'; e.currentTarget.style.color = '#A08C7D' }}
+          style={{ border: '1.5px dashed #b8ceb5', background: 'transparent', cursor: 'pointer' }}
+          onMouseOver={e => { e.currentTarget.style.borderColor = '#5e4749'; e.currentTarget.style.color = '#5e4749' }}
+          onMouseOut={e  => { e.currentTarget.style.borderColor = '#b8ceb5'; e.currentTarget.style.color = '#A08C7D' }}
         >
           + Add a cat
         </button>
@@ -134,10 +134,10 @@ function AICompanion() {
 
       <div
         className="rounded-2xl p-3.5"
-        style={{ background: 'rgba(255,255,255,.6)', border: '1px solid #D7C9BD' }}
+        style={{ background: 'rgba(255,255,255,.6)', border: '1px solid #b8ceb5' }}
       >
         <div className="flex flex-col gap-2 mb-3.5">
-          <BubbleVet>Hi! Describe Luna's symptoms and I'll help assess. 🌿</BubbleVet>
+          <BubbleVet>Hi! Describe Luna's symptoms and I'll help assess.</BubbleVet>
           <BubbleUser>She's sneezing a lot and has watery eyes for 2 days</BubbleUser>
           <BubbleVet>
             Likely Upper Respiratory Infection. Severity:{' '}
@@ -150,7 +150,7 @@ function AICompanion() {
           <div className="prog-track flex-1">
             <div
               className="prog-fill"
-              style={{ width: '45%', background: 'linear-gradient(90deg,#6B8E23,#C48C38)' }}
+              style={{ width: '45%', background: 'linear-gradient(90deg,#7a5e60,#b87c2a)' }}
             />
           </div>
           <span className="t-mono text-[10px] text-amber">Moderate</span>
@@ -167,14 +167,14 @@ function MedicineDB() {
       tag: 'Rx Required', tagVariant: 'clay',
       desc: 'Antibiotic · Oral · 5–12.5 mg/kg q12h',
       warn: '⚠ Penicillin allergy risk',
-      bg: 'rgba(107,142,35,.06)', border: 'rgba(107,142,35,.18)',
+      bg: 'rgba(94,71,73,.06)', border: 'rgba(94,71,73,.18)',
     },
     {
       name: 'Metronidazole',
       tag: 'OTC', tagVariant: 'green',
       desc: 'Antiprotozoal · Oral · 7.5 mg/kg q12h',
       warn: null,
-      bg: 'rgba(255,255,255,.5)', border: '#D7C9BD',
+      bg: 'rgba(255,255,255,.5)', border: '#b8ceb5',
     },
   ]
 
@@ -191,7 +191,7 @@ function MedicineDB() {
       {/* Search bar */}
       <div
         className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl mb-3"
-        style={{ background: 'rgba(255,255,255,.65)', border: '1px solid #D7C9BD' }}
+        style={{ background: 'rgba(255,255,255,.65)', border: '1px solid #b8ceb5' }}
       >
         <span className="text-clay-muted">🔍</span>
         <span className="t-mono text-[10px] text-clay-muted">Search "amoxicillin"…</span>
@@ -205,7 +205,7 @@ function MedicineDB() {
             style={{ background: m.bg, border: `1px solid ${m.border}` }}
           >
             <div className="flex items-center justify-between mb-1">
-              <span className="font-bold text-[13px] text-espresso">💊 {m.name}</span>
+              <span className="font-bold text-[13px] text-espresso">{m.name}</span>
               <Pill variant={m.tagVariant} className="text-[10px]">{m.tag}</Pill>
             </div>
             <div className="text-[11px] text-clay-muted">{m.desc}</div>
@@ -234,7 +234,7 @@ function Prescriptions() {
         {/* Active Rx */}
         <div
           className="p-3 rounded-[13px]"
-          style={{ background: 'rgba(107,142,35,.06)', border: '1px solid rgba(107,142,35,.22)' }}
+          style={{ background: 'rgba(94,71,73,.06)', border: '1px solid rgba(94,71,73,.22)' }}
         >
           <div className="t-mono text-[9px] text-olive mb-1">RX-2024-0091 · Active</div>
           <div className="font-bold text-[13px] text-espresso">Doxycycline 10mg</div>
@@ -246,7 +246,7 @@ function Prescriptions() {
         {/* Completed Rx */}
         <div
           className="p-3 rounded-[13px]"
-          style={{ background: 'rgba(255,255,255,.5)', border: '1px solid #D7C9BD' }}
+          style={{ background: 'rgba(255,255,255,.5)', border: '1px solid #b8ceb5' }}
         >
           <div className="t-mono text-[9px] text-clay-muted mb-1">RX-2024-0078 · Completed</div>
           <div className="font-bold text-[13px] text-espresso">Amoxicillin 50mg</div>

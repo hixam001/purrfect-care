@@ -79,9 +79,9 @@ export default function StoreDetailPage() {
         <div className="fixed inset-0 z-50 flex" onClick={() => setCartOpen(false)}>
           <div className="flex-1" />
           <div className="w-full max-w-sm h-full flex flex-col overflow-hidden"
-               style={{ background:'#F5EBE6', borderLeft:'1px solid #D7C9BD' }}
+               style={{ background:'#dbe8d8', borderLeft:'1px solid #b8ceb5' }}
                onClick={e => e.stopPropagation()}>
-            <div className="px-6 py-5 flex items-center justify-between" style={{ borderBottom:'1px solid #D7C9BD' }}>
+            <div className="px-6 py-5 flex items-center justify-between" style={{ borderBottom:'1px solid #b8ceb5' }}>
               <h2 className="font-display font-black text-[1.1rem] text-espresso">Cart ({totalItems})</h2>
               <button onClick={() => setCartOpen(false)} className="text-clay-muted text-xl">✕</button>
             </div>
@@ -90,9 +90,9 @@ export default function StoreDetailPage() {
                 ? <div className="text-center py-12 text-clay-muted">Your cart is empty</div>
                 : cart.map(item => (
                   <div key={item.id} className="flex items-center gap-3 p-3 rounded-xl"
-                       style={{ background:'rgba(255,255,255,.7)', border:'1px solid #D7C9BD' }}>
+                       style={{ background:'rgba(255,255,255,.7)', border:'1px solid #b8ceb5' }}>
                     <div className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl flex-shrink-0"
-                         style={{ background:'rgba(107,142,35,.08)' }}>📦</div>
+                         style={{ background:'rgba(94,71,73,.08)' }}>📦</div>
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-[13px] text-espresso truncate">{item.name}</div>
                       <div className="text-[11px] text-clay-muted">
@@ -106,7 +106,7 @@ export default function StoreDetailPage() {
               }
             </div>
             {cart.length > 0 && (
-              <div className="p-5 border-t" style={{ borderColor:'#D7C9BD' }}>
+              <div className="p-5 border-t" style={{ borderColor:'#b8ceb5' }}>
                 <div className="flex justify-between font-bold text-[15px] text-espresso mb-4">
                   <span>Total</span>
                   <span>₨ {totalPrice.toLocaleString()}</span>
@@ -126,7 +126,7 @@ export default function StoreDetailPage() {
       )}
 
       {/* Back */}
-      <Link to="/store" className="flex items-center gap-2 no-underline mb-8 text-clay-muted hover:text-olive text-[13px] w-fit">
+      <Link to="/store" className="inline-flex items-center gap-1.5 no-underline mb-8 font-semibold text-[13px] px-4 py-2 rounded-xl w-fit" style={{ color:"#5e4749", background:"rgba(94,71,73,.09)", border:"1px solid rgba(94,71,73,.18)" }}>
         ← Back to Stores
       </Link>
 
@@ -156,7 +156,7 @@ export default function StoreDetailPage() {
           🛒 Cart
           {totalItems > 0 && (
             <span className="absolute -top-2 -right-2 w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
-                  style={{ background:'#C48C38' }}>
+                  style={{ background:'#b87c2a' }}>
               {totalItems}
             </span>
           )}
@@ -167,7 +167,7 @@ export default function StoreDetailPage() {
       <div ref={gridRef} className="fade-up">
         <div className="flex flex-wrap gap-3 mb-6">
           <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl min-w-[200px]"
-               style={{ background:'rgba(255,255,255,.8)', border:'1.5px solid #D7C9BD' }}>
+               style={{ background:'rgba(255,255,255,.8)', border:'1.5px solid #b8ceb5' }}>
             <span>🔍</span>
             <input value={search} onChange={e => setSearch(e.target.value)}
                    placeholder="Search products…"
@@ -177,9 +177,9 @@ export default function StoreDetailPage() {
             <button key={c} onClick={() => setCatFilter(c)}
                     className="pill transition-all"
                     style={{
-                      background: catFilter===c ? '#556B2F' : 'rgba(255,255,255,.7)',
+                      background: catFilter===c ? '#5e4749' : 'rgba(255,255,255,.7)',
                       color:      catFilter===c ? '#fff'    : '#4E342E',
-                      border:     catFilter===c ? 'none'    : '1px solid #D7C9BD',
+                      border:     catFilter===c ? 'none'    : '1px solid #b8ceb5',
                     }}>
               {c}
             </button>
@@ -209,7 +209,7 @@ export default function StoreDetailPage() {
                 <GlassCard key={p.id} className="p-4 flex flex-col group cursor-pointer">
                   {/* Image */}
                   <div className="w-full h-[130px] rounded-2xl overflow-hidden mb-3 flex items-center justify-center"
-                       style={{ background:'linear-gradient(135deg,rgba(107,142,35,.07),rgba(107,142,35,.03))' }}>
+                       style={{ background:'linear-gradient(135deg,rgba(94,71,73,.07),rgba(94,71,73,.03))' }}>
                     {imgSrc
                       ? <img src={imgSrc} alt={p.name} className="w-full h-full object-contain p-3 transition-transform duration-300 group-hover:scale-105" />
                       : <span className="text-5xl">📦</span>

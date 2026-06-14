@@ -71,7 +71,7 @@ export default function FindVetsPage() {
         <div className="flex flex-wrap gap-3 mb-6">
           {/* Search */}
           <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl flex-1 min-w-[220px]"
-               style={{ background:'rgba(255,255,255,.8)', border:'1.5px solid #D7C9BD' }}>
+               style={{ background:'rgba(255,255,255,.8)', border:'1.5px solid #b8ceb5' }}>
             <span className="text-clay-muted">🔍</span>
             <input value={search} onChange={e => setSearch(e.target.value)}
                    placeholder="Search hospitals or cities…"
@@ -83,9 +83,9 @@ export default function FindVetsPage() {
               <button key={c} onClick={() => setCityFilter(c)}
                       className="pill transition-all"
                       style={{
-                        background: cityFilter === c ? '#556B2F' : 'rgba(255,255,255,.7)',
+                        background: cityFilter === c ? '#5e4749' : 'rgba(255,255,255,.7)',
                         color:      cityFilter === c ? '#fff'    : '#4E342E',
-                        border:     cityFilter === c ? 'none'    : '1px solid #D7C9BD',
+                        border:     cityFilter === c ? 'none'    : '1px solid #b8ceb5',
                       }}>
                 {c}
               </button>
@@ -122,7 +122,7 @@ export default function FindVetsPage() {
                   {/* Top */}
                   <div className="flex items-start gap-4 mb-4">
                     <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0"
-                         style={{ background:'linear-gradient(135deg,rgba(107,142,35,.18),rgba(107,142,35,.08))' }}>
+                         style={{ background:'linear-gradient(135deg,rgba(94,71,73,.18),rgba(94,71,73,.08))' }}>
                       🏥
                     </div>
                     <div className="flex-1 min-w-0">

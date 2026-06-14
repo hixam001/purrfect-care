@@ -70,7 +70,8 @@ export default function HospitalDetailPage() {
 
       {/* Back */}
       <Link to="/find-vets"
-            className="flex items-center gap-2 no-underline mb-8 text-clay-muted hover:text-olive text-[13px] w-fit">
+            className="inline-flex items-center gap-1.5 no-underline mb-8 font-semibold text-[13px] px-4 py-2 rounded-xl w-fit"
+            style={{ color:'#5e4749', background:'rgba(94,71,73,.09)', border:'1px solid rgba(94,71,73,.18)' }}>
         ← Back to Hospitals
       </Link>
 
@@ -78,8 +79,8 @@ export default function HospitalDetailPage() {
       <div ref={headerRef} className="fade-up mb-10">
         <div className="flex items-start gap-5 mb-6">
           <div className="w-20 h-20 rounded-3xl flex items-center justify-center text-4xl flex-shrink-0"
-               style={{ background:'linear-gradient(135deg,rgba(107,142,35,.18),rgba(107,142,35,.08))',
-                        boxShadow:'0 0 0 6px rgba(107,142,35,.1)' }}>
+               style={{ background:'linear-gradient(135deg,rgba(94,71,73,.18),rgba(94,71,73,.08))',
+                        boxShadow:'0 0 0 6px rgba(94,71,73,.1)' }}>
             🏥
           </div>
           <div>
@@ -126,7 +127,7 @@ export default function HospitalDetailPage() {
                 <GlassCard key={v.id} className="p-6 flex flex-col">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="w-14 h-14 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0"
-                         style={{ background:'linear-gradient(135deg,rgba(107,142,35,.15),rgba(107,142,35,.07))' }}>
+                         style={{ background:'linear-gradient(135deg,rgba(94,71,73,.15),rgba(94,71,73,.07))' }}>
                       👨‍⚕️
                     </div>
                     <div className="flex-1 min-w-0">

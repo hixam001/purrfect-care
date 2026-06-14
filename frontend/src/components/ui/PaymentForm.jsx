@@ -29,7 +29,7 @@ function CreditCardPreview({ number, name, expiry }) {
   return (
     <div
       className="w-full max-w-[320px] h-[185px] rounded-2xl p-6 relative overflow-hidden mx-auto mb-6 select-none"
-      style={{ background:'linear-gradient(135deg,#3D4F21 0%,#556B2F 50%,#6B8E23 100%)' }}
+      style={{ background:'linear-gradient(135deg,#4a373a 0%,#5e4749 50%,#7a5e60 100%)' }}
     >
       {/* Circles */}
       <div className="absolute top-0 right-0 w-40 h-40 rounded-full"
@@ -73,9 +73,9 @@ export default function PaymentForm({ amount = '₨ 0', onSuccess, onBack, title
   const [success,  setSuccess]  = useState(false)
 
   const inputCls = "w-full px-4 py-3 rounded-xl text-[14px] text-espresso outline-none transition-all"
-  const inputSty = { background:'rgba(255,255,255,.8)', border:'1.5px solid #D7C9BD' }
-  const fi = e => { e.target.style.borderColor='#556B2F'; e.target.style.boxShadow='0 0 0 3px rgba(85,107,47,.12)' }
-  const fo = e => { e.target.style.borderColor='#D7C9BD'; e.target.style.boxShadow='none' }
+  const inputSty = { background:'rgba(255,255,255,.8)', border:'1.5px solid #b8ceb5' }
+  const fi = e => { e.target.style.borderColor='#5e4749'; e.target.style.boxShadow='0 0 0 3px rgba(85,107,47,.12)' }
+  const fo = e => { e.target.style.borderColor='#b8ceb5'; e.target.style.boxShadow='none' }
 
   function formatCard(v) {
     return v.replace(/\D/g,'').slice(0,16).replace(/(.{4})/g,'$1 ').trim()
@@ -96,7 +96,7 @@ export default function PaymentForm({ amount = '₨ 0', onSuccess, onBack, title
   if (success) return (
     <div className="text-center py-12 px-6">
       <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl mx-auto mb-5 animate-bounce"
-           style={{ background:'rgba(107,142,35,.15)', border:'2px solid rgba(107,142,35,.3)' }}>✅</div>
+           style={{ background:'rgba(94,71,73,.15)', border:'2px solid rgba(94,71,73,.3)' }}>✅</div>
       <h3 className="font-display font-black text-[1.6rem] text-espresso mb-2">Payment Successful!</h3>
       <p className="text-clay-muted text-[14px] mb-2">{amount} paid successfully</p>
       <div className="t-mono text-[10px] text-olive">Redirecting…</div>
@@ -122,7 +122,7 @@ export default function PaymentForm({ amount = '₨ 0', onSuccess, onBack, title
             className="flex items-center gap-4 px-4 py-3.5 rounded-2xl text-left transition-all"
             style={{
               background: method === m.id ? 'rgba(85,107,47,.08)' : 'rgba(255,255,255,.7)',
-              border:     method === m.id ? '2px solid #556B2F'   : '1.5px solid #D7C9BD',
+              border:     method === m.id ? '2px solid #5e4749'   : '1.5px solid #b8ceb5',
             }}
           >
             <span className="text-2xl">{m.icon}</span>
@@ -131,7 +131,7 @@ export default function PaymentForm({ amount = '₨ 0', onSuccess, onBack, title
               <div className="text-[11px] text-clay-muted">{m.sub}</div>
             </div>
             <div className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0"
-                 style={{ border:'2px solid', borderColor: method === m.id ? '#556B2F' : '#D7C9BD' }}>
+                 style={{ border:'2px solid', borderColor: method === m.id ? '#5e4749' : '#b8ceb5' }}>
               {method === m.id && <div className="w-2.5 h-2.5 rounded-full bg-olive" />}
             </div>
           </button>
@@ -180,7 +180,7 @@ export default function PaymentForm({ amount = '₨ 0', onSuccess, onBack, title
                       style={{
                         background: wallet === w.id ? w.color : 'rgba(255,255,255,.7)',
                         color:      wallet === w.id ? '#fff'  : '#4E342E',
-                        border:     wallet === w.id ? 'none'  : '1.5px solid #D7C9BD',
+                        border:     wallet === w.id ? 'none'  : '1.5px solid #b8ceb5',
                       }}>
                 {w.label}
               </button>
@@ -192,7 +192,7 @@ export default function PaymentForm({ amount = '₨ 0', onSuccess, onBack, title
                    placeholder="03XX XXXXXXX" className={inputCls} style={inputSty} onFocus={fi} onBlur={fo} />
           </div>
           <div className="mt-4 p-4 rounded-xl text-[12px] text-clay-muted"
-               style={{ background:'rgba(107,142,35,.07)', border:'1px dashed rgba(107,142,35,.3)' }}>
+               style={{ background:'rgba(94,71,73,.07)', border:'1px dashed rgba(94,71,73,.3)' }}>
             <strong className="text-olive">How it works:</strong> You will receive a payment request on your {WALLETS.find(w=>w.id===wallet)?.label} account. Approve it to complete the transaction.
           </div>
         </div>
@@ -202,7 +202,7 @@ export default function PaymentForm({ amount = '₨ 0', onSuccess, onBack, title
       {method === 'bank' && (
         <div>
           <div className="p-5 rounded-2xl mb-4"
-               style={{ background:'rgba(107,142,35,.07)', border:'1px solid rgba(107,142,35,.2)' }}>
+               style={{ background:'rgba(94,71,73,.07)', border:'1px solid rgba(94,71,73,.2)' }}>
             <div className="t-mono text-[10px] text-olive mb-3">TRANSFER TO THIS ACCOUNT</div>
             {[
               ['Bank',         'Meezan Bank Ltd'],
@@ -211,7 +211,7 @@ export default function PaymentForm({ amount = '₨ 0', onSuccess, onBack, title
               ['Account No',   '0001 0100 0123 4567'],
               ['Branch Code',  '0001'],
             ].map(([k,v]) => (
-              <div key={k} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor:'rgba(107,142,35,.15)' }}>
+              <div key={k} className="flex items-center justify-between py-2 border-b last:border-0" style={{ borderColor:'rgba(94,71,73,.15)' }}>
                 <span className="text-[12px] text-clay-muted">{k}</span>
                 <span className="text-[12px] font-bold text-espresso font-mono">{v}</span>
               </div>

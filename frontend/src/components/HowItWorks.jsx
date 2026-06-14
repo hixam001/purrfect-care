@@ -4,27 +4,27 @@ import { Badge, BtnOlive } from './ui/index.jsx'
 
 const STEPS = [
   {
-    emoji: '🐱',
+    
     step:  'Step 01',
     title: 'Register your cat',
     desc:  'Add breed, age, weight, allergies, and medical history. Under 2 minutes.',
     style: {
-      background: 'linear-gradient(135deg,#F5EBE6,#EFE5DC)',
-      border:     '2px solid #D7C9BD',
+      background: 'linear-gradient(135deg,#dbe8d8,#EFE5DC)',
+      border:     '2px solid #b8ceb5',
     },
   },
   {
-    emoji: '🏥',
+    
     step:  'Step 02',
     title: 'Find & book a vet',
     desc:  'Browse verified clinics, check real-time availability, and confirm in seconds.',
     style: {
-      background: 'linear-gradient(135deg,rgba(107,142,35,.1),rgba(85,107,47,.18))',
-      border:     '2px solid rgba(107,142,35,.28)',
+      background: 'linear-gradient(135deg,rgba(94,71,73,.1),rgba(85,107,47,.18))',
+      border:     '2px solid rgba(94,71,73,.28)',
     },
   },
   {
-    emoji: '🌿',
+    
     step:  'Step 03',
     title: 'Track & heal',
     desc:  'Digital prescriptions, progress tracking, vet chat, and recovery shopping — all connected.',
@@ -43,7 +43,7 @@ export default function HowItWorks() {
   return (
     <section
       id="how"
-      style={{ background: '#EFE5DC', borderTop: '1px solid #D7C9BD' }}
+      style={{ background: '#EFE5DC', borderTop: '1px solid #b8ceb5' }}
       className="py-24 px-4 md:px-8"
     >
       <div className="max-w-7xl mx-auto">
@@ -70,7 +70,7 @@ export default function HowItWorks() {
             style={{
               top: '52px', left: '22%', right: '22%',
               height: '1px',
-              background: 'linear-gradient(to right,transparent,#D7C9BD,#D7C9BD,transparent)',
+              background: 'linear-gradient(to right,transparent,#b8ceb5,#b8ceb5,transparent)',
             }}
           />
 
@@ -93,7 +93,7 @@ export default function HowItWorks() {
 
         {/* CTA */}
         <div ref={ctaRef} className="fade-up text-center mt-14">
-          <Link to="/register"><BtnOlive>Start your cat's health journey 🐾</BtnOlive></Link>
+          <Link to="/register"><BtnOlive>Start your cat's health journey</BtnOlive></Link>
         </div>
 
       </div>

@@ -66,7 +66,7 @@ export default function StorePage() {
       <div ref={listRef} className="fade-up">
         <div className="flex flex-wrap gap-3 mb-6">
           <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl flex-1 min-w-[220px]"
-               style={{ background:'rgba(255,255,255,.8)', border:'1.5px solid #D7C9BD' }}>
+               style={{ background:'rgba(255,255,255,.8)', border:'1.5px solid #b8ceb5' }}>
             <span>🔍</span>
             <input value={search} onChange={e => setSearch(e.target.value)}
                    placeholder="Search stores or cities…"
@@ -77,9 +77,9 @@ export default function StorePage() {
               <button key={c} onClick={() => setCityFilter(c)}
                       className="pill transition-all"
                       style={{
-                        background: cityFilter===c ? '#556B2F' : 'rgba(255,255,255,.7)',
+                        background: cityFilter===c ? '#5e4749' : 'rgba(255,255,255,.7)',
                         color:      cityFilter===c ? '#fff'    : '#4E342E',
-                        border:     cityFilter===c ? 'none'    : '1px solid #D7C9BD',
+                        border:     cityFilter===c ? 'none'    : '1px solid #b8ceb5',
                       }}>
                 {c}
               </button>

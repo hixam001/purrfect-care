@@ -85,22 +85,7 @@ export default function AICompanionPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background:'linear-gradient(135deg,#F5EBE6,#EFE5DC)' }}>
-
-      {/* Header nav */}
-      <header className="sticky top-0 z-50"
-              style={{ background:'rgba(245,235,230,.92)', backdropFilter:'blur(18px)', borderBottom:'1px solid #D7C9BD' }}>
-        <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
-          <Link to="/dashboard" className="flex items-center gap-2 no-underline text-clay-muted hover:text-olive text-[13px]">
-            ← Back to Dashboard
-          </Link>
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-olive-light inline-block" />
-            <span className="text-[11px] font-mono text-olive">Powered by Gemini</span>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-screen">
       <section className="max-w-5xl mx-auto px-4 md:px-8 py-10">
 
         {/* Header */}
@@ -120,9 +105,9 @@ export default function AICompanionPage() {
           <Card className="flex flex-col overflow-hidden" style={{ minHeight:520, maxHeight:620 }}>
             {/* Chat header */}
             <div className="px-5 py-4 flex items-center gap-3"
-                 style={{ borderBottom:'1px solid #D7C9BD', background:'rgba(255,255,255,.5)' }}>
+                 style={{ borderBottom:'1px solid #b8ceb5', background:'rgba(255,255,255,.5)' }}>
               <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xl"
-                   style={{ background:'linear-gradient(135deg,rgba(107,142,35,.2),rgba(107,142,35,.1))' }}>🤖</div>
+                   style={{ background:'linear-gradient(135deg,rgba(94,71,73,.2),rgba(94,71,73,.1))' }}>🤖</div>
               <div>
                 <div className="font-bold text-[14px] text-espresso">AI Health Companion</div>
                 <div className="text-[11px] text-olive flex items-center gap-1.5">
@@ -178,7 +163,7 @@ export default function AICompanionPage() {
                        placeholder="Describe your cat's symptoms…"
                        disabled={rateLimited}
                        className="flex-1 px-4 py-2.5 rounded-xl text-[13px] text-espresso outline-none"
-                       style={{ background:'rgba(255,255,255,.8)', border:'1.5px solid #D7C9BD',
+                       style={{ background:'rgba(255,255,255,.8)', border:'1.5px solid #b8ceb5',
                                 opacity: rateLimited ? .5 : 1 }} />
                 <button type="submit" disabled={!input.trim() || typing || rateLimited}
                         className="btn btn-olive !py-2.5 !px-4 !text-[11px]"
@@ -198,10 +183,10 @@ export default function AICompanionPage() {
                 {QUICK_PROMPTS.map(p => (
                   <button key={p} onClick={() => sendMessage(p)} disabled={typing}
                           className="text-left px-3 py-2.5 rounded-xl text-[12px] text-espresso transition-all"
-                          style={{ background:'rgba(107,142,35,.07)', border:'1px solid rgba(107,142,35,.15)',
+                          style={{ background:'rgba(94,71,73,.07)', border:'1px solid rgba(94,71,73,.15)',
                                    opacity: typing ? .5 : 1 }}
-                          onMouseOver={e => { if (!typing) e.currentTarget.style.background='rgba(107,142,35,.14)' }}
-                          onMouseOut={e  => e.currentTarget.style.background='rgba(107,142,35,.07)'}>
+                          onMouseOver={e => { if (!typing) e.currentTarget.style.background='rgba(94,71,73,.14)' }}
+                          onMouseOut={e  => e.currentTarget.style.background='rgba(94,71,73,.07)'}>
                     💬 {p}
                   </button>
                 ))}

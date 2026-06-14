@@ -10,7 +10,7 @@ const PRODUCTS = [
     sub:   'MeowNaturals · 250g',
     price: '₨ 890',
     oldPrice: null,
-    bg: 'linear-gradient(135deg,rgba(107,142,35,.1),rgba(107,142,35,.05))',
+    bg: 'linear-gradient(135deg,rgba(94,71,73,.1),rgba(94,71,73,.05))',
   },
   {
     emoji: '🛏️',
@@ -28,7 +28,7 @@ const PRODUCTS = [
     sub:   'ZenPaws · 100ml',
     price: '₨ 650',
     oldPrice: null,
-    bg: 'linear-gradient(135deg,rgba(107,142,35,.08),rgba(85,107,47,.04))',
+    bg: 'linear-gradient(135deg,rgba(94,71,73,.08),rgba(85,107,47,.04))',
   },
   {
     emoji: '🧴',
@@ -46,7 +46,7 @@ const PRODUCTS = [
     sub:   'FunKitty · 6 pcs',
     price: '₨ 1,120',
     oldPrice: '1,400',
-    bg: 'linear-gradient(135deg,rgba(107,142,35,.1),rgba(85,107,47,.06))',
+    bg: 'linear-gradient(135deg,rgba(94,71,73,.1),rgba(85,107,47,.06))',
   },
 ]
 
@@ -107,7 +107,7 @@ export default function CatStore() {
               <div key={t} className="flex items-center gap-3">
                 <div
                   className="w-8 h-8 rounded-xl flex items-center justify-center text-[15px] flex-shrink-0"
-                  style={{ background: 'rgba(107,142,35,.12)' }}
+                  style={{ background: 'rgba(94,71,73,.12)' }}
                 >✓</div>
                 <span className="text-[14px] text-espresso-soft">{t}</span>
               </div>

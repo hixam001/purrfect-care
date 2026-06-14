@@ -21,9 +21,9 @@ export default function Stepper({ steps, current }) {
                   className="w-9 h-9 rounded-full flex items-center justify-center text-[13px] font-bold transition-all duration-300"
                   style={{
                     background: done
-                      ? '#556B2F'
+                      ? '#5e4749'
                       : active
-                        ? 'linear-gradient(135deg,#556B2F,#3D4F21)'
+                        ? 'linear-gradient(135deg,#5e4749,#4a373a)'
                         : 'rgba(215,201,189,.5)',
                     color:      done || active ? '#fff' : '#A08C7D',
                     boxShadow:  active ? '0 0 0 4px rgba(85,107,47,.18)' : 'none',
@@ -33,7 +33,7 @@ export default function Stepper({ steps, current }) {
                 </div>
                 <span
                   className="mt-1.5 text-[10px] font-mono font-bold uppercase tracking-wide whitespace-nowrap"
-                  style={{ color: active ? '#556B2F' : done ? '#556B2F' : '#A08C7D' }}
+                  style={{ color: active ? '#5e4749' : done ? '#5e4749' : '#A08C7D' }}
                 >
                   {label}
                 </span>
@@ -43,7 +43,7 @@ export default function Stepper({ steps, current }) {
               {!last && (
                 <div
                   className="flex-1 h-0.5 mx-2 rounded-full transition-all duration-500"
-                  style={{ background: done ? '#556B2F' : 'rgba(215,201,189,.6)' }}
+                  style={{ background: done ? '#5e4749' : 'rgba(215,201,189,.6)' }}
                 />
               )}
             </div>

@@ -43,22 +43,22 @@ export default function Hero() {
 
           {/* CTAs */}
           <div className="flex flex-wrap gap-3 mb-9">
-            <Link to="/find-vets"><BtnOlive>🐾 Book a Vet Today</BtnOlive></Link>
+            <Link to="/find-vets"><BtnOlive>Book a Vet Today</BtnOlive></Link>
             <a href="#features"><BtnOutline>Explore Platform →</BtnOutline></a>
           </div>
 
           {/* Real feature badges */}
           <div className="flex flex-wrap gap-3">
             <StatChip>
-              <span>✅</span>
+              <span>✓</span>
               <span className="text-[12px] font-bold text-espresso">Verified Hospitals</span>
             </StatChip>
             <StatChip>
-              <span>🤖</span>
+              <span></span>
               <span className="text-[12px] font-bold text-espresso">AI Health Triage</span>
             </StatChip>
             <StatChip>
-              <span>💬</span>
+              <span></span>
               <span className="text-[12px] font-bold text-espresso">Real-time Vet Chat</span>
             </StatChip>
           </div>
@@ -70,7 +70,7 @@ export default function Hero() {
           {/* Platform overview card — spans both columns */}
           <GlassCard
             className="col-span-2 p-6 glow-border"
-            style={{ borderColor: 'rgba(107,142,35,.35)' }}
+            style={{ borderColor: 'rgba(94,71,73,.35)' }}
           >
             <div className="mb-4">
               <Badge className="mb-2">All-in-one Cat Care</Badge>
@@ -84,15 +84,15 @@ export default function Hero() {
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Pill variant="green">✅ Verified Hospitals</Pill>
-              <Pill variant="clay">🐱 Cat Health Records</Pill>
-              <Pill variant="amber">🤖 AI Companion</Pill>
+              <Pill variant="green">Verified Hospitals</Pill>
+              <Pill variant="clay">Cat Health Records</Pill>
+              <Pill variant="amber">AI Companion</Pill>
             </div>
           </GlassCard>
 
           {/* AI Companion mini */}
           <Card className="p-4">
-            <FeatIcon className="mb-3">🤖</FeatIcon>
+            <FeatIcon className="mb-3"></FeatIcon>
             <Badge className="mb-2">AI Companion</Badge>
             <div className="font-display font-bold text-[14px] text-espresso mt-1.5 mb-2">
               Symptom Triage
@@ -100,8 +100,8 @@ export default function Hero() {
             <div
               className="rounded-xl p-2.5"
               style={{
-                background: 'rgba(107,142,35,.07)',
-                border: '1px dashed rgba(107,142,35,.3)',
+                background: 'rgba(94,71,73,.07)',
+                border: '1px dashed rgba(94,71,73,.3)',
               }}
             >
               <span className="t-mono text-[10px] text-olive">
@@ -113,7 +113,7 @@ export default function Hero() {
           {/* Vet Chat mini */}
           <Card className="p-4">
             <div className="flex items-center gap-2 mb-3">
-              <FeatIcon>💬</FeatIcon>
+              <FeatIcon></FeatIcon>
               <PulseDot />
             </div>
             <Badge className="mb-2">Vet Chat</Badge>
