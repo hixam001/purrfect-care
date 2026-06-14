@@ -22,13 +22,23 @@ class NotificationChannel(str, Enum):
 
 
 class NotificationType(str, Enum):
+    # Core appointment types (4)
     APPOINTMENT_CONFIRMED  = "appointment_confirmed"
     APPOINTMENT_REMINDER   = "appointment_reminder"
     APPOINTMENT_CANCELLED  = "appointment_cancelled"
+    APPOINTMENT_COMPLETED  = "appointment_completed"
+    # Order types (3)
     ORDER_CONFIRMED        = "order_confirmed"
     ORDER_STATUS_UPDATED   = "order_status_updated"
+    ORDER_DELIVERED        = "order_delivered"
+    # Engagement types (4)
     MESSAGE_RECEIVED       = "message_received"
     REVIEW_RESPONSE        = "review_response"
+    NEW_OFFER              = "new_offer"
+    PRESCRIPTION_READY     = "prescription_ready"
+    # System types (3)
+    ACCOUNT_VERIFIED       = "account_verified"
+    PAYMENT_RECEIVED       = "payment_received"
     SYSTEM                 = "system"
 
 

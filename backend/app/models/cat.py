@@ -112,6 +112,11 @@ class MedicalRecordUpdate(MedicalRecordBase):
     pass
 
 
+class MedicalRecordCreate(MedicalRecordBase):
+    """Request body — POST /api/cats/{id}/medical-record"""
+    cat_id: str | None = None  # injected from URL path in controller
+
+
 class MedicalRecordResponse(MedicalRecordBase):
     id:           str
     cat_id:       str

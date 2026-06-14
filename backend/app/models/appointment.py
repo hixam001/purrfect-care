@@ -60,7 +60,7 @@ class AppointmentBase(BaseModel):
     hospital_id:      str
     service_id:       str
     slot_id:          str | None = None
-    appointment_date: datetime
+    appointment_date: datetime | None = None  # resolved from slot if not provided
     notes:            str | None = None
 
 

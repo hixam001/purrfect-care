@@ -74,7 +74,7 @@ class MedicineResponse(MedicineBase):
 
 class PrescriptionBase(BaseModel):
     cat_id:         str
-    vet_id:         str
+    vet_id:         str | None = None  # injected from auth context in controller
     medicine_id:    str
     dosage:         str   = Field(..., max_length=100)
     frequency:      str   = Field(..., max_length=100)

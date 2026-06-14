@@ -41,7 +41,7 @@ class HospitalServiceBase(BaseModel):
 
 
 class HospitalServiceCreate(HospitalServiceBase):
-    hospital_id: str
+    hospital_id: str | None = None  # injected from URL path in controller
 
 
 class HospitalServiceUpdate(BaseModel):
@@ -107,3 +107,17 @@ class HospitalResponse(HospitalBase):
     services:      list[HospitalServiceResponse] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}
+
+
+# ──────────────────────────────────────────
+# AppointmentSlot shorthand (used by hospital admins to create slots)
+# ──────────────────────────────────────────
+
+class SlotCreate(BaseModel):
+    """Request body — POST /api/hospitals/{id}/slots (hospital_admin)."""
+    vet_id:       str
+    slot_date:    str  # YYYY-MM-DD
+    start_time:   str  # HH:MM
+    end_time:     str  # HH:MM
+    is_recurring: bool = False
+

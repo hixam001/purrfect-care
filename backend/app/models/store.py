@@ -51,7 +51,7 @@ class ProductBase(BaseModel):
 
 class ProductCreate(ProductBase):
     """Request body — POST /api/stores/{id}/products (store_owner)."""
-    store_id: str
+    store_id: str | None = None  # injected from URL path in controller
 
 
 class ProductUpdate(BaseModel):
@@ -128,3 +128,9 @@ class CatStoreResponse(CatStoreBase):
     products:      list[ProductResponse] = Field(default_factory=list)
 
     model_config = {"from_attributes": True}
+
+
+# Aliases used by tests and controllers
+StoreCreate   = CatStoreCreate
+StoreUpdate   = CatStoreUpdate
+StoreResponse = CatStoreResponse

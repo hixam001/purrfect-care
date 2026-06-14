@@ -33,8 +33,8 @@ class OrderStatus(str, Enum):
 
 class OrderItemCreate(BaseModel):
     product_id: str
-    quantity:   int = Field(..., gt=0)
-    unit_price: float = Field(..., gt=0)
+    quantity:   int   = Field(..., gt=0)
+    unit_price: float | None = Field(None, gt=0)  # resolved from product in controller
 
 
 class OrderItemResponse(BaseModel):

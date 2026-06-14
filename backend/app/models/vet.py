@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 # ──────────────────────────────────────────
 
 class VetBase(BaseModel):
-    license_number:   str   = Field(..., max_length=50)
+    license_number:   str   = Field(..., min_length=1, max_length=50)
     specialization:   str | None = Field(None, max_length=100)
     experience_years: int | None = Field(None, ge=0)
     bio:              str | None = None
@@ -25,7 +25,7 @@ class VetBase(BaseModel):
 
 class VetCreate(VetBase):
     """Request body — POST /api/vets (called at registration if role=vet)."""
-    user_id: str
+    user_id: str | None = None  # injected from auth context in controller
 
 
 class VetUpdate(BaseModel):
