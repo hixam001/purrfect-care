@@ -441,7 +441,6 @@ export default function MyCatsPage() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
   const headerRef = useFadeUp(0)
-  const gridRef   = useFadeUp(0.1)
 
   const [cats,    setCats]    = useState([])
   const [loading, setLoading] = useState(true)
@@ -451,7 +450,7 @@ export default function MyCatsPage() {
   const displayName = user?.full_name ?? user?.email ?? 'Cat Parent'
 
   /* Load cats */
-  useEffect(() => {
+  function loadCats() {
     if (!user?.id) { setLoading(false); return }
     supabase
       .from('cats')
@@ -462,22 +461,22 @@ export default function MyCatsPage() {
         if (!error && data) setCats(data)
         setLoading(false)
       })
-  }, [user?.profile_id])
+  }
+  useEffect(() => { loadCats() }, [user?.id])
+
+  // Reload cats when Supabase session is restored (after page refresh)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => { if (session && user?.id) loadCats() }
+    )
+    return () => subscription.unsubscribe()
+  }, [user?.id])
 
   function openAdd()          { setEditing(null); setDrawerOpen(true) }
   function openEdit(cat)      { setEditing(cat);  setDrawerOpen(true) }
   function closeDrawer()      { setDrawerOpen(false) }
 
-  function handleSaved() {
-    /* Refetch */
-    if (!user?.id) return
-    supabase
-      .from('cats')
-      .select('*')
-      .eq('owner_id', user.id)
-      .order('registered_at', { ascending: false })
-      .then(({ data }) => { if (data) setCats(data) })
-  }
+  function handleSaved() { loadCats() }
 
   function handleDelete(id) {
     setCats(prev => prev.filter(c => c.id !== id))
@@ -524,7 +523,7 @@ export default function MyCatsPage() {
 
         {/* Empty state */}
         {!loading && cats.length === 0 && (
-          <div ref={gridRef} className="fade-up">
+          <div>
             <Card className="py-20 text-center max-w-md mx-auto">
               <div className="text-7xl mb-4">🐱</div>
               <div className="font-display font-bold text-[1.2rem] text-espresso mb-2">No cats yet</div>
@@ -539,7 +538,7 @@ export default function MyCatsPage() {
 
         {/* Cats grid */}
         {!loading && cats.length > 0 && (
-          <div ref={gridRef} className="fade-up grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {cats.map(cat => (
               <CatCard
                 key={cat.id}

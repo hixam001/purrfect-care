@@ -3,21 +3,48 @@
  * Provides login / logout helpers and exposes the current user.
  */
 import { createContext, useContext, useState, useEffect } from 'react'
+import { supabase } from '../lib/supabaseClient.js'
 
 const AuthContext = createContext(null)
 
 const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 
 export function AuthProvider({ children }) {
-  const [user,  setUser]  = useState(null)
-  const [token, setToken] = useState(() => localStorage.getItem('pc_token') ?? null)
-  const [loading, setLoading] = useState(false)
+  const [user,    setUser]    = useState(null)
+  const [token,   setToken]   = useState(() => localStorage.getItem('pc_token') ?? null)
+  const [loading, setLoading] = useState(true)
   const [error,   setError]   = useState(null)
 
-  /* ── Persist token ───────────────────────────────── */
+  /* ── Restore session on mount ─────────────────────── */
+  useEffect(() => {
+    const stored = localStorage.getItem('pc_token')
+    if (!stored) { setLoading(false); return }
+
+    // Fetch user profile using stored backend JWT
+    fetch(`${API}/api/auth/me`, {
+      headers: { Authorization: `Bearer ${stored}` },
+    })
+      .then(r => r.ok ? r.json() : null)
+      .then(profile => {
+        if (profile) setUser(profile)
+        else { localStorage.removeItem('pc_token'); setToken(null) }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+
+    // Restore Supabase session if tokens were saved
+    const sb_access  = localStorage.getItem('pc_sb_access')
+    const sb_refresh = localStorage.getItem('pc_sb_refresh')
+    if (sb_access && sb_refresh) {
+      supabase.auth.setSession({ access_token: sb_access, refresh_token: sb_refresh })
+        .catch(() => {})
+    }
+  }, [])
+
+  /* ── Persist backend token ──────────────────────────── */
   useEffect(() => {
     if (token) localStorage.setItem('pc_token', token)
-    else        localStorage.removeItem('pc_token')
+    else       localStorage.removeItem('pc_token')
   }, [token])
 
   /* ── Login ───────────────────────────────────────── */
@@ -33,6 +60,15 @@ export function AuthProvider({ children }) {
       if (!res.ok) throw new Error(data.detail ?? 'Login failed')
       setToken(data.access_token)
       setUser(data.user)
+      /* Sync session into the Supabase client so RLS auth.uid() resolves */
+      if (data.access_token && data.refresh_token) {
+        await supabase.auth.setSession({
+          access_token:  data.access_token,
+          refresh_token: data.refresh_token,
+        })
+        localStorage.setItem('pc_sb_access',  data.access_token)
+        localStorage.setItem('pc_sb_refresh', data.refresh_token)
+      }
       return { ok: true, user: data.user }
     } catch (e) {
       setError(e.message)
@@ -55,6 +91,15 @@ export function AuthProvider({ children }) {
       if (!res.ok) throw new Error(data.detail ?? 'Registration failed')
       setToken(data.access_token)
       setUser(data.user)
+      /* Sync session into the Supabase client so RLS auth.uid() resolves */
+      if (data.access_token && data.refresh_token) {
+        await supabase.auth.setSession({
+          access_token:  data.access_token,
+          refresh_token: data.refresh_token,
+        })
+        localStorage.setItem('pc_sb_access',  data.access_token)
+        localStorage.setItem('pc_sb_refresh', data.refresh_token)
+      }
       return { ok: true }
     } catch (e) {
       setError(e.message)
@@ -65,13 +110,16 @@ export function AuthProvider({ children }) {
   }
 
   /* ── Logout ──────────────────────────────────────── */
-  function logout() {
+  async function logout() {
     if (token) {
       fetch(`${API}/api/auth/logout`, {
         method:  'POST',
         headers: { Authorization: `Bearer ${token}` },
       }).catch(() => {})
     }
+    await supabase.auth.signOut()
+    localStorage.removeItem('pc_sb_access')
+    localStorage.removeItem('pc_sb_refresh')
     setToken(null)
     setUser(null)
   }

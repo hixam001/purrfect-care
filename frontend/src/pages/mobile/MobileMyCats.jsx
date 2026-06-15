@@ -184,7 +184,18 @@ export default function MobileMyCats() {
     if (data) setCats(data)
     setLoading(false)
   }
-  useEffect(()=>{ load() },[user?.id])
+  useEffect(() => { load() }, [user?.id])
+
+  // Also reload when Supabase session is restored (e.g. after page refresh)
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (session && user?.id) load()
+      }
+    )
+    return () => subscription.unsubscribe()
+  }, [user?.id])
+
 
   async function handleDelete(cat) {
     if (!confirm(`Remove ${cat.name} from your profile?`)) return
