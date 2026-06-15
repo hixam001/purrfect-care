@@ -78,19 +78,21 @@ def create_app() -> FastAPI:
     from app.controllers.auth_controller import router as auth_router
     from app.controllers.user_controller import router as user_router
     from app.controllers.payment_controller import router as payment_router
-    app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])
-    app.include_router(user_router, prefix="/api/users", tags=["Users"])
-    app.include_router(payment_router, prefix="/api", tags=["Payments"])
+    from app.controllers.subscription_controller import router as subscription_router
+    app.include_router(auth_router,         prefix="/api/auth",          tags=["Authentication"])
+    app.include_router(user_router,         prefix="/api/users",         tags=["Users"])
+    app.include_router(payment_router,      prefix="/api",               tags=["Payments"])
+    app.include_router(subscription_router, prefix="/api/subscriptions", tags=["Subscriptions"])
 
     # Phase 4: Cats & Breeds
     # from app.controllers.cat_controller import router as cat_router
     # app.include_router(cat_router, prefix="/api", tags=["Cats & Breeds"])
 
     # Phase 5: Hospitals & Appointments
-    # from app.controllers.hospital_controller import router as hospital_router
-    # from app.controllers.appointment_controller import router as appointment_router
-    # app.include_router(hospital_router, prefix="/api/hospitals", tags=["Hospitals"])
-    # app.include_router(appointment_router, prefix="/api/appointments", tags=["Appointments"])
+    from app.controllers.hospital_controller import router as hospital_router
+    from app.controllers.appointment_controller import router as appointment_router
+    app.include_router(hospital_router, prefix="/api/hospitals", tags=["Hospitals"])
+    app.include_router(appointment_router, prefix="/api/appointments", tags=["Appointments"])
 
     # Phase 6: Chat, AI, Prescriptions
     # from app.controllers.chat_controller import router as chat_router

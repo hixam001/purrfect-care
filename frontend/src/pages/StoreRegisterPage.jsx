@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Stepper from '../components/ui/Stepper.jsx'
-import PaymentForm from '../components/ui/PaymentForm.jsx'
+import { supabase } from '../lib/supabaseClient.js'
+import { uploadAllDocs } from '../lib/uploadDocs.js'
+
+const API = import.meta.env.VITE_API_URL || 'https://server-vmvwkwachq-uc.a.run.app'
 
 /* ─────────────────────────────────────────────────────────────────────
    Store registration — GATED flow.
@@ -10,7 +13,7 @@ import PaymentForm from '../components/ui/PaymentForm.jsx'
    This mirrors the hospital registration security model.
 ───────────────────────────────────────────────────────────────────── */
 
-const STEPS = ['Store Type', 'Store Info', 'Owner Details', 'Documents', 'Choose Plan', 'Payment', 'Done']
+const STEPS = ['Store Type', 'Store Info', 'Owner Details', 'Documents', 'Done']
 
 const STORE_TYPES = [
   { value:'online',   icon:'🌐', label:'Online Store',       desc:'Sell products through the Purrfect Care app only'         },
@@ -20,23 +23,7 @@ const STORE_TYPES = [
 
 const CATEGORIES = ['Food & Treats','Beds & Furniture','Wellness','Grooming','Toys','Supplements','Clothing','Accessories','Medications']
 
-const PLANS = [
-  {
-    id:'starter', name:'Starter',    price:'₨ 500/mo',   yearly:'₨ 5,000/yr', commission:'8%',
-    color:'rgba(160,140,125,.1)', border:'#b8ceb5',
-    features:['Up to 30 products', '₨ 50,000 monthly orders', '8% commission per order', 'Standard delivery integration','Email support'],
-  },
-  {
-    id:'growth',  name:'Growth',     price:'₨ 1,500/mo', yearly:'₨ 15,000/yr', commission:'5%', badge:'Best Value',
-    color:'rgba(94,71,73,.1)', border:'rgba(94,71,73,.35)',
-    features:['Up to 200 products','Unlimited orders','5% commission per order','Priority listing in search','Real-time analytics','Dedicated support'],
-  },
-  {
-    id:'premium', name:'Premium',    price:'₨ 3,500/mo', yearly:'₨ 35,000/yr', commission:'3%',
-    color:'rgba(196,140,56,.1)', border:'rgba(196,140,56,.35)',
-    features:['Unlimited products','Unlimited orders','3% commission per order','Featured store placement','AI-driven recommendations','Vet-approved badge eligibility','API access'],
-  },
-]
+
 
 const inputCls = "w-full px-4 py-3 rounded-xl text-[14px] text-espresso outline-none transition-all"
 const inputSty = { background:'rgba(255,255,255,.8)', border:'1.5px solid #b8ceb5' }
@@ -52,9 +39,7 @@ function Field({ label, children }) {
 
 export default function StoreRegisterPage() {
   const navigate = useNavigate()
-  const [step,     setStep]     = useState(0)
-  const [plan,     setPlan]     = useState('growth')
-  const [billing,  setBilling]  = useState('monthly')
+  const [step, setStep] = useState(0)
 
   /* Step 0 */
   const [storeType, setStoreType] = useState('')
@@ -75,26 +60,96 @@ export default function StoreRegisterPage() {
   const [password,   setPassword]   = useState('')
   const [confirm,    setConfirm]    = useState('')
 
-  const [err, setErr] = useState('')
+  /* Step 3 — documents */
+  const [storeDocs, setStoreDocs] = useState({})
+  
+  function handleDocFile(label, file) {
+    if (!file) return
+    setStoreDocs(prev => ({ ...prev, [label]: file }))
+  }
 
-  const selectedPlan = PLANS.find(p => p.id === plan)
-  const payAmount    = billing === 'monthly' ? selectedPlan?.price : selectedPlan?.yearly
+  const [err, setErr]               = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   function toggleCat(c) {
     setSelCats(s => s.includes(c) ? s.filter(x=>x!==c) : [...s, c])
   }
 
   function validate() {
-    if (step === 0 && !storeType)                                    { setErr('Please select a store type.'); return false }
-    if (step === 1 && (!storeName || !city || selCats.length===0))   { setErr('Please fill required fields and select at least one category.'); return false }
-    if (step === 2 && (!ownerName || !ownerEmail || !password))      { setErr('Please fill all required fields.'); return false }
-    if (step === 2 && password !== confirm)                           { setErr('Passwords do not match.'); return false }
-    if (step === 2 && password.length < 8)                           { setErr('Password must be at least 8 characters.'); return false }
+    if (step === 0 && !storeType)                                  { setErr('Please select a store type.'); return false }
+    if (step === 1 && (!storeName || !city || selCats.length===0)) { setErr('Please fill required fields and select at least one category.'); return false }
+    if (step === 2 && (!ownerName || !ownerEmail || !password))    { setErr('Please fill all required fields.'); return false }
+    if (step === 2 && password !== confirm)                        { setErr('Passwords do not match.'); return false }
+    if (step === 2 && password.length < 8)                        { setErr('Password must be at least 8 characters.'); return false }
     return true
   }
 
-  function next() { setErr(''); if (validate()) setStep(s => s+1) }
+  function next() { setStep(s => s+1) }
   function back() { setErr(''); setStep(s => s-1) }
+
+  /**
+   * Step 3 = Documents → Done: register account + upload docs.
+   * All other steps: just validate and advance.
+   */
+  async function handleNext() {
+    setErr('')
+    if (!validate()) return
+
+    if (step === 3) {
+      setSubmitting(true)
+      try {
+        const regRes = await fetch(`${API}/api/auth/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name:     ownerName,
+            email:    ownerEmail,
+            phone:    ownerPhone,
+            password: password,
+            role:     'store_owner',
+            city:     city,
+            address:  address,
+          }),
+        })
+        const regData = await regRes.json()
+        if (!regRes.ok) {
+          const msg = Array.isArray(regData.detail)
+            ? regData.detail.map(d => d.msg || d.message || JSON.stringify(d)).join('; ')
+            : regData.message || regData.detail || 'Registration failed. Please check your details and try again.'
+          throw new Error(msg)
+        }
+
+        const userId       = regData.user?.user_id
+        const profId       = regData.user?.id
+        const accessToken  = regData.access_token  || ''
+        const refreshToken = regData.refresh_token || ''
+
+        if (userId && Object.keys(storeDocs).length > 0) {
+          try {
+            const paths = await uploadAllDocs(supabase, userId, storeDocs, accessToken, refreshToken)
+            if (profId && accessToken) {
+              await fetch(`${API}/api/users/me/docs`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+                body: JSON.stringify({ verification_docs: paths }),
+              }).catch(() => {})
+            }
+          } catch (uploadErr) {
+            console.warn('Doc upload error (non-fatal):', uploadErr.message)
+          }
+        }
+
+        next()
+      } catch (e) {
+        setErr(e.message)
+      } finally {
+        setSubmitting(false)
+      }
+      return
+    }
+
+    next()
+  }
 
   return (
     <div className="min-h-screen" style={{ background:'linear-gradient(135deg,#dbe8d8 0%,#EFE5DC 100%)' }}>
@@ -110,7 +165,7 @@ export default function StoreRegisterPage() {
         </Link>
 
         {/* Header */}
-        {step < 6 && (
+        {step < 4 && (
           <div className="mb-8">
             <span className="t-label mb-3 inline-block">Cat Store Registration</span>
             <h1 className="font-display font-black text-espresso tracking-tight mb-2"
@@ -137,10 +192,10 @@ export default function StoreRegisterPage() {
           </div>
         )}
 
-        {step < 6 && <Stepper steps={STEPS} current={step} />}
+        {step < 4 && <Stepper steps={STEPS} current={step} />}
 
         {/* Card */}
-        {step < 6 && (
+        {step < 4 && (
           <div className="rounded-3xl p-8" style={{ background:'rgba(255,255,255,.75)', backdropFilter:'blur(12px)', border:'1px solid #b8ceb5' }}>
 
             {/* ── STEP 0: Store Type ── */}
@@ -283,99 +338,45 @@ export default function StoreRegisterPage() {
                   { label:'Business Registration Certificate *', hint:'FBR / SECP registration or NTN certificate' },
                   { label:'Proof of Address *',                  hint:'Utility bill or bank statement (last 3 months)' },
                   { label:'Product Source / Supplier Agreement', hint:'Invoice, supplier contract, or import documents (optional but recommended)' },
-                ].map(doc => (
-                  <div key={doc.label} className="p-5 rounded-2xl cursor-pointer transition-all"
-                       style={{ background:'rgba(255,255,255,.6)', border:'2px dashed #b8ceb5' }}
-                       onMouseOver={e=>e.currentTarget.style.borderColor='#5e4749'}
-                       onMouseOut={e=>e.currentTarget.style.borderColor='#b8ceb5'}>
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-                           style={{ background:'rgba(94,71,73,.1)' }}>📄</div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-[14px] text-espresso">{doc.label}</div>
-                        <div className="text-[12px] text-clay-muted">{doc.hint}</div>
+                ].map(doc => {
+                  const uploaded = storeDocs[doc.label]
+                  return (
+                    <label key={doc.label} className="p-5 rounded-2xl cursor-pointer transition-all block"
+                           style={{ background: uploaded ? 'rgba(94,71,73,.07)' : 'rgba(255,255,255,.6)',
+                                    border: uploaded ? '2px solid #5e4749' : '2px dashed #b8ceb5' }}
+                           onMouseOver={e => { if (!uploaded) e.currentTarget.style.borderColor='#5e4749' }}
+                           onMouseOut={e  => { if (!uploaded) e.currentTarget.style.borderColor='#b8ceb5' }}>
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+                             style={{ background: uploaded ? 'rgba(94,71,73,.15)' : 'rgba(94,71,73,.1)' }}>
+                          {uploaded ? '✅' : '📄'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-[14px] text-espresso">{doc.label}</div>
+                          {uploaded
+                            ? <div className="text-[12px] font-medium truncate" style={{ color:'#5e4749' }}>📎 {uploaded.name}</div>
+                            : <div className="text-[12px] text-clay-muted">{doc.hint}</div>
+                          }
+                        </div>
+                        <div className="btn btn-outline !py-2 !px-4 !text-[10px] flex-shrink-0">
+                          {uploaded ? 'Change' : 'Upload'}
+                        </div>
                       </div>
-                      <div className="btn btn-outline !py-2 !px-4 !text-[10px]">Upload</div>
-                    </div>
-                  </div>
-                ))}
+                      <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="sr-only"
+                             onChange={e => handleDocFile(doc.label, e.target.files?.[0])} />
+                    </label>
+                  )
+                })}
 
-                <div className="p-4 rounded-xl text-[12px] text-clay-muted flex flex-col gap-1.5"
-                     style={{ background:'rgba(196,140,56,.08)', border:'1px solid rgba(196,140,56,.2)' }}>
-                  <div className="font-semibold text-espresso text-[13px]">⏱️ What happens next?</div>
-                  <div>Our team reviews your documents within <strong>24–48 hours</strong>. You'll receive an email at <strong>{ownerEmail || 'your registered email'}</strong> once your application is approved or if we need more information.</div>
-                  <div className="pt-1" style={{ borderTop:'1px solid rgba(196,140,56,.2)' }}>
-                    🔒 <strong>Your store will not be listed publicly</strong> until a System Admin explicitly approves your application.
-                  </div>
+                <div className="p-4 rounded-xl text-[12px]" style={{ background:'rgba(196,140,56,.08)', border:'1px solid rgba(196,140,56,.2)', color:'#7A4F10' }}>
+                  Your subscription plan will be selected after our team approves your application (24–48 hours).
+                  Payment is only required post-approval.
                 </div>
               </div>
-            )}
-
-            {/* ── STEP 4: Plan ── */}
-            {step === 4 && (
-              <div>
-                <h2 className="font-display font-black text-[1.3rem] text-espresso mb-2">Choose Your Plan</h2>
-                <div className="flex gap-2 mb-5">
-                  {['monthly','yearly'].map(b => (
-                    <button key={b} type="button" onClick={()=>setBilling(b)}
-                            className="flex-1 py-2 rounded-xl text-[12px] font-bold transition-all"
-                            style={{ background: billing===b ? '#5e4749' : 'rgba(255,255,255,.7)',
-                                     color: billing===b ? '#fff' : '#4E342E', border: billing===b ? 'none' : '1.5px solid #b8ceb5' }}>
-                      {b === 'monthly' ? 'Monthly' : 'Yearly (2 months free)'}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {PLANS.map(p => (
-                    <div key={p.id} onClick={()=>setPlan(p.id)}
-                         className="relative p-5 rounded-2xl cursor-pointer transition-all"
-                         style={{ background:p.color, border:`2px solid ${plan===p.id ? '#5e4749' : p.border}` }}>
-                      {p.badge && (
-                        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                          <span className="t-label text-[9px]">{p.badge}</span>
-                        </div>
-                      )}
-                      <div className="font-display font-black text-[1rem] text-espresso mb-0.5">{p.name}</div>
-                      <div className="font-black text-[1.4rem] text-olive mb-0.5">
-                        {billing==='monthly' ? p.price : p.yearly}
-                      </div>
-                      <div className="t-mono text-[9px] text-clay-muted mb-3">{p.commission} commission</div>
-                      <div className="flex flex-col gap-1.5">
-                        {p.features.map(f => (
-                          <div key={f} className="flex items-start gap-2 text-[11px] text-espresso-soft">
-                            <span className="text-olive flex-shrink-0">✓</span>{f}
-                          </div>
-                        ))}
-                      </div>
-                      {plan===p.id && (
-                        <div className="mt-3 pt-2 border-t" style={{ borderColor:'rgba(94,71,73,.2)' }}>
-                          <span className="t-mono text-[9px] text-olive">✓ Selected</span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="mt-4 p-3 rounded-xl text-[12px] text-clay-muted"
-                     style={{ background:'rgba(94,71,73,.07)', border:'1px solid rgba(94,71,73,.18)' }}>
-                  ℹ️ Your subscription will only be activated once your store application has been <strong className="text-espresso">approved by a System Admin</strong>. No charges are made during the review period.
-                </div>
-              </div>
-            )}
-
-            {/* ── STEP 5: Payment ── */}
-            {step === 5 && (
-              <PaymentForm
-                amount={payAmount}
-                title={`${selectedPlan?.name} Plan · ${billing==='monthly' ? 'Monthly' : 'Annual'} Subscription`}
-                onBack={back}
-                onSuccess={next}
-              />
             )}
 
             {/* Error */}
-            {err && step !== 5 && (
+            {err && (
               <div className="mt-4 px-4 py-3 rounded-xl text-[13px]"
                    style={{ background:'rgba(196,56,56,.08)', border:'1px solid rgba(196,56,56,.2)', color:'#9B2020' }}>
                 ⚠️ {err}
@@ -383,21 +384,28 @@ export default function StoreRegisterPage() {
             )}
 
             {/* Nav buttons */}
-            {step !== 5 && (
-              <div className="flex gap-3 mt-6">
-                {step > 0 && (
-                  <button type="button" onClick={back} className="btn btn-outline flex-1 justify-center !py-3">← Back</button>
-                )}
-                <button type="button" onClick={next} className="btn btn-olive flex-1 justify-center !py-3">
-                  {step === 4 ? 'Continue to Payment →' : 'Continue →'}
-                </button>
-              </div>
-            )}
+            <div className="flex gap-3 mt-6">
+              {step > 0 && (
+                <button type="button" onClick={back} className="btn btn-outline flex-1 justify-center !py-3">← Back</button>
+              )}
+              <button type="button" onClick={handleNext} disabled={submitting} className="btn btn-olive flex-1 justify-center !py-3"
+                      style={{ opacity: submitting ? .7 : 1 }}>
+                {submitting
+                  ? <span className="flex items-center gap-2">
+                      <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity=".3"/>
+                        <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+                      </svg>
+                      Submitting application…
+                    </span>
+                  : step === 3 ? 'Submit Application →' : 'Continue →'
+                }
+              </button>
+            </div>
           </div>
         )}
 
-        {/* ── SUCCESS / PENDING REVIEW ── */}
-        {step === 6 && (
+        {step === 4 && (
           <div className="text-center py-16 px-8 rounded-3xl"
                style={{ background:'rgba(255,255,255,.75)', backdropFilter:'blur(12px)', border:'1px solid rgba(196,140,56,.3)' }}>
 

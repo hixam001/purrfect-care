@@ -10,8 +10,6 @@ export default function MobileSettings() {
   const { user, token, logout } = useAuth()
   const navigate = useNavigate()
   const [tab,       setTab]     = useState('Profile')
-  const [name,      setName]    = useState('')
-  const [phone,     setPhone]   = useState('')
   const [city,      setCity]    = useState('')
   const [avatarUrl, setAvatarUrl] = useState(null)
   const [saving,    setSaving]  = useState(false)
@@ -24,7 +22,7 @@ export default function MobileSettings() {
   const [notifStore,  setNotifStore]  = useState(false)
 
   useEffect(() => {
-    if (user) { setName(user.name??''); setPhone(user.phone??''); setCity(user.city??''); setAvatarUrl(user.avatar_url??null) }
+    if (user) { setCity(user.city ?? ''); setAvatarUrl(user.avatar_url ?? null) }
   }, [user])
 
   async function handleAvatar(e) {
@@ -42,9 +40,9 @@ export default function MobileSettings() {
     try {
       const res = await fetch(`${API}/api/users/profile`, {
         method:'PUT', headers:{ 'Content-Type':'application/json', Authorization:`Bearer ${token}` },
-        body: JSON.stringify({ name, phone:phone||null, city:city||null, avatar_url:avatarUrl||null }),
+        body: JSON.stringify({ city: city || null }),
       })
-      setMsg(res.ok ? '✅ Profile saved!' : '❌ Could not save profile.')
+      setMsg(res.ok ? '✅ City saved!' : '❌ Could not save.')
     } catch { setMsg('❌ Network error.') }
     finally { setSaving(false) }
   }
@@ -89,7 +87,7 @@ export default function MobileSettings() {
         {/* ── Profile tab ── */}
         {tab==='Profile' && (
           <>
-            {/* Avatar */}
+            {/* Avatar — editable */}
             <label className="flex flex-col items-center gap-2 cursor-pointer">
               <div className="w-20 h-20 rounded-full overflow-hidden flex items-center justify-center relative"
                 style={{ border:'3px solid #5e4749', backgroundColor:'rgba(94,71,73,0.09)' }}>
@@ -101,29 +99,33 @@ export default function MobileSettings() {
               <input type="file" accept="image/*" className="sr-only" onChange={handleAvatar} />
             </label>
 
-            {/* Email (read-only) */}
-            <div className="px-4 py-3 rounded-xl" style={{ backgroundColor:'#eef4ec', border:'1.5px solid #b8ceb5' }}>
-              <p className="text-xs font-semibold mb-0.5" style={{ color:'#7a5e60', fontFamily:'Plus Jakarta Sans, sans-serif' }}>Email (cannot be changed)</p>
-              <p className="text-sm font-medium" style={{ color:'#3a2c2d', fontFamily:'Plus Jakarta Sans, sans-serif' }}>{user?.email}</p>
-            </div>
-
+            {/* Read-only fields from registration */}
             {[
-              { label:'Full name', value:name, set:setName, placeholder:'Your full name', type:'text' },
-              { label:'Phone number', value:phone, set:setPhone, placeholder:'+92 300 0000000', type:'tel' },
-              { label:'City', value:city, set:setCity, placeholder:'Lahore, Karachi…', type:'text' },
+              { label:'Full name',    value: user?.name  ?? '', hint:'Set at registration' },
+              { label:'Email',        value: user?.email ?? '', hint:'Cannot be changed'   },
+              { label:'Phone number', value: user?.phone ?? '', hint:'Set at registration' },
             ].map(f => (
               <div key={f.label}>
                 <label className="block text-xs font-semibold mb-1" style={{ color:'#3a2c2d', fontFamily:'Plus Jakarta Sans, sans-serif' }}>{f.label}</label>
-                <input type={f.type} className="w-full px-4 py-3 rounded-xl text-sm outline-none"
-                  style={{ backgroundColor:'#eef4ec', border:'1.5px solid #b8ceb5', color:'#3a2c2d', fontFamily:'Plus Jakarta Sans, sans-serif' }}
-                  placeholder={f.placeholder} value={f.value} onChange={e=>f.set(e.target.value)} />
+                <div className="w-full px-4 py-3 rounded-xl text-sm" style={{ backgroundColor:'rgba(0,0,0,0.04)', border:'1.5px solid #b8ceb5', color:'#7a5e60', fontFamily:'Plus Jakarta Sans, sans-serif' }}>
+                  {f.value || '—'}
+                </div>
+                <p className="text-xs mt-1" style={{ color:'#a08c7d', fontFamily:'Plus Jakarta Sans, sans-serif' }}>{f.hint}</p>
               </div>
             ))}
+
+            {/* City — editable */}
+            <div>
+              <label className="block text-xs font-semibold mb-1" style={{ color:'#3a2c2d', fontFamily:'Plus Jakarta Sans, sans-serif' }}>City</label>
+              <input className="w-full px-4 py-3 rounded-xl text-sm outline-none"
+                style={{ backgroundColor:'#eef4ec', border:'1.5px solid #b8ceb5', color:'#3a2c2d', fontFamily:'Plus Jakarta Sans, sans-serif' }}
+                placeholder="Lahore, Karachi…" value={city} onChange={e => setCity(e.target.value)} />
+            </div>
 
             <button onClick={saveProfile} disabled={saving}
               className="w-full py-3.5 rounded-xl font-bold text-white disabled:opacity-50"
               style={{ backgroundColor:'#5e4749', fontFamily:'Plus Jakarta Sans, sans-serif' }}>
-              {saving ? 'Saving…' : 'Save Profile'}
+              {saving ? 'Saving…' : 'Save City'}
             </button>
           </>
         )}

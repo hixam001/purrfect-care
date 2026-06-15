@@ -1,14 +1,21 @@
 import hashlib
 import hmac
 import logging
+import math
+from datetime import datetime, timezone
 
 import httpx
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from pydantic import BaseModel
 
 from app.config import Settings, get_settings
+from app.database import get_supabase_client
 
 logger = logging.getLogger("purrfect_care.payments")
+
+PLATFORM_FEE_RATE   = 0.015   # 1.5%
+APPOINTMENT_BASE    = 500     # PKR fixed appointment fee
+APPOINTMENT_TOTAL   = math.ceil(APPOINTMENT_BASE * (1 + PLATFORM_FEE_RATE))  # 508 PKR
 
 router = APIRouter()
 
@@ -48,7 +55,7 @@ async def create_payment_session(
         response = await client.post(
             f"{base}/order/v1/init",
             json={
-                "merchant_api_key": settings.SAFEPAY_SECRET_KEY,
+                "merchant_api_key": settings.SAFEPAY_PUBLIC_KEY,
                 "intent": "CYBERSOURCE",
                 "mode": "payment",
                 "currency": body.currency,
@@ -85,6 +92,131 @@ async def create_payment_session(
     return {
         "token": tracker,
         "checkout_url": checkout_url,
+    }
+
+
+# ─────────────────────────────────────────────────────────────
+# Order payment session (store order with 1.5% platform fee)
+# ─────────────────────────────────────────────────────────────
+
+class OrderPaymentRequest(BaseModel):
+    order_id: str          # your internal order ref
+    amount_pkr: int        # cart total in PKR (without fee)
+    redirect_url: str
+    cancel_url: str
+
+
+@router.post("/payments/order-session", status_code=status.HTTP_201_CREATED)
+async def create_order_payment_session(
+    body: OrderPaymentRequest,
+    settings: Settings = Depends(get_settings),
+):
+    """Create a Safepay session for a store order (cart + 1.5% platform fee)."""
+    fee_pkr        = math.ceil(body.amount_pkr * PLATFORM_FEE_RATE)
+    total_pkr      = body.amount_pkr + fee_pkr
+    total_paisa    = total_pkr * 100
+    safepay_oid    = f"ORD-{body.order_id}"
+
+    base = _safepay_base(settings)
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            f"{base}/order/v1/init",
+            json={
+                "merchant_api_key": settings.SAFEPAY_PUBLIC_KEY,
+                "intent":           "CYBERSOURCE",
+                "mode":             "payment",
+                "currency":         "PKR",
+                "amount":           total_paisa,
+                "order_id":         safepay_oid,
+                "cancel_url":       body.cancel_url,
+                "redirect_url":     body.redirect_url,
+            },
+            headers={"Content-Type": "application/json"},
+            timeout=15.0,
+        )
+
+    if resp.status_code not in (200, 201):
+        raise HTTPException(status_code=502, detail="Payment gateway error.")
+
+    data    = resp.json()
+    tracker = data.get("data", {}).get("tracker", {}).get("token")
+    if not tracker:
+        raise HTTPException(status_code=502, detail="No payment token returned.")
+
+    checkout_url = (
+        f"{'https://sandbox.api.getsafepay.com' if settings.SAFEPAY_ENV == 'sandbox' else 'https://www.getsafepay.com'}"
+        f"/checkout/pay/{tracker}"
+        f"?env={'sandbox' if settings.SAFEPAY_ENV == 'sandbox' else 'production'}"
+    )
+
+    return {
+        "token":        tracker,
+        "checkout_url": checkout_url,
+        "order_id":     safepay_oid,
+        "amount_pkr":   body.amount_pkr,
+        "fee_pkr":      fee_pkr,
+        "total_pkr":    total_pkr,
+    }
+
+
+# ─────────────────────────────────────────────────────────────
+# Appointment payment session (₨500 fixed + 1.5% = ₨508)
+# ─────────────────────────────────────────────────────────────
+
+class AppointmentPaymentRequest(BaseModel):
+    appointment_ref: str   # internal reference (for order_id)
+    redirect_url: str
+    cancel_url: str
+
+
+@router.post("/payments/appointment-session", status_code=status.HTTP_201_CREATED)
+async def create_appointment_payment_session(
+    body: AppointmentPaymentRequest,
+    settings: Settings = Depends(get_settings),
+):
+    """Create a Safepay session for an appointment booking (₨508 fixed)."""
+    total_paisa  = APPOINTMENT_TOTAL * 100
+    safepay_oid  = f"APT-{body.appointment_ref}"
+
+    base = _safepay_base(settings)
+    async with httpx.AsyncClient() as client:
+        resp = await client.post(
+            f"{base}/order/v1/init",
+            json={
+                "merchant_api_key": settings.SAFEPAY_PUBLIC_KEY,
+                "intent":           "CYBERSOURCE",
+                "mode":             "payment",
+                "currency":         "PKR",
+                "amount":           total_paisa,
+                "order_id":         safepay_oid,
+                "cancel_url":       body.cancel_url,
+                "redirect_url":     body.redirect_url,
+            },
+            headers={"Content-Type": "application/json"},
+            timeout=15.0,
+        )
+
+    if resp.status_code not in (200, 201):
+        raise HTTPException(status_code=502, detail="Payment gateway error.")
+
+    data    = resp.json()
+    tracker = data.get("data", {}).get("tracker", {}).get("token")
+    if not tracker:
+        raise HTTPException(status_code=502, detail="No payment token returned.")
+
+    checkout_url = (
+        f"{'https://sandbox.api.getsafepay.com' if settings.SAFEPAY_ENV == 'sandbox' else 'https://www.getsafepay.com'}"
+        f"/checkout/pay/{tracker}"
+        f"?env={'sandbox' if settings.SAFEPAY_ENV == 'sandbox' else 'production'}"
+    )
+
+    return {
+        "token":           tracker,
+        "checkout_url":    checkout_url,
+        "order_id":        safepay_oid,
+        "base_fee_pkr":    APPOINTMENT_BASE,
+        "platform_fee_pkr": APPOINTMENT_TOTAL - APPOINTMENT_BASE,
+        "total_pkr":       APPOINTMENT_TOTAL,
     }
 
 
@@ -125,15 +257,26 @@ async def safepay_webhook(
     logger.info("Safepay webhook received: %s", event_type)
 
     if event_type in ("payment:created", "payment:succeeded"):
-        tracker = event.get("data", {}).get("tracker", {}).get("token")
-        order_id = event.get("data", {}).get("order_id")
-        amount = event.get("data", {}).get("amount")
+        tracker  = event.get("data", {}).get("tracker", {}).get("token")
+        order_id = event.get("data", {}).get("order_id", "")
+        amount   = event.get("data", {}).get("amount")
         logger.info(
             "Payment succeeded — tracker=%s order_id=%s amount=%s",
-            tracker,
-            order_id,
-            amount,
+            tracker, order_id, amount,
         )
+
+        # Activate subscription when SUB-* order completes
+        if order_id.startswith("SUB-"):
+            try:
+                from app.database import get_supabase_client as _get_sb
+                _sb = next(_get_sb())
+                _sb.table("subscriptions").update({
+                    "status":     "active",
+                    "started_at": datetime.now(timezone.utc).isoformat(),
+                }).eq("safepay_order_id", order_id).execute()
+                logger.info("Subscription activated for order_id=%s", order_id)
+            except Exception as _e:
+                logger.error("Failed to activate subscription: %s", _e)
 
     elif event_type in ("payment:failed", "payment:reversed"):
         tracker = event.get("data", {}).get("tracker", {}).get("token")

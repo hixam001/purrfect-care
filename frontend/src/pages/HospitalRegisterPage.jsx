@@ -1,33 +1,17 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Stepper from '../components/ui/Stepper.jsx'
-import PaymentForm from '../components/ui/PaymentForm.jsx'
+import { supabase } from '../lib/supabaseClient.js'
+import { uploadAllDocs } from '../lib/uploadDocs.js'
 
-const STEPS = ['Hospital Info', 'Admin Account', 'Documents', 'Choose Plan', 'Payment', 'Done']
+const API   = import.meta.env.VITE_API_URL || 'https://server-vmvwkwachq-uc.a.run.app'
+const STEPS = ['Hospital Info', 'Admin Account', 'Documents', 'Done']
 
 const HOSPITAL_TYPES = [
-  { value:'general',   label:'General Veterinary Clinic',     icon:'🏥' },
-  { value:'specialist',label:'Specialist Feline Hospital',    icon:'⚕️' },
-  { value:'emergency', label:'Emergency & Critical Care',     icon:'🚨' },
-  { value:'wellness',  label:'Wellness & Preventive Care',    icon:'🌿' },
-]
-
-const PLANS = [
-  {
-    id:'basic', name:'Basic',      price:'₨ 1,500/mo', yearly:'₨ 15,000/yr',
-    color:'rgba(160,140,125,.12)', border:'#b8ceb5',
-    features:['Up to 3 vets', '50 appointments/mo', 'Basic analytics', 'Email support'],
-  },
-  {
-    id:'pro',   name:'Professional', price:'₨ 3,500/mo', yearly:'₨ 35,000/yr',
-    color:'rgba(94,71,73,.1)',   border:'rgba(94,71,73,.35)', badge:'Most Popular',
-    features:['Up to 15 vets', 'Unlimited appointments', 'Advanced analytics', 'Priority support', 'Digital prescriptions', 'Patient history'],
-  },
-  {
-    id:'ent',   name:'Enterprise',  price:'₨ 7,500/mo', yearly:'₨ 75,000/yr',
-    color:'rgba(61,38,22,.07)',    border:'rgba(61,38,22,.25)',
-    features:['Unlimited vets', 'Unlimited everything', 'Custom integrations', 'Dedicated account manager', 'AI diagnostics', 'Multi-branch support'],
-  },
+  { value:'general',    label:'General Veterinary Clinic',   icon:'🏥' },
+  { value:'specialist', label:'Specialist Feline Hospital',  icon:'⚕️' },
+  { value:'emergency',  label:'Emergency & Critical Care',   icon:'🚨' },
+  { value:'wellness',   label:'Wellness & Preventive Care',  icon:'🌿' },
 ]
 
 const inputCls = "w-full px-4 py-3 rounded-xl text-[14px] text-espresso outline-none transition-all"
@@ -45,52 +29,121 @@ function Field({ label, children }) {
 export default function HospitalRegisterPage() {
   const navigate = useNavigate()
   const [step, setStep]         = useState(0)
-  const [plan, setPlan]         = useState('pro')
-  const [billing, setBilling]   = useState('monthly')
 
-  /* Step 1 */
-  const [hospName, setHospName]     = useState('')
-  const [hospType, setHospType]     = useState('')
-  const [license,  setLicense]      = useState('')
-  const [city,     setCity]         = useState('')
-  const [address,  setAddress]      = useState('')
-  const [phone,    setPhone]        = useState('')
+  /* Step 0 — Hospital Info */
+  const [hospName, setHospName]   = useState('')
+  const [hospType, setHospType]   = useState('')
+  const [license,  setLicense]    = useState('')
+  const [city,     setCity]       = useState('')
+  const [address,  setAddress]    = useState('')
+  const [phone,    setPhone]      = useState('')
 
-  /* Step 2 */
-  const [adminName, setAdminName]   = useState('')
-  const [adminEmail,setAdminEmail]  = useState('')
-  const [adminCnic, setAdminCnic]   = useState('')
-  const [password,  setPassword]    = useState('')
-  const [confirm,   setConfirm]     = useState('')
-  const [err,       setErr]         = useState('')
+  /* Step 1 — Admin Account */
+  const [adminName,  setAdminName]  = useState('')
+  const [adminEmail, setAdminEmail] = useState('')
+  const [adminCnic,  setAdminCnic]  = useState('')
+  const [password,   setPassword]   = useState('')
+  const [confirm,    setConfirm]    = useState('')
 
-  const selectedPlan = PLANS.find(p => p.id === plan)
-  const payAmount = billing === 'monthly' ? selectedPlan?.price : selectedPlan?.yearly
+  /* Step 2 — Documents */
+  const [hospDocs, setHospDocs] = useState({})
+
+  const [err,        setErr]        = useState('')
+  const [submitting, setSubmitting] = useState(false)
+
+  function handleDocFile(label, file) {
+    if (!file) return
+    setHospDocs(prev => ({ ...prev, [label]: file }))
+  }
 
   function next() { setErr(''); setStep(s => s + 1) }
   function back() { setErr(''); setStep(s => s - 1) }
 
   function validateStep() {
     if (step === 0) {
-      if (!hospName || !hospType || !license || !city) { setErr('Please fill all required fields.'); return false }
+      if (!hospName || !hospType || !license || !city) {
+        setErr('Please fill all required fields.'); return false
+      }
     }
     if (step === 1) {
-      if (!adminName || !adminEmail || !password) { setErr('Please fill all required fields.'); return false }
-      if (password !== confirm)                   { setErr('Passwords do not match.'); return false }
-      if (password.length < 8)                    { setErr('Password must be at least 8 characters.'); return false }
+      if (!adminName || !adminEmail || !password) {
+        setErr('Please fill all required fields.'); return false
+      }
+      if (password !== confirm)  { setErr('Passwords do not match.'); return false }
+      if (password.length < 8)   { setErr('Password must be at least 8 characters.'); return false }
     }
     return true
   }
 
-  function handleNext() {
-    if (validateStep()) next()
+  /**
+   * Step 2 (Documents) → Done: register the account + upload docs.
+   * All earlier steps: just validate and advance.
+   */
+  async function handleNext() {
+    setErr('')
+    if (!validateStep()) return
+
+    if (step === 2) {
+      setSubmitting(true)
+      try {
+        const regRes = await fetch(`${API}/api/auth/register`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name:     adminName,
+            email:    adminEmail,
+            phone:    phone,
+            password: password,
+            role:     'hospital_admin',
+            city:     city,
+            address:  address,
+          }),
+        })
+        const regData = await regRes.json()
+        if (!regRes.ok) {
+          const msg = Array.isArray(regData.detail)
+            ? regData.detail.map(d => d.msg || d.message || JSON.stringify(d)).join('; ')
+            : regData.message || regData.detail || 'Registration failed. Please check your details and try again.'
+          throw new Error(msg)
+        }
+
+        const userId       = regData.user?.user_id   // Supabase auth UID
+        const profId       = regData.user?.id         // profile PK
+        const accessToken  = regData.access_token  || ''
+        const refreshToken = regData.refresh_token || ''
+
+        if (userId && Object.keys(hospDocs).length > 0) {
+          try {
+            const paths = await uploadAllDocs(supabase, userId, hospDocs, accessToken, refreshToken)
+            if (profId && accessToken) {
+              await fetch(`${API}/api/users/me/docs`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+                body: JSON.stringify({ verification_docs: paths }),
+              }).catch(() => {})
+            }
+          } catch (uploadErr) {
+            console.warn('Doc upload error (non-fatal):', uploadErr.message)
+          }
+        }
+
+        next()  // advance to Done step
+      } catch (e) {
+        setErr(e.message)
+      } finally {
+        setSubmitting(false)
+      }
+      return
+    }
+
+    next()
   }
 
   return (
     <div className="min-h-screen" style={{ background:'linear-gradient(135deg,#dbe8d8 0%,#EFE5DC 100%)' }}>
       <div className="max-w-3xl mx-auto px-4 py-10">
 
-        {/* Back to home */}
+        {/* Logo */}
         <Link to="/" className="flex items-center gap-2 no-underline mb-8 w-fit">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
                style={{ background:'linear-gradient(135deg,#5e4749,#4a373a)' }}>🐱</div>
@@ -100,7 +153,7 @@ export default function HospitalRegisterPage() {
         </Link>
 
         {/* Header */}
-        {step < 5 && (
+        {step < 3 && (
           <div className="mb-8">
             <span className="t-label mb-3 inline-block">Hospital / Clinic Registration</span>
             <h1 className="font-display font-black text-espresso tracking-tight mb-2"
@@ -108,16 +161,17 @@ export default function HospitalRegisterPage() {
               Register Your Veterinary Hospital
             </h1>
             <p className="text-clay-muted text-[14px]">
-              Set up your hospital profile and start onboarding your veterinary team.
+              Set up your hospital profile. Our team reviews and approves your application within 24–48 hours.
+              You will choose your subscription plan after approval.
             </p>
           </div>
         )}
 
         {/* Stepper */}
-        {step < 5 && <Stepper steps={STEPS} current={step} />}
+        {step < 3 && <Stepper steps={STEPS} current={step} />}
 
         {/* Card */}
-        {step < 5 && (
+        {step < 3 && (
           <div className="rounded-3xl p-8" style={{ background:'rgba(255,255,255,.75)', backdropFilter:'blur(12px)', border:'1px solid #b8ceb5' }}>
 
             {/* ── STEP 0: Hospital Info ── */}
@@ -221,139 +275,118 @@ export default function HospitalRegisterPage() {
             {step === 2 && (
               <div className="flex flex-col gap-5">
                 <h2 className="font-display font-black text-[1.3rem] text-espresso mb-2">Verification Documents</h2>
-                <p className="text-clay-muted text-[13px] -mt-2">Upload required documents for verification. Accepted formats: PDF, JPG, PNG.</p>
+                <p className="text-clay-muted text-[13px] -mt-2">Upload required documents for verification. Accepted formats: PDF, JPG, PNG (max 5 MB each).</p>
 
                 {[
                   { label:'Hospital Registration Certificate *', hint:'Issued by Provincial Veterinary Council' },
                   { label:'Veterinary License *',                hint:'Valid license from Pakistan Veterinary Medical Council (PVMC)' },
                   { label:'Owner / Director CNIC',               hint:'Front side of CNIC/Passport' },
                   { label:'Proof of Address',                    hint:'Utility bill or tenancy agreement (last 3 months)' },
-                ].map(doc => (
-                  <div key={doc.label} className="p-5 rounded-2xl cursor-pointer transition-all"
-                       style={{ background:'rgba(255,255,255,.6)', border:'2px dashed #b8ceb5' }}
-                       onMouseOver={e=>e.currentTarget.style.borderColor='#5e4749'}
-                       onMouseOut={e=>e.currentTarget.style.borderColor='#b8ceb5'}>
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
-                           style={{ background:'rgba(94,71,73,.1)' }}>📄</div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-[14px] text-espresso">{doc.label}</div>
-                        <div className="text-[12px] text-clay-muted">{doc.hint}</div>
+                ].map(doc => {
+                  const uploaded = hospDocs[doc.label]
+                  return (
+                    <label key={doc.label} className="p-5 rounded-2xl cursor-pointer transition-all block"
+                           style={{ background: uploaded ? 'rgba(94,71,73,.07)' : 'rgba(255,255,255,.6)',
+                                    border: uploaded ? '2px solid #5e4749' : '2px dashed #b8ceb5' }}
+                           onMouseOver={e => { if (!uploaded) e.currentTarget.style.borderColor='#5e4749' }}
+                           onMouseOut={e  => { if (!uploaded) e.currentTarget.style.borderColor='#b8ceb5' }}>
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl flex-shrink-0"
+                             style={{ background: uploaded ? 'rgba(94,71,73,.15)' : 'rgba(94,71,73,.1)' }}>
+                          {uploaded ? '✅' : '📄'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-[14px] text-espresso">{doc.label}</div>
+                          {uploaded
+                            ? <div className="text-[12px] font-medium truncate" style={{ color:'#5e4749' }}>📎 {uploaded.name}</div>
+                            : <div className="text-[12px] text-clay-muted">{doc.hint}</div>
+                          }
+                        </div>
+                        <div className="btn btn-outline !py-2 !px-4 !text-[10px] flex-shrink-0">
+                          {uploaded ? 'Change' : 'Upload'}
+                        </div>
                       </div>
-                      <div className="btn btn-outline !py-2 !px-4 !text-[10px]">Upload</div>
-                    </div>
-                  </div>
-                ))}
+                      <input type="file" accept=".pdf,.jpg,.jpeg,.png" className="sr-only"
+                             onChange={e => handleDocFile(doc.label, e.target.files?.[0])} />
+                    </label>
+                  )
+                })}
 
-                <div className="p-4 rounded-xl text-[12px] text-clay-muted"
-                     style={{ background:'rgba(196,140,56,.08)', border:'1px solid rgba(196,140,56,.2)' }}>
-                  ⏱️ Verification typically takes <strong>24–48 hours</strong>. You'll receive an email once approved.
+                <div className="p-4 rounded-xl text-[12px]"
+                     style={{ background:'rgba(196,140,56,.08)', border:'1px solid rgba(196,140,56,.2)', color:'#7A4F10' }}>
+                  Your subscription plan will be selected after our team approves your application (24–48 hours).
+                  Payment is only required post-approval.
                 </div>
               </div>
-            )}
-
-            {/* ── STEP 3: Plans ── */}
-            {step === 3 && (
-              <div>
-                <h2 className="font-display font-black text-[1.3rem] text-espresso mb-2">Choose Your Plan</h2>
-                <div className="flex gap-2 mb-5">
-                  {['monthly','yearly'].map(b => (
-                    <button key={b} type="button" onClick={()=>setBilling(b)}
-                            className="flex-1 py-2 rounded-xl text-[12px] font-bold transition-all"
-                            style={{ background: billing===b ? '#5e4749' : 'rgba(255,255,255,.7)',
-                                     color: billing===b ? '#fff' : '#4E342E', border: billing===b ? 'none' : '1.5px solid #b8ceb5' }}>
-                      {b === 'monthly' ? 'Monthly' : 'Yearly (2 months free)'}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {PLANS.map(p => (
-                    <div key={p.id} onClick={()=>setPlan(p.id)}
-                         className="relative p-5 rounded-2xl cursor-pointer transition-all"
-                         style={{ background:p.color, border:`2px solid ${plan===p.id ? '#5e4749' : p.border}` }}>
-                      {p.badge && (
-                        <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                          <span className="t-label text-[9px]">{p.badge}</span>
-                        </div>
-                      )}
-                      <div className="font-display font-black text-[1.1rem] text-espresso mb-1">{p.name}</div>
-                      <div className="font-black text-[1.5rem] text-olive mb-3">
-                        {billing==='monthly' ? p.price : p.yearly}
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        {p.features.map(f => (
-                          <div key={f} className="flex items-start gap-2 text-[12px] text-espresso-soft">
-                            <span className="text-olive mt-0.5 flex-shrink-0">✓</span>{f}
-                          </div>
-                        ))}
-                      </div>
-                      {plan===p.id && (
-                        <div className="mt-3 pt-3 border-t" style={{ borderColor:'rgba(94,71,73,.2)' }}>
-                          <span className="t-mono text-[9px] text-olive">✓ Selected</span>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* ── STEP 4: Payment ── */}
-            {step === 4 && (
-              <PaymentForm
-                amount={payAmount}
-                title={`${selectedPlan?.name} Plan · ${billing === 'monthly' ? 'Monthly' : 'Annual'}`}
-                onBack={back}
-                onSuccess={() => setStep(5)}
-              />
             )}
 
             {/* Error */}
-            {err && step < 4 && (
+            {err && (
               <div className="mt-4 px-4 py-3 rounded-xl text-[13px]"
                    style={{ background:'rgba(196,56,56,.08)', border:'1px solid rgba(196,56,56,.2)', color:'#9B2020' }}>
                 ⚠️ {err}
               </div>
             )}
 
-            {/* Nav buttons (not on payment step) */}
-            {step < 4 && (
-              <div className="flex gap-3 mt-6">
-                {step > 0 && (
-                  <button type="button" onClick={back}
-                          className="btn btn-outline flex-1 justify-center !py-3">← Back</button>
-                )}
-                <button type="button" onClick={handleNext}
-                        className="btn btn-olive flex-1 justify-center !py-3">
-                  {step === 3 ? 'Continue to Payment →' : 'Continue →'}
+            {/* Nav */}
+            <div className="flex gap-3 mt-6">
+              {step > 0 && (
+                <button type="button" onClick={back} className="btn btn-outline flex-1 justify-center !py-3">
+                  ← Back
                 </button>
-              </div>
-            )}
+              )}
+              <button type="button" onClick={handleNext} disabled={submitting}
+                      className="btn btn-olive flex-1 justify-center !py-3"
+                      style={{ opacity: submitting ? .7 : 1 }}>
+                {submitting
+                  ? <span className="flex items-center gap-2">
+                      <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity=".3"/>
+                        <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+                      </svg>
+                      Submitting application…
+                    </span>
+                  : step === 2 ? 'Submit Application →' : 'Continue →'
+                }
+              </button>
+            </div>
           </div>
         )}
 
-        {/* ── STEP 5: SUCCESS ── */}
-        {step === 5 && (
+        {/* ── STEP 3: Done ── */}
+        {step === 3 && (
           <div className="text-center py-16 px-8 rounded-3xl"
                style={{ background:'rgba(255,255,255,.75)', backdropFilter:'blur(12px)', border:'1px solid rgba(94,71,73,.25)' }}>
             <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl mx-auto mb-6"
                  style={{ background:'rgba(94,71,73,.15)', border:'2px solid rgba(94,71,73,.3)' }}>🏥</div>
-            <div className="t-label mb-4 inline-block">Registration Complete</div>
-            <h2 className="font-display font-black text-[2rem] text-espresso tracking-tight mb-3">
-              Welcome to Purrfect Care!
-            </h2>
-            <p className="text-clay-muted text-[15px] max-w-md mx-auto mb-6">
-              Your hospital <strong className="text-espresso">{hospName}</strong> has been registered.
-              Our team will verify your documents within 24–48 hours.
-            </p>
-            <div className="flex flex-col gap-3 max-w-xs mx-auto">
-              <button onClick={() => navigate('/hospital/dashboard')}
-                      className="btn btn-olive justify-center !py-3 w-full">
-                Go to Hospital Dashboard →
-              </button>
-              <Link to="/" className="text-[13px] font-semibold" style={{ color:"#5e4749" }}>← Back to home</Link>
+
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5"
+                 style={{ background:'rgba(196,140,56,.1)', border:'1px solid rgba(196,140,56,.25)' }}>
+              <div className="w-2 h-2 rounded-full animate-pulse" style={{ background:'#b87c2a' }} />
+              <span className="text-[11px] font-mono tracking-widest uppercase" style={{ color:'#b87c2a' }}>
+                Pending Review
+              </span>
             </div>
+
+            <h2 className="font-display font-black text-[2rem] text-espresso tracking-tight mb-3">
+              Application Submitted!
+            </h2>
+            <p className="text-clay-muted text-[15px] max-w-md mx-auto mb-2">
+              <strong className="text-espresso">{hospName}</strong> has been registered successfully.
+            </p>
+            <p className="text-clay-muted text-[14px] max-w-md mx-auto mb-6">
+              Our team will verify your documents within <strong className="text-espresso">24–48 hours</strong>.
+              Once approved, you will be able to log in and choose your subscription plan to activate your dashboard.
+            </p>
+
+            <div className="p-4 rounded-xl text-[13px] mb-6 max-w-sm mx-auto"
+                 style={{ background:'rgba(94,71,73,.06)', border:'1px solid rgba(94,71,73,.15)', color:'#5e4749' }}>
+              You will receive an email confirmation once your application is approved.
+            </div>
+
+            <Link to="/" className="btn btn-olive justify-center !py-3 no-underline inline-flex">
+              ← Return to Home
+            </Link>
           </div>
         )}
 

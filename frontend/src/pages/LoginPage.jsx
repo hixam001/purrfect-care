@@ -2,15 +2,19 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 
-/* Redirect destination per role after login */
+/* Redirect destination per role after login.
+ * Subscription state is checked separately — the guard in App.jsx will
+ * bounce hospital_admin; login page handles store_owner redirect itself. */
 function dashboardForRole(role) {
   if (role === 'admin')          return '/admin/dashboard'
   if (role === 'hospital_admin') return '/hospital/dashboard'
+  if (role === 'store_owner')    return '/store/dashboard'
+  if (role === 'vet')            return '/vet-dashboard'
   return '/dashboard'
 }
 
 export default function LoginPage() {
-  const { login, loading } = useAuth()
+  const { login, loading, isSubscribed } = useAuth()
   const navigate = useNavigate()
 
   const [email,    setEmail]    = useState('')
@@ -22,10 +26,12 @@ export default function LoginPage() {
     setErr('')
     const result = await login(email, password)
     if (result.ok) {
-      /* result.user may be undefined if AuthContext doesn't return it on login.
-         Fall back to reading from the context user if needed.                */
       const role = result.user?.role ?? null
-      navigate(dashboardForRole(role))
+      // Store owners and hospital admins without an active subscription
+      // are redirected to plan selection before accessing their dashboards.
+      const needsSubscription =
+        (role === 'store_owner' || role === 'hospital_admin') && !isSubscribed
+      navigate(needsSubscription ? '/subscription' : dashboardForRole(role))
     } else {
       setErr(result.error)
     }
@@ -54,23 +60,28 @@ export default function LoginPage() {
           </span>
         </Link>
 
-        {/* Middle quote */}
+        {/* Middle content */}
         <div>
           <div className="text-[2.8rem] font-display font-black text-cream leading-[1.1] tracking-tight mb-6">
             Your cat's health,<br />
             <span style={{ color: '#A8D060' }}>finally</span> simplified.
           </div>
           <p className="text-cream/70 text-[15px] leading-relaxed max-w-sm">
-            Join 18,000+ cat families who trust Purrfect Care for every paw, purr, and prescription.
+            Book vet appointments, track your cat's health records, and get AI-powered care guidance — all in one place.
           </p>
         </div>
 
-        {/* Stats */}
-        <div className="flex gap-8">
-          {[['18k+','Cats'], ['340+','Clinics'], ['200+','Vets']].map(([v,l]) => (
-            <div key={l}>
-              <div className="font-display font-black text-2xl text-cream">{v}</div>
-              <div className="text-cream/60 text-[12px] font-mono uppercase tracking-widest">{l}</div>
+        {/* Feature list */}
+        <div className="flex flex-col gap-3">
+          {[
+            { icon: '🏥', label: 'Find & book verified veterinarians' },
+            { icon: '🤖', label: 'AI health companion for your cat' },
+            { icon: '🛍️', label: 'Curated cat care store' },
+          ].map(f => (
+            <div key={f.label} className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                   style={{ background: 'rgba(255,255,255,.12)' }}>{f.icon}</div>
+              <span className="text-cream/70 text-[13.5px]">{f.label}</span>
             </div>
           ))}
         </div>
@@ -170,11 +181,17 @@ export default function LoginPage() {
             </Link>
           </p>
 
-          {/* Hospital admin link */}
+          {/* Hospital / Store admin registration links */}
           <p className="text-center text-[12px] text-clay-muted mt-3">
             Registering a hospital?{' '}
             <Link to="/hospital/register" className="text-olive no-underline hover:underline font-semibold">
               Hospital registration →
+            </Link>
+          </p>
+          <p className="text-center text-[12px] text-clay-muted mt-1">
+            Registering a store?{' '}
+            <Link to="/store/register" className="text-olive no-underline hover:underline font-semibold">
+              Store registration →
             </Link>
           </p>
 

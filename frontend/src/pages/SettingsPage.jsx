@@ -83,23 +83,17 @@ function Toast({ message, type = 'success', onDone }) {
 /* ─── Profile section ──────────────────────────────────────── */
 function ProfileSection({ user }) {
   const fileRef = useRef()
-  const [form,      setForm]      = useState({ name: '', phone: '', city: '' })
-  const [avatarSrc, setAvatarSrc] = useState(null)   // current display URL
+  const [city,      setCity]      = useState('')
+  const [avatarSrc, setAvatarSrc] = useState(null)
   const [uploading, setUploading] = useState(false)
   const [saving,    setSaving]    = useState(false)
   const [toast,     setToast]     = useState(null)
 
-  /* Pre-fill from registration / login data */
+  /* Pre-fill from registration data */
   useEffect(() => {
-    setForm({
-      name:  user?.name  ?? '',
-      phone: user?.phone ?? '',
-      city:  user?.city  ?? '',
-    })
+    setCity(user?.city ?? '')
     setAvatarSrc(user?.avatar_url ?? null)
   }, [user])
-
-  function set(k, v) { setForm(f => ({ ...f, [k]: v })) }
 
   /* Photo picker → upload to Supabase Storage */
   async function handlePhoto(e) {
@@ -134,17 +128,12 @@ function ProfileSection({ user }) {
     setSaving(true)
     const { error } = await supabase
       .from('user_profiles')
-      .update({
-        name:       form.name.trim()  || null,
-        phone:      form.phone.trim() || null,
-        city:       form.city.trim()  || null,
-        updated_at: new Date().toISOString(),
-      })
+      .update({ city: city.trim() || null, updated_at: new Date().toISOString() })
       .eq('id', user.id)
     setSaving(false)
     setToast(error
       ? { msg: error.message,     type: 'error'   }
-      : { msg: 'Profile updated', type: 'success' }
+      : { msg: 'City updated',    type: 'success' }
     )
   }
 
@@ -180,36 +169,43 @@ function ProfileSection({ user }) {
         </div>
       </div>
 
+      {/* Read-only info from registration */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
           <FieldLabel>Full Name</FieldLabel>
-          <InputField id="settings-name" value={form.name} onChange={e => set('name', e.target.value)} placeholder="Your name" />
+          <InputField id="settings-name" value={user?.name ?? ''} disabled />
+          <p className="text-[11px] text-clay-muted mt-1">Set at registration — contact support to change.</p>
         </div>
         <div>
           <FieldLabel>Phone Number</FieldLabel>
-          <InputField id="settings-phone" type="tel" value={form.phone} onChange={e => set('phone', e.target.value)} placeholder="+92 3XX XXXXXXX" />
+          <InputField id="settings-phone" type="tel" value={user?.phone ?? ''} disabled />
+          <p className="text-[11px] text-clay-muted mt-1">Set at registration — contact support to change.</p>
         </div>
         <div>
-          <FieldLabel>City</FieldLabel>
-          <InputField id="settings-city" value={form.city} onChange={e => set('city', e.target.value)} placeholder="e.g. Lahore, Karachi" />
+          <FieldLabel>Email Address</FieldLabel>
+          <InputField id="settings-email" type="email" value={user?.email ?? ''} disabled />
+          <p className="text-[11px] text-clay-muted mt-1">Email cannot be changed here.</p>
+        </div>
+        <div>
+          <FieldLabel>Account Role</FieldLabel>
+          <InputField id="settings-role" value={user?.role ?? 'cat_owner'} disabled />
         </div>
       </div>
 
-      {/* Email — read only, always pre-filled */}
-      <div>
-        <FieldLabel>Email Address</FieldLabel>
-        <InputField id="settings-email" type="email" value={user?.email ?? ''} disabled />
-        <p className="text-[11px] text-clay-muted mt-1.5">Email cannot be changed here. Contact support if needed.</p>
-      </div>
-
-      <div>
-        <FieldLabel>Account Role</FieldLabel>
-        <InputField id="settings-role" value={user?.role ?? 'cat_owner'} disabled />
+      {/* Editable: city only */}
+      <div className="max-w-xs">
+        <FieldLabel>City</FieldLabel>
+        <InputField
+          id="settings-city"
+          value={city}
+          onChange={e => setCity(e.target.value)}
+          placeholder="e.g. Lahore, Karachi"
+        />
       </div>
 
       <div className="pt-2">
-        <BtnOlive onClick={() => {}}>
-          {saving ? '⏳ Saving…' : '✓ Save Profile'}
+        <BtnOlive type="submit">
+          {saving ? '⏳ Saving…' : '✓ Save City'}
         </BtnOlive>
       </div>
 

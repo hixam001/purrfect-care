@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert,
+  StyleSheet, ScrollView, KeyboardAvoidingView, Platform, Alert, Linking,
 } from 'react-native'
 import { Link, useRouter } from 'expo-router'
 import { useAuth } from '../../context/AuthContext'
@@ -94,6 +94,16 @@ export default function LoginScreen() {
               <Text style={s.footerLink}>Create one →</Text>
             </TouchableOpacity>
           </Link>
+        </View>
+
+        {/* Business registration links */}
+        <View style={s.bizLinks}>
+          <TouchableOpacity onPress={() => Linking.openURL('https://purrfect-care-app.web.app/hospital/register')}>
+            <Text style={s.bizLink}>Registering a hospital? Register here →</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => Linking.openURL('https://purrfect-care-app.web.app/store/register')}>
+            <Text style={s.bizLink}>Registering a store? Register here →</Text>
+          </TouchableOpacity>
         </View>
 
       </ScrollView>
@@ -202,5 +212,17 @@ const s = StyleSheet.create({
     fontFamily: FontFamily.bodySemiBold,
     fontSize: FontSize.base,
     color: Colors.olive,
+  },
+  bizLinks: {
+    marginTop: Spacing.lg,
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  bizLink: {
+    fontFamily: FontFamily.bodyRegular,
+    fontSize: FontSize.sm,
+    color: Colors.textMuted,
+    textDecorationLine: 'underline',
+    textAlign: 'center',
   },
 })

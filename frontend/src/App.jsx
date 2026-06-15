@@ -30,10 +30,14 @@ import MobileRegister from './pages/mobile/MobileRegister.jsx'
 import DashboardPage          from './pages/DashboardPage.jsx'
 import HospitalAdminDashboard from './pages/HospitalAdminDashboard.jsx'
 import SystemAdminDashboard   from './pages/SystemAdminDashboard.jsx'
+import VetDashboard           from './pages/VetDashboard.jsx'
+import StoreDashboard         from './pages/StoreDashboard.jsx'
 
 /* Onboarding */
 import HospitalRegisterPage from './pages/HospitalRegisterPage.jsx'
 import StoreRegisterPage    from './pages/StoreRegisterPage.jsx'
+import PaymentReturnPage    from './pages/PaymentReturnPage.jsx'
+import SubscriptionPage     from './pages/SubscriptionPage.jsx'
 
 /* App pages — desktop */
 import FindVetsPage       from './pages/FindVetsPage.jsx'
@@ -86,9 +90,25 @@ function RequireAdmin({ children }) {
 }
 
 function RequireHospitalAdmin({ children }) {
+  const { isLoggedIn, user, isSubscribed } = useAuth()
+  if (!isLoggedIn)                              return <Navigate to="/login"        replace />
+  if (user && user.role !== 'hospital_admin')   return <Navigate to="/dashboard"    replace />
+  if (isLoggedIn && !isSubscribed)              return <Navigate to="/subscription" replace />
+  return children
+}
+
+function RequireVet({ children }) {
   const { isLoggedIn, user } = useAuth()
-  if (!isLoggedIn) return <Navigate to="/login" replace />
-  if (user && user.role !== 'hospital_admin') return <Navigate to="/dashboard" replace />
+  if (!isLoggedIn)                    return <Navigate to="/login"     replace />
+  if (user && user.role !== 'vet')    return <Navigate to="/dashboard" replace />
+  return children
+}
+
+function RequireStoreOwner({ children }) {
+  const { isLoggedIn, user, isSubscribed } = useAuth()
+  if (!isLoggedIn)                                return <Navigate to="/login"        replace />
+  if (user && user.role !== 'store_owner')        return <Navigate to="/dashboard"    replace />
+  if (isLoggedIn && !isSubscribed)                return <Navigate to="/subscription" replace />
   return children
 }
 
@@ -109,9 +129,17 @@ function AppRoutes() {
       {/* ── System admin (always desktop, no AppLayout) ── */}
       <Route path="/admin/login"     element={<SystemAdminLoginPage />} />
       <Route path="/admin/dashboard" element={<RequireAdmin><SystemAdminDashboard /></RequireAdmin>} />
+      <Route path="/payment/return"  element={<PaymentReturnPage />} />
+      <Route path="/subscription"    element={<SubscriptionPage />} />
 
       {/* ── Hospital admin (always desktop, no AppLayout) ── */}
       <Route path="/hospital/dashboard" element={<RequireHospitalAdmin><HospitalAdminDashboard /></RequireHospitalAdmin>} />
+
+      {/* ── Vet dashboard (always desktop, no AppLayout) ── */}
+      <Route path="/vet-dashboard"   element={<RequireVet><VetDashboard /></RequireVet>} />
+
+      {/* ── Store owner dashboard (always desktop, no AppLayout) ── */}
+      <Route path="/store/dashboard" element={<RequireStoreOwner><StoreDashboard /></RequireStoreOwner>} />
 
       {/* ══════════════════════════════════════════
           MOBILE ROUTES — use MobileLayout internally

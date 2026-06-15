@@ -13,17 +13,53 @@ const TILES = [
   { icon:'⚙',  label:'Settings',     desc:'Account & preferences',        to:'/settings'     },
 ]
 
+const STORE_TILES = [
+  { icon:'📊', label:'Overview',  desc:'Sales & store summary',          to:null, tab:'overview'  },
+  { icon:'📦', label:'Products',  desc:'Manage your catalogue',          to:null, tab:'products'  },
+  { icon:'🛍️', label:'Orders',   desc:'View & update orders',           to:null, tab:'orders'    },
+  { icon:'📈', label:'Statistics',desc:'Revenue & analytics',            to:null, tab:'stats'     },
+  { icon:'⚙️', label:'Settings', desc:'Store profile & hours',          to:null, tab:'settings'  },
+]
+
+const HOSPITAL_TILES = [
+  { icon:'📊', label:'Overview',     desc:'Appointments & summary',      tab:'overview'  },
+  { icon:'👩‍⚕️', label:'Vets',       desc:'Your veterinary team',        tab:'vets'      },
+  { icon:'📅', label:'Appointments', desc:'Confirm & manage bookings',   tab:'appts'     },
+  { icon:'🏥', label:'Services',     desc:'Treatments & pricing',        tab:'services'  },
+  { icon:'🗓️', label:'Slots',       desc:'Availability calendar',       tab:'slots'     },
+  { icon:'📈', label:'Statistics',   desc:'Hospital analytics',          tab:'stats'     },
+  { icon:'⚙️', label:'Settings',    desc:'Hospital profile & hours',    tab:'settings'  },
+]
+
 export default function MobileDashboard() {
-  const { user, token } = useAuth()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [cats, setCats] = useState([])
   const firstName = user?.name?.split(' ')[0] ?? 'there'
+
+  /* ── Redirect business roles to their own dashboards ── */
+  useEffect(() => {
+    if (user?.role === 'store_owner')    navigate('/store/dashboard', { replace: true })
+    if (user?.role === 'hospital_admin') navigate('/hospital/dashboard', { replace: true })
+    if (user?.role === 'vet')            navigate('/vet-dashboard', { replace: true })
+  }, [user?.role, navigate])
 
   useEffect(() => {
     if (!user?.id) return
     supabase.from('cats').select('id,name,breed,photo_url').eq('owner_id', user.id).limit(3)
       .then(({ data }) => { if (data) setCats(data) })
   }, [user?.id])
+
+  // Don't render the user dashboard content for business roles (they'll be redirected)
+  if (user?.role === 'store_owner' || user?.role === 'hospital_admin' || user?.role === 'vet') {
+    return (
+      <MobileLayout title="Loading…">
+        <div className="flex items-center justify-center h-48">
+          <div className="text-[14px]" style={{ color:'#7a5e60' }}>Redirecting to your dashboard…</div>
+        </div>
+      </MobileLayout>
+    )
+  }
 
   return (
     <MobileLayout title={`Hello, ${firstName} 👋`}>

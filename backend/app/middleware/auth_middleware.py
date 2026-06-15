@@ -1,16 +1,15 @@
 """
 Purrfect Care — JWT Authentication Middleware
 
-Verifies the Supabase JWT from the Authorization header and
-extracts the authenticated user's id and role.
+Verifies the Supabase JWT by calling Supabase Auth's get_user endpoint
+(algorithm-agnostic — works with HS256 and ES256 tokens alike).
+Extracts the authenticated user's id, email, and platform role.
 Used as a FastAPI dependency on protected routes.
 """
 
 from fastapi import Depends, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import jwt, JWTError
 
-from app.config import get_settings, Settings
 from app.database import get_supabase_client
 from app.utils.exceptions import UnauthorizedException
 
@@ -32,46 +31,44 @@ class AuthenticatedUser:
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    settings: Settings = Depends(get_settings),
 ) -> AuthenticatedUser:
     """
     FastAPI dependency that:
-    1. Extracts the Bearer token from the Authorization header
-    2. Verifies it against Supabase Auth
-    3. Returns an AuthenticatedUser with id, email, and role
-
-    Usage:
-        @router.get("/protected")
-        async def protected_route(user: AuthenticatedUser = Depends(get_current_user)):
-            ...
+    1. Extracts the Bearer token from the Authorization header.
+    2. Verifies it via Supabase Auth's get_user API (supports ES256 and HS256).
+    3. Fetches the caller's domain role from user_profiles.
+    4. Returns an AuthenticatedUser with id, email, and role.
     """
     token = credentials.credentials
+    db = get_supabase_client()
 
+    # ── Step 1: Verify token via Supabase Auth (algorithm-agnostic) ──
     try:
-        # Verify the JWT using Supabase's dedicated JWT secret
-        # Found in Supabase Dashboard > Settings > API > JWT Secret
-        jwt_secret = settings.SUPABASE_JWT_SECRET or settings.SUPABASE_ANON_KEY
-        payload = jwt.decode(
-            token,
-            jwt_secret,
-            algorithms=["HS256"],
-            audience="authenticated",
-        )
-    except JWTError as e:
+        user_response = db.auth.get_user(token)
+    except Exception as e:
         raise UnauthorizedException(f"Invalid or expired token: {str(e)}")
 
-    user_id = payload.get("sub")
-    email = payload.get("email", "")
+    if not user_response or not user_response.user:
+        raise UnauthorizedException("Invalid or expired token")
 
-    if not user_id:
-        raise UnauthorizedException("Invalid token: missing user ID")
+    supabase_user = user_response.user
+    user_id = supabase_user.id
+    email = supabase_user.email or ""
 
-    # Fetch the user's role from our users table
-    db = get_supabase_client()
-    result = db.table("users").select("role").eq("id", user_id).single().execute()
+    # ── Step 2: Fetch platform role from user_profiles ──
+    try:
+        result = (
+            db.table("user_profiles")
+            .select("role")
+            .eq("user_id", user_id)
+            .single()
+            .execute()
+        )
+    except Exception as e:
+        raise UnauthorizedException(f"Could not fetch user profile: {str(e)}")
 
     if not result.data:
-        raise UnauthorizedException("User not found in database")
+        raise UnauthorizedException("User profile not found")
 
     role = result.data.get("role", "cat_owner")
 
@@ -80,32 +77,33 @@ async def get_current_user(
 
 async def get_optional_user(
     request: Request,
-    settings: Settings = Depends(get_settings),
 ) -> AuthenticatedUser | None:
     """
-    Optional authentication — returns None if no token is provided.
-    Useful for endpoints that work differently for authenticated vs anonymous users.
+    Optional authentication — returns None if no valid token is provided.
+    Useful for endpoints that behave differently for authenticated vs anonymous users.
     """
     auth_header = request.headers.get("Authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
         return None
 
+    token = auth_header.split(" ", 1)[1]
+    db = get_supabase_client()
+
     try:
-        token = auth_header.split(" ")[1]
-        jwt_secret = settings.SUPABASE_JWT_SECRET or settings.SUPABASE_ANON_KEY
-        payload = jwt.decode(
-            token,
-            jwt_secret,
-            algorithms=["HS256"],
-            audience="authenticated",
-        )
-        user_id = payload.get("sub")
-        email = payload.get("email", "")
-        if not user_id:
+        user_response = db.auth.get_user(token)
+        if not user_response or not user_response.user:
             return None
 
-        db = get_supabase_client()
-        result = db.table("users").select("role").eq("id", user_id).single().execute()
+        user_id = user_response.user.id
+        email = user_response.user.email or ""
+
+        result = (
+            db.table("user_profiles")
+            .select("role")
+            .eq("user_id", user_id)
+            .single()
+            .execute()
+        )
         if not result.data:
             return None
 
@@ -114,5 +112,5 @@ async def get_optional_user(
             email=email,
             role=result.data.get("role", "cat_owner"),
         )
-    except (JWTError, Exception):
+    except Exception:
         return None

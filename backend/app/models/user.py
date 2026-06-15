@@ -63,7 +63,8 @@ class UserUpdate(BaseModel):
 
 class UserResponse(UserBase):
     """Response body for user data."""
-    id: str
+    id: str           # user_profiles.id (profile primary key)
+    user_id: str = "" # user_profiles.user_id (Supabase auth UID — used for storage paths)
     email: str
     role: Role
     is_active: bool = True

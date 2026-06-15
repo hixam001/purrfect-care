@@ -10,12 +10,13 @@ export default function ChatPage() {
   const [appointment, setAppointment] = useState(null)
   const [chatRoom,    setChatRoom]    = useState(null)
   const [messages,    setMessages]    = useState([])
+  const [myProfileId, setMyProfileId] = useState(null)
   const [input,       setInput]       = useState('')
   const [loading,     setLoading]     = useState(true)
-  const [blocked,     setBlocked]     = useState(false)   // case closed or not authorised
+  const [blocked,     setBlocked]     = useState(false)
 
-  const bottomRef     = useRef(null)
-  const channelRef    = useRef(null)
+  const bottomRef  = useRef(null)
+  const channelRef = useRef(null)
 
   /* ── Scroll to bottom ── */
   useEffect(() => {
@@ -27,25 +28,59 @@ export default function ChatPage() {
     if (!user?.id) return
 
     async function load() {
-      // Fetch appointment
+      // Resolve caller's profile + role
+      const { data: myProfile } = await supabase
+        .from('user_profiles')
+        .select('id, role')
+        .eq('user_id', user.id)
+        .single()
+
+      if (!myProfile) { setBlocked(true); setLoading(false); return }
+
+      const profileId = myProfile.id
+      const isVet     = myProfile.role === 'vet'
+      setMyProfileId(profileId)
+
+      // Fetch vet row when caller is a vet (need vet.id to match appointment.vet_id)
+      let myVetId = null
+      if (isVet) {
+        const { data: vetRow } = await supabase
+          .from('vets')
+          .select('id')
+          .eq('user_id', profileId)
+          .single()
+        myVetId = vetRow?.id ?? null
+      }
+
+      // Fetch appointment without user_id restriction — vets must also be able to load it
       const { data: appt } = await supabase
         .from('appointments')
         .select(`
-          id, case_status, status,
+          id, status, user_id, vet_id,
           cats ( name ),
           vets ( id, user_profiles ( id, name ) ),
           hospitals ( name )
         `)
         .eq('id', appointmentId)
-        .eq('user_id', user.id)
         .single()
 
       if (!appt) { setBlocked(true); setLoading(false); return }
-      if (appt.case_status !== 'open') { setBlocked(true); setLoading(false); setAppointment(appt); return }
+
+      // Authorisation: must be the cat owner OR the assigned vet
+      const isPatient     = appt.user_id === profileId
+      const isAssignedVet = !!myVetId && appt.vet_id === myVetId
+      if (!isPatient && !isAssignedVet) {
+        setBlocked(true); setLoading(false); return
+      }
+
+      // Block only when appointment is terminal
+      if (['cancelled', 'completed', 'no_show'].includes(appt.status)) {
+        setBlocked(true); setLoading(false); setAppointment(appt); return
+      }
 
       setAppointment(appt)
 
-      // Get or create chat room for this appointment
+      // Get or create chat room
       let { data: room } = await supabase
         .from('chat_rooms')
         .select('*')
@@ -56,7 +91,7 @@ export default function ChatPage() {
         const { data: newRoom } = await supabase
           .from('chat_rooms')
           .insert({
-            user_id:        user.id,
+            user_id:        appt.user_id,
             vet_id:         appt.vets?.id,
             appointment_id: appointmentId,
           })
@@ -71,7 +106,7 @@ export default function ChatPage() {
       const { data: msgs } = await supabase
         .from('messages')
         .select(`
-          id, content, sent_at, message_type,
+          id, content, sent_at, message_type, sender_id,
           user_profiles ( id, name )
         `)
         .eq('chat_room_id', room.id)
@@ -80,7 +115,7 @@ export default function ChatPage() {
       setMessages(msgs ?? [])
       setLoading(false)
 
-      // Subscribe to new messages
+      // Subscribe to new messages via realtime
       channelRef.current = supabase
         .channel(`chat_room_${room.id}`)
         .on('postgres_changes', {
@@ -110,13 +145,16 @@ export default function ChatPage() {
 
     await supabase.from('messages').insert({
       chat_room_id: chatRoom.id,
-      sender_id:    user.id,
+      sender_id:    myProfileId,   // must be user_profiles.id, not auth UID
       content:      text,
       message_type: 'text',
     })
   }
 
   /* ── Blocked / case closed ── */
+  const backTo = appointment?.vets?.user_profiles?.id === myProfileId
+    ? '/vet-dashboard' : '/dashboard'
+
   if (!loading && blocked) return (
     <div className="min-h-screen flex items-center justify-center px-4"
          style={{ background:'linear-gradient(135deg,#dbe8d8,#EFE5DC)' }}>
@@ -128,10 +166,10 @@ export default function ChatPage() {
         </h2>
         <p className="text-clay-muted text-[13px] mb-6">
           {!appointment
-            ? 'This appointment does not exist or doesn\'t belong to you.'
-            : 'The hospital has closed this case. You can no longer chat with the vet for this appointment. Contact the hospital if you need to reopen it.'}
+            ? 'This appointment does not exist or you are not a participant.'
+            : `This appointment has been ${appointment.status}. Chat is no longer available.`}
         </p>
-        <Link to="/dashboard" className="btn btn-olive justify-center w-full !py-3 no-underline">
+        <Link to={backTo} className="btn btn-olive justify-center w-full !py-3 no-underline">
           ← Back to Dashboard
         </Link>
       </div>
@@ -144,23 +182,28 @@ export default function ChatPage() {
     </div>
   )
 
-  const vetName  = appointment?.vets?.user_profiles?.name ?? 'Vet'
-  const catName  = appointment?.cats?.name ?? 'Cat'
-  const hospName = appointment?.hospitals?.name ?? 'Hospital'
+  const isVetViewer = appointment?.vets?.user_profiles?.id === myProfileId
+  const otherName   = isVetViewer
+    ? (appointment?.user_profiles?.name ?? 'Patient')
+    : (vetName)
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background:'linear-gradient(135deg,#dbe8d8,#EFE5DC)' }}>
 
-      {/* Vet sub-header — sits below AppLayout navbar */}
+      {/* Sub-header */}
       <div style={{ background:'rgba(219,232,216,.80)', backdropFilter:'blur(12px)', borderBottom:'1px solid #b8ceb5' }}>
         <div className="max-w-3xl mx-auto px-4 md:px-6 h-14 flex items-center gap-4">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center text-xl flex-shrink-0"
                style={{ background:'linear-gradient(135deg,rgba(94,71,73,.18),rgba(94,71,73,.08))' }}>
-            👨‍⚕️
+            {isVetViewer ? '🐱' : '👨‍⚕️'}
           </div>
           <div className="flex-1 min-w-0">
-            <div className="font-bold text-[14px] text-espresso truncate">{vetName}</div>
-            <div className="text-[11px] text-clay-muted truncate">{hospName} · 🐱 {catName}</div>
+            <div className="font-bold text-[14px] text-espresso truncate">
+              {isVetViewer ? otherName : vetName}
+            </div>
+            <div className="text-[11px] text-clay-muted truncate">
+              {hospName} · 🐱 {catName}
+            </div>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full" style={{ background:'#5e4749' }} />
@@ -173,17 +216,17 @@ export default function ChatPage() {
       <main className="flex-1 overflow-y-auto max-w-3xl w-full mx-auto px-4 md:px-6 py-6 flex flex-col gap-3">
         {messages.length === 0 && (
           <div className="text-center py-12 text-clay-muted text-[13px]">
-            No messages yet. Say hello to {vetName}!
+            No messages yet. {isVetViewer ? `Send a message to ${otherName}!` : `Say hello to ${vetName}!`}
           </div>
         )}
         {messages.map(msg => {
-          const isMe = msg.sender_id === user.id || msg.user_profiles?.id === user.id
+          const isMe = msg.sender_id === myProfileId
           return (
             <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
               <div className={isMe ? 'bubble-user max-w-[75%]' : 'bubble-vet max-w-[75%]'}>
                 {!isMe && (
                   <div className="text-[10px] text-olive font-mono mb-1">
-                    {msg.user_profiles?.name ?? vetName}
+                    {msg.user_profiles?.name ?? otherName}
                   </div>
                 )}
                 <div>{msg.content}</div>
@@ -203,7 +246,7 @@ export default function ChatPage() {
               className="flex items-center gap-3 p-3 rounded-2xl"
               style={{ background:'rgba(255,255,255,.85)', backdropFilter:'blur(12px)', border:'1px solid #b8ceb5' }}>
           <input value={input} onChange={e => setInput(e.target.value)}
-                 placeholder={`Message ${vetName}…`}
+                 placeholder={`Message ${isVetViewer ? otherName : vetName}…`}
                  className="flex-1 bg-transparent outline-none text-[14px] text-espresso px-2" />
           <button type="submit" disabled={!input.trim()}
                   className="btn btn-olive !py-2 !px-5 !text-[12px]"

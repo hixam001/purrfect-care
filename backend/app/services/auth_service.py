@@ -23,6 +23,7 @@ from app.models.user import UserCreate, UserLoginRequest, UserLoginResponse, Use
 from app.repositories.user_repository import UserRepository
 from app.utils.exceptions import (
     ConflictException,
+    ForbiddenException,
     UnauthorizedException,
     ExternalServiceException,
     NotFoundException,
@@ -77,6 +78,7 @@ class AuthService:
         now = datetime.now(timezone.utc).isoformat()
         profile_data: dict = {
             "user_id": supabase_user_id,
+            "email":   data.email,
             "name": data.name,
             "role": data.role.value,
             "phone": data.phone,
@@ -86,7 +88,7 @@ class AuthService:
             "country": data.country,
             "latitude": data.latitude,
             "longitude": data.longitude,
-            "is_active": True,
+            "is_active": data.role.value not in ("hospital_admin", "store_owner"),
             "created_at": now,
         }
         # Remove None values to let DB defaults apply
@@ -141,6 +143,27 @@ class AuthService:
         profile = self.user_repo.find_by_user_id(supabase_user_id)
         if not profile:
             raise NotFoundException("User profile")
+
+        # If email not yet stored in profile (old accounts), backfill it
+        if not profile.get("email"):
+            try:
+                self.user_repo.db.table("user_profiles").update(
+                    {"email": auth_response.user.email}
+                ).eq("id", profile["id"]).execute()
+                profile["email"] = auth_response.user.email
+            except Exception:
+                pass
+
+        # Block login for accounts awaiting admin approval
+        if not profile.get("is_active", True):
+            role = profile.get("role", "")
+            if role in ("hospital_admin", "store_owner"):
+                raise ForbiddenException(
+                    "Your account is pending admin approval. "
+                    "You will receive an email once your application has been reviewed."
+                )
+            else:
+                raise ForbiddenException("Your account has been deactivated. Contact support.")
 
         # Update last login timestamp (non-blocking, best-effort)
         try:
@@ -244,6 +267,7 @@ class AuthService:
         """Convert a raw user_profiles row to a UserResponse model."""
         return UserResponse(
             id=profile["id"],
+            user_id=profile.get("user_id", ""),   # Supabase auth UID — needed for Storage paths
             email=profile.get("email", ""),
             name=profile.get("name", ""),
             phone=profile.get("phone"),

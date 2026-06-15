@@ -1,7 +1,7 @@
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-/* SVG icon components — no emoji */
+/* SVG icon components */
 const IconHome = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9.5z"/>
@@ -27,7 +27,9 @@ const IconHospital = () => (
 const IconAI = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-    <circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="12" cy="10" r="1" fill="currentColor"/><circle cx="15" cy="10" r="1" fill="currentColor"/>
+    <circle cx="9" cy="10" r="1" fill="currentColor"/>
+    <circle cx="12" cy="10" r="1" fill="currentColor"/>
+    <circle cx="15" cy="10" r="1" fill="currentColor"/>
   </svg>
 )
 const IconStore = () => (
@@ -43,24 +45,62 @@ const IconSettings = () => (
     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
   </svg>
 )
+const IconDashboard = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="7" height="9" rx="1"/>
+    <rect x="14" y="3" width="7" height="5" rx="1"/>
+    <rect x="14" y="12" width="7" height="9" rx="1"/>
+    <rect x="3" y="16" width="7" height="5" rx="1"/>
+  </svg>
+)
 
-const TABS = [
-  { to: '/dashboard',    Icon: IconHome,  label: 'Home'    },
-  { to: '/my-cats',      Icon: IconPaw,   label: 'My Cats' },
-  { to: '/find-vets',    Icon: IconHospital, label: 'Hospitals' },
-  { to: '/ai-companion', Icon: IconAI,    label: 'AI Chat' },
-  { to: '/store',        Icon: IconStore, label: 'Store'   },
-]
+/* Role-aware bottom nav tabs */
+function getTabsForRole(role) {
+  if (role === 'store_owner') {
+    return [
+      { to: '/store/dashboard', Icon: IconDashboard, label: 'Dashboard' },
+      { to: '/store',           Icon: IconStore,     label: 'Store'     },
+      { to: '/ai-companion',    Icon: IconAI,        label: 'AI Chat'   },
+      { to: '/settings',        Icon: IconSettings,  label: 'Settings'  },
+    ]
+  }
+  if (role === 'hospital_admin') {
+    return [
+      { to: '/hospital/dashboard', Icon: IconDashboard, label: 'Dashboard' },
+      { to: '/find-vets',          Icon: IconHospital,  label: 'Hospitals' },
+      { to: '/ai-companion',       Icon: IconAI,        label: 'AI Chat'   },
+      { to: '/settings',           Icon: IconSettings,  label: 'Settings'  },
+    ]
+  }
+  if (role === 'vet') {
+    return [
+      { to: '/vet-dashboard', Icon: IconDashboard, label: 'Dashboard' },
+      { to: '/find-vets',     Icon: IconHospital,  label: 'Hospitals' },
+      { to: '/ai-companion',  Icon: IconAI,        label: 'AI Chat'   },
+      { to: '/settings',      Icon: IconSettings,  label: 'Settings'  },
+    ]
+  }
+  // Default: regular user
+  return [
+    { to: '/dashboard',    Icon: IconHome,     label: 'Home'      },
+    { to: '/my-cats',      Icon: IconPaw,      label: 'My Cats'   },
+    { to: '/find-vets',    Icon: IconHospital, label: 'Hospitals' },
+    { to: '/ai-companion', Icon: IconAI,       label: 'AI Chat'   },
+    { to: '/store',        Icon: IconStore,    label: 'Store'     },
+  ]
+}
 
 /**
- * MobileLayout — wraps every authenticated mobile screen.
- * Sticky header + fixed 5-tab bottom nav bar.
+ * MobileLayout — wraps every mobile screen.
+ * Sticky header + fixed role-aware bottom nav bar.
  */
 export default function MobileLayout({ children, title }) {
   const { user } = useAuth()
   const navigate  = useNavigate()
   const { pathname } = useLocation()
   const firstName = user?.name?.split(' ')[0] ?? 'there'
+
+  const TABS = getTabsForRole(user?.role)
 
   return (
     <div className="flex flex-col min-h-screen" style={{ backgroundColor: '#dbe8d8' }}>
@@ -93,7 +133,7 @@ export default function MobileLayout({ children, title }) {
         {children}
       </main>
 
-      {/* ── Bottom tab bar ── */}
+      {/* ── Role-aware bottom tab bar ── */}
       <nav
         className="fixed bottom-0 left-0 right-0 z-50 flex"
         style={{
@@ -115,7 +155,6 @@ export default function MobileLayout({ children, title }) {
                 textDecoration: 'none',
               }}
             >
-              {/* Active indicator line */}
               {active && (
                 <span
                   className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full"

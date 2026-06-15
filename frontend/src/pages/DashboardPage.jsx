@@ -37,7 +37,6 @@ export default function DashboardPage() {
         id,
         appointment_date,
         status,
-        case_status,
         notes,
         cats   ( name ),
         vets   ( specialization, user_profiles ( name ) ),
@@ -124,7 +123,7 @@ export default function DashboardPage() {
                 const vetName      = a.vets?.user_profiles?.name ?? 'Vet'
                 const hospitalName = a.hospitals?.name           ?? 'Hospital'
                 const catName      = a.cats?.name                ?? 'Cat'
-                const isOpen       = a.case_status === 'open'
+                const isOpen       = ['confirmed', 'in_progress'].includes(a.status)
 
                 return (
                   <GlassCard key={a.id} className="p-5 flex items-center gap-5">
@@ -156,7 +155,7 @@ export default function DashboardPage() {
                       ) : (
                         <span className="text-[10px] text-clay-muted px-2 py-1 rounded-lg"
                               style={{ background:'rgba(0,0,0,.04)', border:'1px solid #b8ceb5' }}>
-                          Case Closed
+                          Awaiting Confirmation
                         </span>
                       )}
                     </div>

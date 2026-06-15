@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { useAuth }   from '../context/AuthContext.jsx'
 import { supabase }  from '../lib/supabaseClient.js'
 import { Badge, Pill, GlassCard, BtnOlive, BtnOutline, Stars } from '../components/ui/index.jsx'
 import Stepper      from '../components/ui/Stepper.jsx'
-import PaymentForm  from '../components/ui/PaymentForm.jsx'
+
+const API                 = import.meta.env.VITE_API_URL || 'https://server-vmvwkwachq-uc.a.run.app'
+const PLATFORM_FEE_BASE   = 500      // PKR
+const PLATFORM_FEE_TOTAL  = 508      // PKR (500 + 1.5%)
 
 const STEPS = ['Select Date & Time', 'Choose Pet', 'Review & Pay', 'Confirmed']
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
@@ -64,37 +67,39 @@ function Calendar({ selected, onSelect }) {
   )
 }
 
-const TIME_SLOTS = [
-  '9:00 AM','9:30 AM','10:00 AM','10:30 AM','11:00 AM','11:30 AM',
-  '2:00 PM','2:30 PM','3:00 PM','3:30 PM','4:00 PM','4:30 PM','5:00 PM',
-]
+// TIME_SLOTS replaced by real DB slots
 
 export default function BookingPage() {
   const { vetId }     = useParams()
   const [searchParams]= useSearchParams()
   const hospitalId    = searchParams.get('hospital')
   const navigate      = useNavigate()
-  const { user }      = useAuth()
+  const { user, token } = useAuth()
 
   const [vet,      setVet]      = useState(null)
   const [hospital, setHospital] = useState(null)
   const [cats,     setCats]     = useState([])
   const [loading,  setLoading]  = useState(true)
 
-  const [step,   setStep]  = useState(0)
-  const [date,   setDate]  = useState('')
-  const [time,   setTime]  = useState('')
-  const [catId,  setCatId] = useState(null)
-  const [notes,  setNotes] = useState('')
-  const [done,   setDone]  = useState(false)
-  const [saving, setSaving]= useState(false)
+  const [step,              setStep]             = useState(0)
+  const [date,              setDate]             = useState('')
+  const [time,              setTime]             = useState('')
+  const [catId,             setCatId]            = useState(null)
+  const [selectedServiceId, setSelectedServiceId]= useState(null)
+  const [notes,             setNotes]            = useState('')
+  const [saving,            setSaving]           = useState(false)
+  const [payErr,            setPayErr]           = useState('')
+  const [slots,             setSlots]            = useState([])
+  const [slotId,            setSlotId]           = useState(null)
+  const [slotsLoading,      setSlotsLoading]     = useState(true)
 
   const bookingRef = 'PC-' + Math.random().toString(36).slice(2,8).toUpperCase()
 
-  /* ── Load vet, hospital, and user's cats ── */
+  /* ── Load vet, hospital, cats, and available slots ── */
   useEffect(() => {
     async function load() {
-      const [{ data: v }, { data: h }, { data: c }] = await Promise.all([
+      const today = new Date().toISOString().slice(0, 10)
+      const [{ data: v }, { data: h }, { data: c }, { data: sl }] = await Promise.all([
         supabase.from('vets').select(`
           id, specialization, experience_years, bio, rating, total_reviews,
           user_profiles ( name ),
@@ -108,15 +113,39 @@ export default function BookingPage() {
         user?.id
           ? supabase.from('cats').select('id, name, breed_id, age_months').eq('owner_id', user.id)
           : { data: [] },
+
+        // Real availability slots — only future, unbooked ones for this vet
+        supabase.from('appointment_slots')
+          .select('id, slot_date, start_time, end_time, is_booked')
+          .eq('vet_id', vetId)
+          .eq('is_booked', false)
+          .gte('slot_date', today)
+          .order('slot_date')
+          .order('start_time'),
       ])
 
-      setVet(v)
-      setHospital(h)
+      setVet(v ?? null)
+      setHospital(h ?? null)
       setCats(c ?? [])
+      setSlots(sl ?? [])
+      setSlotsLoading(false)
+      // Default to first available service
+      if (v?.hospital_services?.length) setSelectedServiceId(v.hospital_services[0].id)
       setLoading(false)
     }
     load()
   }, [vetId, hospitalId, user?.id])
+
+  /* Group slots by date for display */
+  const slotsByDate = useMemo(() => {
+    return slots.reduce((acc, s) => {
+      acc[s.slot_date] = acc[s.slot_date] ?? []
+      acc[s.slot_date].push(s)
+      return acc
+    }, {})
+  }, [slots])
+
+  const availableDates = Object.keys(slotsByDate).sort()
 
   function fmtDate(d) {
     if (!d) return ''
@@ -124,37 +153,67 @@ export default function BookingPage() {
     return `${day} ${MONTHS[parseInt(m)-1]} ${y}`
   }
 
-  const cat         = cats.find(c => c.id === catId)
-  const defaultFee  = vet?.hospital_services?.[0]?.price ?? 0
-  const feeDisplay  = `₨ ${defaultFee.toLocaleString()}`
+  const cat            = cats.find(c => c.id === catId)
+  const selectedService = vet?.hospital_services?.find(s => s.id === selectedServiceId)
+                       ?? vet?.hospital_services?.[0]
+  const feeDisplay     = selectedService ? `₨ ${selectedService.price.toLocaleString()}` : '—'
 
-  /* ── Confirm booking ── */
+  /* ── Confirm booking: save appointment (with slot_id) then initiate Safepay ── */
   async function handleConfirm() {
     setSaving(true)
+    setPayErr('')
     try {
-      // Build appointment datetime
-      const [h, mStr] = time.replace(/ (AM|PM)/, '').split(':')
-      let hr = parseInt(h)
-      if (time.includes('PM') && hr !== 12) hr += 12
-      if (time.includes('AM') && hr === 12) hr = 0
-      const apptDate = new Date(`${date}T${String(hr).padStart(2,'0')}:${mStr}:00`)
+      if (!slotId) throw new Error('Please select a time slot.')
 
-      await supabase.from('appointments').insert({
+      // Guard: vet must have at least one service configured
+      const serviceId = selectedServiceId ?? vet?.hospital_services?.[0]?.id
+      if (!serviceId) throw new Error('This vet has no services configured. Please contact the hospital.')
+
+      // 1. Build appointment datetime from the selected slot
+      const selectedSlot = slots.find(s => s.id === slotId)
+      const apptDate = new Date(`${date}T${selectedSlot.start_time}`)
+
+      // 2. Insert appointment — slot_id UNIQUE constraint prevents double-booking
+      //    The DB trigger (migration 010) will mark slot as is_booked = true
+      const { data: appt, error: apptErr } = await supabase.from('appointments').insert({
         user_id:          user.id,
         cat_id:           catId,
         vet_id:           vetId,
         hospital_id:      hospitalId,
-        service_id:       vet?.hospital_services?.[0]?.id,
+        service_id:       serviceId,
+        slot_id:          slotId,
         appointment_date: apptDate.toISOString(),
         notes:            notes || null,
         status:           'pending',
-        case_status:      'closed',
-        amount_paid:      defaultFee,
+        amount_paid:      selectedService?.price ?? 0,
+      }).select('id').single()
+
+      if (apptErr) {
+        // Unique violation = slot was just taken by another user
+        if (apptErr.code === '23505') throw new Error('This slot was just booked by someone else. Please choose another.')
+        throw new Error(apptErr.message)
+      }
+
+      // 3. Create Safepay session for platform fee (₨508)
+      const sessionRes = await fetch(`${API}/api/payments/appointment-session`, {
+        method:  'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization:  `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          appointment_ref: appt.id,
+          redirect_url:    `${window.location.origin}/payment/return?type=appointment&ref=${bookingRef}`,
+          cancel_url:      `${window.location.origin}/payment/return?type=appointment&status=cancelled`,
+        }),
       })
-      setDone(true)
+      const sessionData = await sessionRes.json()
+      if (!sessionRes.ok) throw new Error(sessionData.detail || 'Payment session failed.')
+
+      // 4. Redirect to Safepay checkout
+      window.location.href = sessionData.checkout_url
     } catch (e) {
-      console.error(e)
-    } finally {
+      setPayErr(e.message)
       setSaving(false)
     }
   }
@@ -177,45 +236,7 @@ export default function BookingPage() {
 
   const vetName = vet.user_profiles?.name ?? 'Veterinarian'
 
-  /* ── Confirmed screen ── */
-  if (done) return (
-    <div className="min-h-screen flex items-center justify-center px-4"
-         style={{ background:'linear-gradient(135deg,#dbe8d8,#EFE5DC)' }}>
-      <div className="max-w-md w-full rounded-3xl p-10 text-center"
-           style={{ background:'rgba(255,255,255,.85)', backdropFilter:'blur(12px)', border:'1px solid rgba(94,71,73,.25)' }}>
-        <div className="w-20 h-20 rounded-full flex items-center justify-center text-4xl mx-auto mb-5"
-             style={{ background:'rgba(94,71,73,.15)', border:'2px solid rgba(94,71,73,.3)' }}>📅</div>
-        <div className="t-label mb-3 inline-block">Booking Confirmed</div>
-        <h2 className="font-display font-black text-[1.8rem] text-espresso mb-3">You're booked!</h2>
-        <div className="flex flex-col gap-2 mb-5 p-4 rounded-2xl text-left"
-             style={{ background:'rgba(94,71,73,.07)', border:'1px solid rgba(94,71,73,.18)' }}>
-          {[
-            ['Reference', bookingRef],
-            ['Vet',       vetName],
-            ['Hospital',  hospital?.name ?? '—'],
-            ['Cat',       cat?.name ?? '—'],
-            ['Date',      fmtDate(date)],
-            ['Time',      time],
-            ['Fee',       feeDisplay],
-          ].map(([k, v]) => (
-            <div key={k} className="flex justify-between text-[13px]">
-              <span className="text-clay-muted">{k}</span>
-              <span className="font-semibold text-espresso">{v}</span>
-            </div>
-          ))}
-        </div>
-        <p className="text-clay-muted text-[12px] mb-5">
-          Your appointment is now pending confirmation from the hospital.
-        </p>
-        <div className="flex flex-col gap-3">
-          <button onClick={() => navigate('/dashboard')} className="btn btn-olive justify-center w-full !py-3">
-            Go to Dashboard
-          </button>
-          <Link to="/find-vets" className="text-[13px] font-semibold" style={{ color:"#5e4749" }}>← Book another</Link>
-        </div>
-      </div>
-    </div>
-  )
+
 
   return (
     <div className="min-h-screen" style={{ background:'linear-gradient(135deg,#dbe8d8,#EFE5DC)' }}>
@@ -243,34 +264,52 @@ export default function BookingPage() {
 
             <div className="rounded-3xl p-6" style={{ background:'rgba(255,255,255,.75)', backdropFilter:'blur(12px)', border:'1px solid #b8ceb5' }}>
 
-              {/* STEP 0: Date & Time */}
+              {/* STEP 0: Real Slot Selection */}
               {step === 0 && (
                 <div>
-                  <h2 className="font-bold text-[1rem] text-espresso mb-4">Select Date</h2>
-                  <Calendar selected={date} onSelect={setDate} />
-                  {date && (
-                    <div className="mt-5">
-                      <h2 className="font-bold text-[1rem] text-espresso mb-3">
-                        Select Time — <span className="text-olive">{fmtDate(date)}</span>
-                      </h2>
-                      <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                        {TIME_SLOTS.map(t => (
-                          <button key={t} type="button" onClick={() => setTime(t)}
-                                  className="py-2.5 rounded-xl text-[12px] font-semibold transition-all"
-                                  style={{
-                                    background: time===t ? '#5e4749' : 'rgba(255,255,255,.7)',
-                                    color:      time===t ? '#fff'    : '#4E342E',
-                                    border:     time===t ? 'none'    : '1px solid #b8ceb5',
-                                  }}>
-                            {t}
-                          </button>
-                        ))}
-                      </div>
+                  <h2 className="font-bold text-[1rem] text-espresso mb-1">Select Available Slot</h2>
+                  <p className="text-[13px] text-clay-muted mb-4">Only available (unbooked) slots are shown.</p>
+
+                  {slotsLoading ? (
+                    <div className="text-center py-10 text-clay-muted text-[13px]">Loading availability…</div>
+                  ) : availableDates.length === 0 ? (
+                    <div className="text-center py-10 rounded-2xl" style={{ background:'rgba(255,255,255,.6)', border:'1px solid #b8ceb5' }}>
+                      <div className="text-3xl mb-3">🗓️</div>
+                      <div className="font-bold text-espresso mb-1">No slots available</div>
+                      <p className="text-[13px] text-clay-muted">The hospital admin hasn't added availability for this vet yet.</p>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-5">
+                      {availableDates.map(d => (
+                        <div key={d}>
+                          <div className="font-semibold text-[13px] text-espresso mb-2">
+                            {new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' })}
+                          </div>
+                          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                            {slotsByDate[d].map(slot => {
+                              const isSelected = slotId === slot.id
+                              return (
+                                <button key={slot.id} type="button"
+                                        onClick={() => { setSlotId(slot.id); setDate(d); setTime(slot.start_time) }}
+                                        className="py-2.5 rounded-xl text-[12px] font-semibold transition-all"
+                                        style={{
+                                          background: isSelected ? '#5e4749' : 'rgba(255,255,255,.7)',
+                                          color:      isSelected ? '#fff'    : '#4E342E',
+                                          border:     isSelected ? 'none'    : '1px solid #b8ceb5',
+                                        }}>
+                                  {slot.start_time.slice(0,5)}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   )}
-                  <button onClick={() => setStep(1)} disabled={!date || !time}
-                          className="btn btn-olive w-full justify-center !py-3 mt-5"
-                          style={{ opacity:(!date||!time) ? .5 : 1 }}>
+
+                  <button onClick={() => setStep(1)} disabled={!slotId}
+                          className="btn btn-olive w-full justify-center !py-3 mt-6"
+                          style={{ opacity: slotId ? 1 : 0.5 }}>
                     Continue →
                   </button>
                 </div>
@@ -309,6 +348,31 @@ export default function BookingPage() {
                     </div>
                   )}
 
+                  {/* Service selector — shown when vet has multiple services */}
+                  {vet?.hospital_services?.length > 1 && (
+                    <div className="mb-5">
+                      <label className="t-mono text-[10px] text-espresso-soft block mb-1.5">Select Service</label>
+                      <div className="flex flex-col gap-2">
+                        {vet.hospital_services.map(s => (
+                          <button key={s.id} type="button" onClick={() => setSelectedServiceId(s.id)}
+                                  className="flex items-center justify-between px-4 py-3 rounded-xl text-left transition-all"
+                                  style={{
+                                    background: selectedServiceId===s.id ? 'rgba(85,107,47,.08)' : 'rgba(255,255,255,.7)',
+                                    border:     selectedServiceId===s.id ? '2px solid #5e4749' : '1.5px solid #b8ceb5',
+                                  }}>
+                            <div>
+                              <div className="font-semibold text-[14px] text-espresso">{s.name}</div>
+                              {s.duration_minutes && <div className="text-[11px] text-clay-muted">{s.duration_minutes} min</div>}
+                            </div>
+                            <div className="font-black text-[14px]" style={{ color:'#5e4749' }}>
+                              ₨ {s.price.toLocaleString()}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="mb-5">
                     <label className="t-mono text-[10px] text-espresso-soft block mb-1.5">Notes (optional)</label>
                     <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3}
@@ -332,16 +396,18 @@ export default function BookingPage() {
               {step === 2 && (
                 <div>
                   <h2 className="font-bold text-[1rem] text-espresso mb-4">Review & Complete Payment</h2>
-                  <div className="p-4 rounded-2xl mb-5"
+
+                  {/* Booking summary */}
+                  <div className="p-4 rounded-2xl mb-4"
                        style={{ background:'rgba(94,71,73,.07)', border:'1px solid rgba(94,71,73,.2)' }}>
                     <div className="t-mono text-[10px] text-olive mb-3">BOOKING SUMMARY</div>
                     {[
                       ['Vet',      vetName],
                       ['Hospital', hospital?.name ?? '—'],
+                      ['Service',  selectedService?.name ?? '—'],
                       ['Date',     fmtDate(date)],
                       ['Time',     time],
                       ['Cat',      cat?.name ?? '—'],
-                      ['Fee',      feeDisplay],
                     ].map(([k, v]) => (
                       <div key={k} className="flex justify-between py-1.5 text-[13px] border-b last:border-0"
                            style={{ borderColor:'rgba(94,71,73,.15)' }}>
@@ -351,13 +417,55 @@ export default function BookingPage() {
                     ))}
                   </div>
 
-                  <PaymentForm
-                    amount={feeDisplay}
-                    title={`Consultation with ${vetName}`}
-                    onBack={() => setStep(1)}
-                    onSuccess={handleConfirm}
-                  />
-                  {saving && <p className="text-center text-clay-muted text-[12px] mt-3">Saving booking…</p>}
+                  {/* Platform fee breakdown */}
+                  <div className="p-4 rounded-2xl mb-4"
+                       style={{ background:'rgba(85,107,47,.06)', border:'1px solid rgba(85,107,47,.2)' }}>
+                    <div className="t-mono text-[10px] text-olive mb-3">PAYMENT BREAKDOWN</div>
+                    <div className="flex justify-between text-[13px] py-1.5">
+                      <span className="text-clay-muted">Platform Booking Fee</span>
+                      <span className="font-semibold text-espresso">₨ {PLATFORM_FEE_BASE.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-[13px] py-1.5 border-b"
+                         style={{ borderColor:'rgba(85,107,47,.15)' }}>
+                      <span className="text-clay-muted">Service Charge (1.5%)</span>
+                      <span className="font-semibold text-espresso">₨ {(PLATFORM_FEE_TOTAL - PLATFORM_FEE_BASE).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between text-[14px] pt-2 font-black">
+                      <span className="text-espresso">Total Due via Safepay</span>
+                      <span className="text-olive">₨ {PLATFORM_FEE_TOTAL.toLocaleString()}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-xl mb-4 text-[12px]"
+                       style={{ background:'rgba(196,140,56,.07)', border:'1px solid rgba(196,140,56,.2)', color:'#7A4F10' }}>
+                    The hospital's consultation fee (<strong>{feeDisplay}</strong>) is billed separately at the clinic.
+                    The amount above is the Purrfect Care platform booking fee processed via Safepay.
+                  </div>
+
+                  {payErr && (
+                    <div className="mb-4 px-4 py-3 rounded-xl text-[13px]"
+                         style={{ background:'rgba(196,56,56,.08)', border:'1px solid rgba(196,56,56,.2)', color:'#9B2020' }}>
+                      ⚠️ {payErr}
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <button onClick={() => setStep(1)} className="btn btn-outline flex-1 justify-center !py-3">← Back</button>
+                    <button onClick={handleConfirm} disabled={saving}
+                            className="btn btn-olive flex-1 justify-center !py-3"
+                            style={{ opacity: saving ? .7 : 1 }}>
+                      {saving
+                        ? <span className="flex items-center gap-2">
+                            <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none">
+                              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" opacity=".3"/>
+                              <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
+                            </svg>
+                            Redirecting to payment…
+                          </span>
+                        : `Confirm & Pay ₨ ${PLATFORM_FEE_TOTAL} →`
+                      }
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

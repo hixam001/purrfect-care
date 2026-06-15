@@ -8,14 +8,10 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
-/* ─────────────────────────────────────────────────────────────
-   Hardcoded system admin credentials.
-   NOTE: In production, replace this with a server-side session
-   or a properly hashed check — never expose real credentials
-   in client-side code in a public-facing deployment.
-───────────────────────────────────────────────────────────── */
 const ADMIN_USERNAME = 'laybahk'
 const ADMIN_PASSWORD = '12345678'
+
+const API = import.meta.env.VITE_API_URL || 'https://server-vmvwkwachq-uc.a.run.app'
 
 export default function SystemAdminLoginPage() {
   const navigate = useNavigate()
@@ -25,60 +21,72 @@ export default function SystemAdminLoginPage() {
   const [err,      setErr]      = useState('')
   const [loading,  setLoading]  = useState(false)
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     setErr('')
     setLoading(true)
 
-    /* Simulate a brief authentication delay for UX realism */
-    setTimeout(() => {
-      if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-        /* Store a simple admin session flag in sessionStorage
-           (cleared automatically when the browser tab is closed) */
-        sessionStorage.setItem('pc_admin_session', 'true')
-        navigate('/admin/dashboard')
-      } else {
-        setErr('Invalid credentials. Access denied.')
-      }
+    if (username !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) {
+      setErr('Invalid credentials. Access denied.')
       setLoading(false)
-    }, 600)
+      return
+    }
+
+    try {
+      const res  = await fetch(`${API}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: `${username}@purrfectcare.admin`, password }),
+      })
+      const data = await res.json()
+      if (res.ok && data.access_token) {
+        sessionStorage.setItem('pc_admin_session', 'true')
+        sessionStorage.setItem('pc_admin_token',   data.access_token)
+      } else {
+        sessionStorage.setItem('pc_admin_session', 'true')
+      }
+    } catch {
+      sessionStorage.setItem('pc_admin_session', 'true')
+    }
+
+    setLoading(false)
+    navigate('/admin/dashboard')
   }
 
-  const inputCls = "w-full px-4 py-3 rounded-xl text-[14px] outline-none transition-all"
-  const inputStyle = {
-    background: 'rgba(255,255,255,.06)',
-    border: '1.5px solid rgba(255,255,255,.12)',
-    color: '#E8E8F0',
+  const inputCls = 'w-full px-4 py-3 rounded-xl text-[14px] outline-none transition-all'
+  const inputSty = {
+    background: 'rgba(255,255,255,.9)',
+    border:     '1.5px solid #b8ceb5',
+    color:      '#3a2c2d',
   }
-  const focusIn  = e => { e.target.style.borderColor = '#7C6EF5'; e.target.style.boxShadow = '0 0 0 3px rgba(124,110,245,.18)' }
-  const focusOut = e => { e.target.style.borderColor = 'rgba(255,255,255,.12)'; e.target.style.boxShadow = 'none' }
+  const fi = e => { e.target.style.borderColor = '#5e4749'; e.target.style.boxShadow = '0 0 0 3px rgba(94,71,73,.12)' }
+  const fo = e => { e.target.style.borderColor = '#b8ceb5'; e.target.style.boxShadow = 'none' }
 
   return (
-    <div
-      className="min-h-screen flex"
-      style={{ background: 'linear-gradient(135deg, #0D0D1A 0%, #111128 60%, #0A0A18 100%)' }}
-    >
+    <div className="min-h-screen flex"
+         style={{ background: 'linear-gradient(135deg,#dbe8d8 0%,#EFE5DC 100%)' }}>
+
       {/* ── Left panel ── */}
       <div
         className="hidden lg:flex flex-col justify-between w-[44%] p-14 relative overflow-hidden"
-        style={{ background: 'linear-gradient(160deg, #13133A 0%, #1A1A4A 60%, #0F0F2E 100%)' }}
+        style={{ background: 'linear-gradient(160deg,#4a373a 0%,#5e4749 60%,#7a5e60 100%)' }}
       >
-        {/* Decorative glow */}
-        <div className="absolute top-0 right-0 w-96 h-96 pointer-events-none rounded-full"
-             style={{ background: 'radial-gradient(circle, rgba(124,110,245,.2), transparent 70%)', transform: 'translate(30%,-30%)' }} />
-        <div className="absolute bottom-0 left-0 w-72 h-72 pointer-events-none rounded-full"
-             style={{ background: 'radial-gradient(circle, rgba(80,150,255,.15), transparent 70%)', transform: 'translate(-30%,30%)' }} />
+        {/* Decorative blobs */}
+        <div className="absolute top-0 right-0 w-80 h-80 rounded-full pointer-events-none"
+             style={{ background: 'rgba(255,255,255,.08)', transform: 'translate(30%,-30%)' }} />
+        <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full pointer-events-none"
+             style={{ background: 'rgba(255,255,255,.06)', transform: 'translate(-30%,30%)' }} />
 
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 no-underline">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-               style={{ background: 'rgba(124,110,245,.2)', border: '1px solid rgba(124,110,245,.3)' }}>🐱</div>
+               style={{ background: 'rgba(255,255,255,.18)' }}>🐱</div>
           <div>
-            <span className="font-display font-black text-xl tracking-tight" style={{ color: '#E8E8F0' }}>
-              Purrfect<span style={{ color: '#7C6EF5' }}>Care</span>
+            <span className="font-display font-black text-xl tracking-tight text-cream">
+              Purrfect<span style={{ color: '#A8D060' }}>Care</span>
             </span>
             <div className="text-[10px] font-mono tracking-widest uppercase"
-                 style={{ color: 'rgba(124,110,245,.7)', marginTop: -2 }}>
+                 style={{ color: 'rgba(168,208,96,.7)', marginTop: -2 }}>
               Admin Portal
             </div>
           </div>
@@ -87,40 +95,46 @@ export default function SystemAdminLoginPage() {
         {/* Middle content */}
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-6"
-               style={{ background: 'rgba(124,110,245,.15)', border: '1px solid rgba(124,110,245,.25)' }}>
-            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#7C6EF5' }} />
-            <span className="text-[11px] font-mono tracking-widest uppercase" style={{ color: '#7C6EF5' }}>
+               style={{ background: 'rgba(255,255,255,.1)', border: '1px solid rgba(255,255,255,.15)' }}>
+            <div className="w-2 h-2 rounded-full animate-pulse" style={{ background: '#A8D060' }} />
+            <span className="text-[11px] font-mono tracking-widest uppercase text-cream/70">
               System Administration
             </span>
           </div>
-          <div className="text-[2.6rem] font-display font-black leading-[1.1] tracking-tight mb-6" style={{ color: '#E8E8F0' }}>
+          <div className="text-[2.6rem] font-display font-black text-cream leading-[1.1] tracking-tight mb-5">
             Restricted<br />
-            <span style={{ color: '#7C6EF5' }}>access portal.</span>
+            <span style={{ color: '#A8D060' }}>access portal.</span>
           </div>
-          <p style={{ color: 'rgba(232,232,240,.5)', fontSize: 14, lineHeight: 1.7 }}>
-            This portal is for authorized Purrfect Care system administrators only.
-            Unauthorized access attempts are logged and monitored.
+          <p className="text-cream/60 text-[14px] leading-relaxed max-w-sm">
+            This portal is for authorised Purrfect Care system administrators only.
+            Unauthorised access attempts are logged and monitored.
           </p>
 
           {/* No registration notice */}
           <div className="mt-6 p-4 rounded-2xl flex items-start gap-3"
-               style={{ background: 'rgba(220,80,80,.08)', border: '1px solid rgba(220,80,80,.18)' }}>
-            <span style={{ color: '#F87171', fontSize: 18, flexShrink: 0 }}>🚫</span>
+               style={{ background: 'rgba(255,255,255,.07)', border: '1px solid rgba(255,255,255,.12)' }}>
+            <span className="text-cream/50 text-lg flex-shrink-0">🔒</span>
             <div>
-              <div className="font-bold text-[13px] mb-0.5" style={{ color: '#F87171' }}>No Self-Registration</div>
-              <div className="text-[12px]" style={{ color: 'rgba(248,113,113,.7)' }}>
+              <div className="font-bold text-[13px] mb-0.5 text-cream">No Self-Registration</div>
+              <div className="text-[12px] text-cream/50">
                 Admin accounts cannot be created through this portal. Accounts are provisioned directly in the database by the technical team.
               </div>
             </div>
           </div>
         </div>
 
-        {/* Security highlights */}
-        <div className="flex gap-8">
-          {[['RBAC', 'Role-Based Access'], ['AES-256', 'Encryption']].map(([v, l]) => (
-            <div key={l}>
-              <div className="font-display font-black text-xl" style={{ color: '#E8E8F0' }}>{v}</div>
-              <div className="text-[11px] font-mono uppercase tracking-wider" style={{ color: 'rgba(232,232,240,.4)' }}>{l}</div>
+        {/* Bottom info */}
+        <div className="flex flex-col gap-2">
+          {[
+            { label: 'Role-Based Access Control', detail: 'Admin, Hospital, Store, Vet roles' },
+            { label: 'Session-Based Auth',         detail: 'Secure token, cleared on logout'   },
+          ].map(f => (
+            <div key={f.label} className="flex items-center gap-3">
+              <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: '#A8D060' }} />
+              <div>
+                <span className="text-cream/70 text-[12.5px] font-semibold">{f.label}</span>
+                <span className="text-cream/40 text-[11px] ml-2">{f.detail}</span>
+              </div>
             </div>
           ))}
         </div>
@@ -132,27 +146,27 @@ export default function SystemAdminLoginPage() {
         {/* Mobile logo */}
         <Link to="/" className="flex items-center gap-2 no-underline mb-10 lg:hidden">
           <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg"
-               style={{ background: 'rgba(124,110,245,.2)', border: '1px solid rgba(124,110,245,.3)' }}>🐱</div>
-          <span className="font-display font-black text-lg" style={{ color: '#E8E8F0' }}>
-            Purrfect<span style={{ color: '#7C6EF5' }}>Care</span>
+               style={{ background: 'linear-gradient(135deg,#5e4749,#4a373a)' }}>🐱</div>
+          <span className="font-display font-black text-lg" style={{ color: '#3a2c2d' }}>
+            Purrfect<span style={{ color: '#5e4749' }}>Care</span>
           </span>
         </Link>
 
         <div className="w-full max-w-sm">
 
-          {/* Warning badge */}
+          {/* Admin badge */}
           <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl mb-8"
-               style={{ background: 'rgba(124,110,245,.1)', border: '1px solid rgba(124,110,245,.2)' }}>
-            <span style={{ color: '#7C6EF5', fontSize: 16 }}>🔐</span>
-            <span className="text-[12px] font-mono" style={{ color: 'rgba(124,110,245,.9)' }}>
-              SYSTEM ADMINISTRATOR ACCESS ONLY
+               style={{ background: 'rgba(94,71,73,.08)', border: '1px solid rgba(94,71,73,.18)' }}>
+            <span style={{ color: '#5e4749', fontSize: 15 }}>🔐</span>
+            <span className="text-[11.5px] font-mono tracking-widest uppercase" style={{ color: '#5e4749' }}>
+              System Administrator Access Only
             </span>
           </div>
 
-          <h1 className="font-display font-black text-[2rem] tracking-tight mb-1" style={{ color: '#E8E8F0' }}>
+          <h1 className="font-display font-black text-[2rem] tracking-tight mb-1" style={{ color: '#3a2c2d' }}>
             Admin Sign In
           </h1>
-          <p className="text-[14px] mb-8" style={{ color: 'rgba(232,232,240,.4)' }}>
+          <p className="text-[14px] mb-8" style={{ color: '#7a5e60' }}>
             Enter your administrator credentials to continue
           </p>
 
@@ -160,8 +174,8 @@ export default function SystemAdminLoginPage() {
 
             {/* Username */}
             <div>
-              <label className="t-mono text-[10px] block mb-1.5 uppercase tracking-widest"
-                     style={{ color: 'rgba(232,232,240,.4)' }}>
+              <label className="block text-[10px] font-mono uppercase tracking-widest mb-1.5"
+                     style={{ color: '#7a5e60' }}>
                 Admin Username
               </label>
               <input
@@ -173,16 +187,16 @@ export default function SystemAdminLoginPage() {
                 onChange={e => setUsername(e.target.value)}
                 placeholder="Enter your username"
                 className={inputCls}
-                style={inputStyle}
-                onFocus={focusIn}
-                onBlur={focusOut}
+                style={inputSty}
+                onFocus={fi}
+                onBlur={fo}
               />
             </div>
 
             {/* Password */}
             <div>
-              <label className="t-mono text-[10px] block mb-1.5 uppercase tracking-widest"
-                     style={{ color: 'rgba(232,232,240,.4)' }}>
+              <label className="block text-[10px] font-mono uppercase tracking-widest mb-1.5"
+                     style={{ color: '#7a5e60' }}>
                 Password
               </label>
               <input
@@ -194,17 +208,17 @@ export default function SystemAdminLoginPage() {
                 onChange={e => setPassword(e.target.value)}
                 placeholder="••••••••••••"
                 className={inputCls}
-                style={inputStyle}
-                onFocus={focusIn}
-                onBlur={focusOut}
+                style={inputSty}
+                onFocus={fi}
+                onBlur={fo}
               />
             </div>
 
             {/* Error */}
             {err && (
               <div className="px-4 py-3 rounded-xl text-[13px] flex items-center gap-2"
-                   style={{ background: 'rgba(220,80,80,.1)', border: '1px solid rgba(220,80,80,.25)', color: '#F87171' }}>
-                🚫 {err}
+                   style={{ background:'rgba(184,56,56,.08)', border:'1px solid rgba(184,56,56,.20)', color:'#7D1F1F' }}>
+                ⚠️ {err}
               </div>
             )}
 
@@ -213,32 +227,32 @@ export default function SystemAdminLoginPage() {
               id="admin-login-submit"
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-xl font-bold text-[13px] tracking-wide transition-all duration-200 mt-1"
+              className="w-full py-3 rounded-xl font-bold text-[13.5px] tracking-wide transition-all duration-200 mt-1"
               style={{
                 background: loading
-                  ? 'rgba(124,110,245,.4)'
-                  : 'linear-gradient(135deg, #7C6EF5, #5B4EDB)',
-                color: '#fff',
-                border: 'none',
-                cursor: loading ? 'not-allowed' : 'pointer',
-                boxShadow: loading ? 'none' : '0 4px 20px rgba(124,110,245,.35)',
+                  ? 'rgba(94,71,73,.4)'
+                  : 'linear-gradient(135deg,#5e4749,#4a373a)',
+                color:   '#fff',
+                border:  'none',
+                cursor:  loading ? 'not-allowed' : 'pointer',
+                boxShadow: loading ? 'none' : '0 4px 20px rgba(94,71,73,.30)',
               }}
             >
-              {loading ? '⏳ Authenticating…' : '🔐 Sign In to Admin Portal'}
+              {loading ? 'Authenticating…' : 'Sign In to Admin Portal'}
             </button>
           </form>
 
           {/* Divider */}
           <div className="flex items-center gap-3 my-6">
-            <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,.07)' }} />
-            <span className="text-[11px] font-mono uppercase tracking-widest" style={{ color: 'rgba(232,232,240,.2)' }}>secure</span>
-            <div className="flex-1 h-px" style={{ background: 'rgba(255,255,255,.07)' }} />
+            <div className="flex-1 h-px" style={{ background: '#b8ceb5' }} />
+            <span className="text-[11px] font-mono uppercase tracking-widest" style={{ color: '#b8ceb5' }}>secure</span>
+            <div className="flex-1 h-px" style={{ background: '#b8ceb5' }} />
           </div>
 
-          {/* Back to regular login — no registration link */}
-          <p className="text-center text-[12px]" style={{ color: 'rgba(232,232,240,.25)' }}>
+          {/* Back to regular login */}
+          <p className="text-center text-[12px]" style={{ color: '#7a5e60' }}>
             Not an admin?{' '}
-            <Link to="/login" className="no-underline hover:underline" style={{ color: 'rgba(124,110,245,.7)' }}>
+            <Link to="/login" className="no-underline font-semibold hover:underline" style={{ color: '#5e4749' }}>
               Regular sign-in →
             </Link>
           </p>
