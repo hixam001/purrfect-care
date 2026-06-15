@@ -35,6 +35,13 @@ def _safepay_base(settings: Settings) -> str:
     return SAFEPAY_SANDBOX_BASE if settings.SAFEPAY_ENV == "sandbox" else SAFEPAY_LIVE_BASE
 
 
+def _checkout_url(tracker: str, settings: Settings) -> str:
+    """Safepay checkout page URL (NOT the API subdomain)."""
+    if settings.SAFEPAY_ENV == "sandbox":
+        return f"https://sandbox.getsafepay.com/checkout/pay/{tracker}?env=sandbox"
+    return f"https://www.getsafepay.com/checkout/pay/{tracker}?env=production"
+
+
 # ──────────────────────────────────────────────────────────────
 # Helpers
 # ──────────────────────────────────────────────────────────────
@@ -174,12 +181,6 @@ async def subscription_checkout(
     if not tracker:
         raise HTTPException(status_code=502, detail="No payment token returned.")
 
-    checkout_url = (
-        f"{'https://sandbox.api.getsafepay.com' if settings.SAFEPAY_ENV == 'sandbox' else 'https://www.getsafepay.com'}"
-        f"/checkout/pay/{tracker}"
-        f"?env={'sandbox' if settings.SAFEPAY_ENV == 'sandbox' else 'production'}"
-    )
-
     # Create a pending subscription row so webhook can activate it
     sb.table("subscriptions").insert({
         "profile_id":       profile["id"],
@@ -189,7 +190,8 @@ async def subscription_checkout(
         "safepay_order_id": order_id,
     }).execute()
 
-    return {"token": tracker, "checkout_url": checkout_url, "order_id": order_id}
+    return {"token": tracker, "checkout_url": _checkout_url(tracker, settings), "order_id": order_id}
+
 
 
 @router.post("/activate", status_code=status.HTTP_201_CREATED)

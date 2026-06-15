@@ -47,6 +47,9 @@ class UserCreate(UserBase):
     role: Role = Role.CAT_OWNER
     latitude: float | None = Field(None, ge=-90, le=90)
     longitude: float | None = Field(None, ge=-180, le=180)
+    # For hospital_admin / store_owner: the name of the clinic/store
+    business_name: str | None = Field(None, max_length=200)
+
 
 
 class UserUpdate(BaseModel):

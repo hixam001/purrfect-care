@@ -101,7 +101,47 @@ class AuthService:
             logger.error(f"Failed to insert user_profile for {supabase_user_id}: {e}")
             raise ExternalServiceException("Supabase", f"Profile creation failed: {e}")
 
-        # 4. Build response
+        # 4. For business roles, create the linked hospital / store row
+        profile_id = profile["id"]
+        business_name = getattr(data, "business_name", None) or data.name
+
+        if data.role.value == "hospital_admin":
+            try:
+                hosp_data = {
+                    "name":          business_name,
+                    "admin_user_id": profile_id,
+                    "address":       data.address,
+                    "city":          data.city,
+                    "is_active":     False,
+                    "is_approved":   False,
+                }
+                if data.latitude is not None:
+                    hosp_data["latitude"]  = data.latitude
+                    hosp_data["longitude"] = data.longitude
+                self.service.table("hospitals").insert(hosp_data).execute()
+                logger.info("Created hospitals row for new hospital_admin profile_id=%s", profile_id)
+            except Exception as e:
+                logger.error("Failed to create hospitals row: %s", e)
+
+        elif data.role.value == "store_owner":
+            try:
+                store_data = {
+                    "name":          business_name,
+                    "owner_user_id": profile_id,
+                    "address":       data.address,
+                    "city":          data.city,
+                    "is_active":     False,
+                    "is_approved":   False,
+                }
+                if data.latitude is not None:
+                    store_data["latitude"]  = data.latitude
+                    store_data["longitude"] = data.longitude
+                self.service.table("cat_stores").insert(store_data).execute()
+                logger.info("Created cat_stores row for new store_owner profile_id=%s", profile_id)
+            except Exception as e:
+                logger.error("Failed to create cat_stores row: %s", e)
+
+        # 5. Build response
         user_response = self._profile_to_response(profile)
         session = auth_response.session
 
@@ -111,6 +151,7 @@ class AuthService:
             refresh_token=session.refresh_token if session else None,
             token_type="bearer",
         )
+
 
     # ──────────────────────────────────────────────────
     # Login

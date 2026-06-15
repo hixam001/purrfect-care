@@ -96,6 +96,19 @@ function fmtRelative(iso) {
   return new Date(iso).toLocaleDateString('en-GB', { day:'numeric', month:'short' })
 }
 
+function PatientAvatar({ name = '?' }) {
+  const letter  = name[0].toUpperCase()
+  const colours = ['#5e4749','#4a7c59','#6d5d3b','#2d5a6b','#7a4060']
+  const bg      = colours[letter.charCodeAt(0) % colours.length]
+  return (
+    <div style={{
+      width:40, height:40, borderRadius:12, background:bg, flexShrink:0,
+      display:'flex', alignItems:'center', justifyContent:'center',
+      color:'#fff', fontWeight:800, fontSize:16,
+    }}>{letter}</div>
+  )
+}
+
 /* ═══════════════════════════════════════════════════════════════
    MAIN COMPONENT
 ═══════════════════════════════════════════════════════════════ */
@@ -194,7 +207,6 @@ export default function VetDashboard() {
   const MAIN_TABS = [
     { id:'overview',     label:'Overview',     icon:'🏠' },
     { id:'appointments', label:'Appointments', icon:'📅' },
-    { id:'messages',     label:'Messages',     icon:'💬' },
   ]
 
   /* ── Loading / error states ── */
@@ -253,6 +265,17 @@ export default function VetDashboard() {
               {t.icon} {t.label}
             </button>
           ))}
+          {/* Messages links directly to full chat inbox page */}
+          <Link to="/chats"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[13px] font-semibold transition-all no-underline"
+                style={{ background: C.surface, color: C.textMuted, border:`1px solid ${C.border}` }}>
+            💬 Messages {chatRooms.length > 0 && (
+              <span className="w-5 h-5 rounded-full text-[10px] flex items-center justify-center"
+                    style={{ background: C.olive, color:'#fff' }}>
+                {chatRooms.length}
+              </span>
+            )}
+          </Link>
         </div>
 
         {/* ════════════════════ OVERVIEW ════════════════════ */}
@@ -317,12 +340,12 @@ export default function VetDashboard() {
             <Panel>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="font-display font-bold text-[1.05rem]" style={{ color: C.text }}>
-                  Recent Messages
+                  Recent Patient Chats
                 </h2>
-                <button onClick={() => setActiveTab('messages')}
-                        className="text-[11px] font-semibold" style={{ color: C.olive }}>
+                <Link to="/chats" className="text-[11px] font-semibold no-underline"
+                      style={{ color: C.olive }}>
                   View all →
-                </button>
+                </Link>
               </div>
               {chatRooms.length === 0 ? (
                 <EmptyState icon="💬" title="No messages yet"
@@ -333,22 +356,32 @@ export default function VetDashboard() {
                     const appt    = r.appointments
                     const patient = appt?.user_profiles?.name ?? 'Patient'
                     const cat     = appt?.cats?.name ?? '—'
+                    const canChat = ['confirmed','in_progress'].includes(appt?.status)
                     return (
-                      <Link key={r.id} to={`/chat/${r.appointment_id}`}
-                            className="flex items-center gap-3 p-4 rounded-2xl no-underline transition-all hover:opacity-80"
-                            style={{ background:'rgba(0,0,0,.02)', border:`1px solid ${C.border}` }}>
-                        <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl flex-shrink-0"
-                             style={{ background: C.oliveBg }}>💬</div>
+                      <div key={r.id}
+                           onClick={() => canChat && navigate(`/chat/${r.appointment_id}`)}
+                           className="flex items-center gap-3 p-4 rounded-2xl transition-all"
+                           style={{
+                             background:'rgba(0,0,0,.02)', border:`1px solid ${C.border}`,
+                             cursor: canChat ? 'pointer' : 'default',
+                             opacity: canChat ? 1 : 0.65,
+                           }}>
+                        <PatientAvatar name={patient} />
                         <div className="flex-1 min-w-0">
                           <div className="font-semibold text-[13px] truncate" style={{ color: C.text }}>
                             {patient}
                           </div>
                           <div className="text-[11px]" style={{ color: C.textMuted }}>🐱 {cat}</div>
                         </div>
-                        <div className="text-[10px] flex-shrink-0" style={{ color: C.textMuted }}>
-                          {fmtRelative(appt?.appointment_date)}
+                        <div className="flex flex-col items-end gap-1">
+                          <div className="text-[10px]" style={{ color: C.textMuted }}>
+                            {fmtRelative(appt?.appointment_date)}
+                          </div>
+                          {canChat && (
+                            <span className="text-[10px] font-semibold" style={{ color: C.olive }}>Open →</span>
+                          )}
                         </div>
-                      </Link>
+                      </div>
                     )
                   })}
                 </div>
@@ -430,62 +463,6 @@ export default function VetDashboard() {
                             </Link>
                           )}
                         </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </Panel>
-        )}
-
-        {/* ════════════════════ MESSAGES ════════════════════ */}
-        {activeTab === 'messages' && (
-          <Panel>
-            <h2 className="font-display font-bold text-[1.1rem] mb-5" style={{ color: C.text }}>
-              Patient Messages
-            </h2>
-            {chatRooms.length === 0 ? (
-              <EmptyState icon="💬" title="No chats yet"
-                          sub="When a patient books with you and you're both confirmed, you can message each other here." />
-            ) : (
-              <div className="flex flex-col gap-3">
-                {chatRooms.map(r => {
-                  const appt    = r.appointments
-                  const patient = appt?.user_profiles?.name ?? 'Patient'
-                  const cat     = appt?.cats?.name ?? '—'
-                  const status  = appt?.status ?? 'pending'
-                  const canChat = ['confirmed','in_progress'].includes(status)
-                  return (
-                    <div key={r.id} className="p-5 rounded-2xl flex items-center gap-4"
-                         style={{ background:'rgba(0,0,0,.02)', border:`1px solid ${C.border}` }}>
-                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
-                           style={{ background: C.oliveBg }}>🐱</div>
-                      <div className="flex-1 min-w-0">
-                        <div className="font-bold text-[14px]" style={{ color: C.text }}>
-                          {patient}
-                        </div>
-                        <div className="text-[12px]" style={{ color: C.textMuted }}>
-                          🐱 {cat}
-                        </div>
-                        <div className="text-[11px] mt-1" style={{ color: C.textMuted }}>
-                          Appt: {fmtDate(appt?.appointment_date)}
-                        </div>
-                      </div>
-                      <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                        <StatusPill status={status} />
-                        {canChat ? (
-                          <Link to={`/chat/${r.appointment_id}`}
-                                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-[12px] font-semibold no-underline"
-                                style={{ background: C.olive, color:'#fff' }}>
-                            💬 Open Chat
-                          </Link>
-                        ) : (
-                          <span className="text-[11px] px-3 py-1.5 rounded-xl"
-                                style={{ background: C.amberBg, color: C.amberText, border:`1px solid ${C.amberBorder}` }}>
-                            {status === 'pending' ? 'Awaiting Confirmation' : 'Chat Closed'}
-                          </span>
-                        )}
                       </div>
                     </div>
                   )

@@ -8,6 +8,7 @@ import { useFadeUp } from '../hooks/useScrollReveal.js'
 /* ── Quick-access feature tiles ── */
 const TILES = [
   { icon:'📅', label:'Appointments',  desc:'Book & manage vet visits',        href:'/find-vets',    color:'rgba(94,71,73,.1)'  },
+  { icon:'💬', label:'Messages',      desc:'Chat with your vets',             href:'/chats',        color:'rgba(45,90,39,.1)'  },
   { icon:'🐱', label:'My Cats',       desc:'Cat profiles & health records',   href:'/my-cats',      color:'rgba(196,140,56,.1)'  },
   { icon:'🤖', label:'AI Companion',  desc:'Instant symptom triage',          href:'/ai-companion', color:'rgba(160,140,125,.1)' },
   { icon:'🏪', label:'Cat Store',     desc:'Organic food & accessories',      href:'/store',        color:'rgba(196,140,56,.1)'  },

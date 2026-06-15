@@ -1,12 +1,18 @@
 /**
  * StoreDashboard — Full store management interface.
  * Accessible at /store/dashboard for users with role === 'store_owner'.
- * All data via direct Supabase client (same pattern as HospitalAdminDashboard).
+ *
+ * Store fetch uses the backend API (/api/store/mine) which runs under the
+ * service-role key — this bypasses the RLS policy that hides pending stores,
+ * so the correct "Awaiting Approval" screen is always shown.
+ * Products / orders still use Supabase directly (migration 015 fixes RLS).
  */
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import { supabase } from '../lib/supabaseClient.js'
+
+const API = import.meta.env.VITE_API_URL || 'https://us-central1-purrfect-care-app.cloudfunctions.net/server'
 
 /* ── Design tokens ── */
 const C = {
@@ -234,14 +240,21 @@ export default function StoreDashboard() {
     if (!user?.id) return
     setLoading(true)
     try {
-      // Get store
-      const { data: s } = await supabase
-        .from('cat_stores')
-        .select('*')
-        .eq('owner_user_id', user.id)
-        .single()
+      // ── Fetch store via backend (service-role bypasses RLS for pending stores) ──
+      const token = localStorage.getItem('pc_token') ||
+                    localStorage.getItem('pc_sb_access') || ''
+      const storeRes = await fetch(`${API}/api/store/mine`, {
+        headers: { Authorization: `Bearer ${token}` },
+      })
 
-      if (!s) { setLoading(false); return }
+      if (!storeRes.ok) {
+        // 404 = no store registered; other = error
+        setLoading(false)
+        return
+      }
+
+      const s = await storeRes.json()
+
       setStore(s)
       setSettingsForm({
         name:           s.name,
@@ -253,6 +266,9 @@ export default function StoreDashboard() {
         delivery_fee:   s.delivery_fee   ?? 0,
         operating_hours: JSON.stringify(s.operating_hours ?? {}, null, 2),
       })
+
+      // If still pending approval, don't load products/orders yet
+      if (!s.is_approved) { setLoading(false); return }
 
       // Get products
       const { data: p } = await supabase
@@ -486,10 +502,12 @@ export default function StoreDashboard() {
         ) : !store ? (
           <Panel className="py-20 text-center">
             <div className="text-4xl mb-4">🏪</div>
-            <div className="font-display font-bold text-[1.15rem] mb-2" style={{ color: C.text }}>Store not registered</div>
-            <p className="text-[14px] max-w-sm mx-auto" style={{ color: C.textMuted }}>
-              Your account is not linked to a store. Complete the store registration process or contact support.
+            <div className="font-display font-bold text-[1.15rem] mb-2" style={{ color: C.text }}>Store not found</div>
+            <p className="text-[14px] max-w-sm mx-auto mb-5" style={{ color: C.textMuted }}>
+              Your account is not linked to a store yet. Complete the registration process or contact support.
             </p>
+            <button onClick={loadData} className="px-5 py-2.5 rounded-xl text-[13px] font-semibold"
+                    style={{ background: C.olive, color:'#fff' }}>↺ Refresh</button>
           </Panel>
         ) : !store.is_approved ? (
           <Panel className="py-20 text-center" style={{ border: `1px solid ${C.amberBorder}` }}>
@@ -499,9 +517,16 @@ export default function StoreDashboard() {
               Your store <strong style={{ color: C.text }}>{store.name}</strong> has been registered and is being reviewed by the Purrfect Care team.
               You will be able to manage products and view orders once your store is approved.
             </p>
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold"
-                 style={{ background: C.amberBg, border: `1px solid ${C.amberBorder}`, color: C.amberText }}>
-              ⏱ Approval usually takes 1–2 business days
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold"
+                   style={{ background: C.amberBg, border: `1px solid ${C.amberBorder}`, color: C.amberText }}>
+                ⏱ Approval usually takes 1–2 business days
+              </div>
+              <button onClick={loadData}
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[13px] font-semibold"
+                      style={{ background: C.oliveBg, border:`1px solid ${C.oliveBorder}`, color: C.olive }}>
+                ↺ Check status
+              </button>
             </div>
           </Panel>
         ) : (

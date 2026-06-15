@@ -7,6 +7,7 @@ import { supabase } from '../../lib/supabaseClient'
 const TILES = [
   { icon:'🐾', label:'My Cats',      desc:'Manage your cat profiles',     to:'/my-cats'      },
   { icon:'🏥', label:'Find Vets',    desc:'Search nearby hospitals',      to:'/find-vets'    },
+  { icon:'💬', label:'Messages',     desc:'Chat with your vets',          to:'/chats'        },
   { icon:'🤖', label:'AI Companion', desc:"Ask about your cat's health",  to:'/ai-companion' },
   { icon:'🛍', label:'Cat Store',    desc:'Food, toys & accessories',     to:'/store'        },
   { icon:'📅', label:'Appointments', desc:'Your upcoming vet visits',     to:'/find-vets'    },

@@ -27,6 +27,16 @@ def _safepay_base(settings: Settings) -> str:
     return SAFEPAY_SANDBOX_BASE if settings.SAFEPAY_ENV == "sandbox" else SAFEPAY_LIVE_BASE
 
 
+def _checkout_url(tracker: str, settings: Settings) -> str:
+    """Build the Safepay-hosted checkout page URL.
+    NOTE: the checkout page lives on getsafepay.com/sandbox.getsafepay.com,
+    NOT on the API subdomain (sandbox.api.getsafepay.com).
+    """
+    if settings.SAFEPAY_ENV == "sandbox":
+        return f"https://sandbox.getsafepay.com/checkout/pay/{tracker}?env=sandbox"
+    return f"https://www.getsafepay.com/checkout/pay/{tracker}?env=production"
+
+
 def _verify_webhook_signature(payload: bytes, signature: str, secret: str) -> bool:
     expected = hmac.new(
         secret.encode("utf-8"),
@@ -55,7 +65,7 @@ async def create_payment_session(
         response = await client.post(
             f"{base}/order/v1/init",
             json={
-                "merchant_api_key": settings.SAFEPAY_PUBLIC_KEY,
+                "merchant_api_key": settings.SAFEPAY_SECRET_KEY,
                 "intent": "CYBERSOURCE",
                 "mode": "payment",
                 "currency": body.currency,
@@ -83,15 +93,9 @@ async def create_payment_session(
             detail="Safepay did not return a payment token.",
         )
 
-    checkout_url = (
-        f"{'https://sandbox.api.getsafepay.com' if settings.SAFEPAY_ENV == 'sandbox' else 'https://www.getsafepay.com'}"
-        f"/checkout/pay/{tracker}"
-        f"?env={'sandbox' if settings.SAFEPAY_ENV == 'sandbox' else 'production'}"
-    )
-
     return {
         "token": tracker,
-        "checkout_url": checkout_url,
+        "checkout_url": _checkout_url(tracker, settings),
     }
 
 
@@ -122,7 +126,7 @@ async def create_order_payment_session(
         resp = await client.post(
             f"{base}/order/v1/init",
             json={
-                "merchant_api_key": settings.SAFEPAY_PUBLIC_KEY,
+                "merchant_api_key": settings.SAFEPAY_SECRET_KEY,
                 "intent":           "CYBERSOURCE",
                 "mode":             "payment",
                 "currency":         "PKR",
@@ -143,15 +147,9 @@ async def create_order_payment_session(
     if not tracker:
         raise HTTPException(status_code=502, detail="No payment token returned.")
 
-    checkout_url = (
-        f"{'https://sandbox.api.getsafepay.com' if settings.SAFEPAY_ENV == 'sandbox' else 'https://www.getsafepay.com'}"
-        f"/checkout/pay/{tracker}"
-        f"?env={'sandbox' if settings.SAFEPAY_ENV == 'sandbox' else 'production'}"
-    )
-
     return {
         "token":        tracker,
-        "checkout_url": checkout_url,
+        "checkout_url": _checkout_url(tracker, settings),
         "order_id":     safepay_oid,
         "amount_pkr":   body.amount_pkr,
         "fee_pkr":      fee_pkr,
@@ -183,7 +181,7 @@ async def create_appointment_payment_session(
         resp = await client.post(
             f"{base}/order/v1/init",
             json={
-                "merchant_api_key": settings.SAFEPAY_PUBLIC_KEY,
+                "merchant_api_key": settings.SAFEPAY_SECRET_KEY,
                 "intent":           "CYBERSOURCE",
                 "mode":             "payment",
                 "currency":         "PKR",
@@ -204,15 +202,9 @@ async def create_appointment_payment_session(
     if not tracker:
         raise HTTPException(status_code=502, detail="No payment token returned.")
 
-    checkout_url = (
-        f"{'https://sandbox.api.getsafepay.com' if settings.SAFEPAY_ENV == 'sandbox' else 'https://www.getsafepay.com'}"
-        f"/checkout/pay/{tracker}"
-        f"?env={'sandbox' if settings.SAFEPAY_ENV == 'sandbox' else 'production'}"
-    )
-
     return {
         "token":           tracker,
-        "checkout_url":    checkout_url,
+        "checkout_url":    _checkout_url(tracker, settings),
         "order_id":        safepay_oid,
         "base_fee_pkr":    APPOINTMENT_BASE,
         "platform_fee_pkr": APPOINTMENT_TOTAL - APPOINTMENT_BASE,

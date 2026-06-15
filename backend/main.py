@@ -14,10 +14,13 @@ from firebase_functions.params import SecretParam
 from flask import Response
 
 # ── Declare all secrets ── (Firebase mounts these as env vars at runtime)
-GEMINI_API_KEY           = SecretParam("GEMINI_API_KEY")
-SUPABASE_URL             = SecretParam("SUPABASE_URL")
-SUPABASE_ANON_KEY        = SecretParam("SUPABASE_ANON_KEY")
+GEMINI_API_KEY            = SecretParam("GEMINI_API_KEY")
+SUPABASE_URL              = SecretParam("SUPABASE_URL")
+SUPABASE_ANON_KEY         = SecretParam("SUPABASE_ANON_KEY")
 SUPABASE_SERVICE_ROLE_KEY = SecretParam("SUPABASE_SERVICE_ROLE_KEY")
+# Note: SAFEPAY_* vars are already set as plain env vars on the Cloud Run service
+# and do NOT need SecretParam declarations here.
+
 
 # We create the FastAPI app lazily (first request) so that the secret
 # env vars are already populated by the time the app reads Settings().
@@ -92,3 +95,9 @@ def _run_asgi(asgi_app, request: https_fn.Request) -> Response:
 def server(req: https_fn.Request) -> https_fn.Response:
     """Main entry point — all HTTP requests delegated to FastAPI."""
     return _run_asgi(_get_app(), req)
+
+
+# ── Cloud Run / uvicorn entry point (main:app) ───────────────────────────────
+# When deployed via `gcloud run deploy --source .`, uvicorn looks for `main:app`.
+# Secrets are available as plain env vars in Cloud Run, so lazy init still works.
+app = _get_app()

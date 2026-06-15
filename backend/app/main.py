@@ -103,10 +103,10 @@ def create_app() -> FastAPI:
     # app.include_router(prescription_router, prefix="/api/prescriptions", tags=["Prescriptions"])
 
     # Phase 7: Stores & Orders
-    # from app.controllers.store_controller import router as store_router
-    # from app.controllers.order_controller import router as order_router
-    # app.include_router(store_router, prefix="/api/stores", tags=["Stores"])
-    # app.include_router(order_router, prefix="/api/orders", tags=["Orders"])
+    from app.controllers.store_controller import router as store_router
+    from app.controllers.order_controller import router as order_router
+    app.include_router(store_router, prefix="/api/store", tags=["Store"])
+    app.include_router(order_router, prefix="/api/orders", tags=["Orders"])
 
     # Phase 8: Reviews, Offers, Admin
     # from app.controllers.review_controller import router as review_router

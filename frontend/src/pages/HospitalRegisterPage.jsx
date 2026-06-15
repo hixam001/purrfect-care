@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import Stepper from '../components/ui/Stepper.jsx'
 import { supabase } from '../lib/supabaseClient.js'
@@ -50,6 +50,23 @@ export default function HospitalRegisterPage() {
 
   const [err,        setErr]        = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [lat,        setLat]        = useState(null)
+  const [lng,        setLng]        = useState(null)
+  const [geoLoading, setGeoLoading] = useState(false)
+
+  function handleGetLocation() {
+    if (!navigator.geolocation) return
+    setGeoLoading(true)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLat(pos.coords.latitude)
+        setLng(pos.coords.longitude)
+        setGeoLoading(false)
+      },
+      () => setGeoLoading(false),
+      { timeout: 8000 }
+    )
+  }
 
   function handleDocFile(label, file) {
     if (!file) return
@@ -58,6 +75,13 @@ export default function HospitalRegisterPage() {
 
   function next() { setErr(''); setStep(s => s + 1) }
   function back() { setErr(''); setStep(s => s - 1) }
+
+  /* Auto-request location when the form first loads (step 0 is hospital info) */
+  useEffect(() => {
+    if (step === 0 && lat === null && !geoLoading) {
+      handleGetLocation()
+    }
+  }, [step]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function validateStep() {
     if (step === 0) {
@@ -90,13 +114,16 @@ export default function HospitalRegisterPage() {
           method:  'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            name:     adminName,
-            email:    adminEmail,
-            phone:    phone,
-            password: password,
-            role:     'hospital_admin',
-            city:     city,
-            address:  address,
+            name:          adminName,
+            email:         adminEmail,
+            phone:         phone,
+            password:      password,
+            role:          'hospital_admin',
+            city:          city,
+            address:       address,
+            business_name: hospName,
+            latitude:      lat,
+            longitude:     lng,
           }),
         })
         const regData = await regRes.json()
@@ -219,9 +246,43 @@ export default function HospitalRegisterPage() {
                   </Field>
                 </div>
 
+                {/* ── Location capture card ── */}
+                <div className="rounded-2xl p-4 flex flex-col gap-3"
+                     style={{ background: lat ? 'rgba(85,107,47,.08)' : 'rgba(196,140,56,.06)',
+                              border: lat ? '1.5px solid rgba(85,107,47,.35)' : '1.5px solid rgba(196,140,56,.3)' }}>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-start gap-3">
+                      <span className="text-2xl flex-shrink-0">{lat ? '📍' : '🗺️'}</span>
+                      <div>
+                        <div className="font-bold text-[13px] text-espresso">
+                          {lat ? 'Location pinned ✓' : 'Pin your hospital location'}
+                        </div>
+                        <div className="text-[11px] text-clay-muted mt-0.5">
+                          {lat
+                            ? `Coordinates: ${lat.toFixed(5)}, ${lng.toFixed(5)}`
+                            : 'Helps cat owners find you in nearby searches. Tap to allow location access.'}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleGetLocation}
+                      disabled={geoLoading}
+                      className="flex-shrink-0 btn btn-outline !py-2 !px-4 !text-[12px]"
+                      style={lat ? { borderColor: '#5e4749', color: '#5e4749' } : {}}>
+                      {geoLoading ? '⏳ Locating…' : lat ? '📍 Re-pin' : '📍 Allow Location'}
+                    </button>
+                  </div>
+                  {!lat && !geoLoading && (
+                    <p className="text-[10px] text-clay-muted">
+                      Optional — hospitals with a pinned location appear in radius searches on the app.
+                    </p>
+                  )}
+                </div>
+
                 <Field label="Street Address">
                   <input value={address} onChange={e=>setAddress(e.target.value)}
-                         placeholder="Full street address"
+                         placeholder="Shop no., street, area"
                          className={inputCls} style={inputSty} onFocus={fi} onBlur={fo} />
                 </Field>
 

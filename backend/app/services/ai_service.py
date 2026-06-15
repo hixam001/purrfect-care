@@ -152,7 +152,23 @@ def generate_answer(
             max_output_tokens=1024,
         ),
     )
-    answer = response.text.strip()
+
+    # Guard against empty responses (safety filter, quota, etc.)
+    answer = None
+    if response.candidates:
+        candidate = response.candidates[0]
+        finish_reason = getattr(candidate, "finish_reason", None)
+        logger.info("Finish reason: %s", finish_reason)
+        if hasattr(candidate, "content") and candidate.content and candidate.content.parts:
+            answer = "".join(
+                part.text for part in candidate.content.parts
+                if hasattr(part, "text") and part.text
+            ).strip()
+
+    if not answer:
+        logger.warning("Model returned empty response — using fallback.")
+        answer = "I don't have enough verified information on that topic. Please consult a licensed veterinarian."
+
     logger.info("Answer generated (%d chars)", len(answer))
     return answer
 
@@ -174,8 +190,18 @@ def ask_ai_companion(
     try:
         question_embedding = embed_query(question)
         chunks             = retrieve_context(db, question_embedding)
-        context_string     = build_context_string(chunks)
-        answer             = generate_answer(question, context_string, conversation_history)
+
+        # Short-circuit: no knowledge found — skip model call entirely
+        if not chunks:
+            logger.warning("No knowledge chunks retrieved — returning fallback answer.")
+            return {
+                "answer":          "I don't have enough verified information on that topic. Please consult a licensed veterinarian.",
+                "sources":         [],
+                "retrieved_count": 0,
+            }
+
+        context_string = build_context_string(chunks)
+        answer         = generate_answer(question, context_string, conversation_history)
     except Exception as exc:
         logger.exception("RAG pipeline FAILED: %s", exc)
         raise

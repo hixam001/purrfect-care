@@ -48,8 +48,10 @@ import StoreDetailPage    from './pages/StoreDetailPage.jsx'
 import AICompanionPage    from './pages/AICompanionPage.jsx'
 import MedicinesPage      from './pages/MedicinesPage.jsx'
 import ChatPage           from './pages/ChatPage.jsx'
+import ChatsInboxPage     from './pages/ChatsInboxPage.jsx'
 import MyCatsPage         from './pages/MyCatsPage.jsx'
 import SettingsPage       from './pages/SettingsPage.jsx'
+
 
 /* App pages — mobile */
 import MobileDashboard from './pages/mobile/MobileDashboard.jsx'
@@ -154,6 +156,7 @@ function AppRoutes() {
           <Route path="/book/:vetId"   element={<RequireAuth><BookingPage /></RequireAuth>} />
           <Route path="/ai-companion"  element={<RequireAuth><MobileAIChat /></RequireAuth>} />
           <Route path="/chat/:appointmentId" element={<RequireAuth><ChatPage /></RequireAuth>} />
+          <Route path="/chats"              element={<RequireAuth><ChatsInboxPage /></RequireAuth>} />
           <Route path="/store"         element={<MobileStore />} />
           <Route path="/store/:storeId" element={<StoreDetailPage />} />
           <Route path="/medicines"     element={<MedicinesPage />} />
@@ -187,8 +190,11 @@ function AppRoutes() {
           {/* AI Companion */}
           <Route path="/ai-companion"        element={<RequireAuth><AICompanionPage /></RequireAuth>} />
 
-          {/* Chat */}
+          {/* Chat — individual conversation */}
           <Route path="/chat/:appointmentId" element={<RequireAuth><ChatPage /></RequireAuth>} />
+
+          {/* Chats inbox — all conversations list */}
+          <Route path="/chats" element={<RequireAuth><ChatsInboxPage /></RequireAuth>} />
 
           {/* Store */}
           <Route path="/store"               element={<StorePage />} />
