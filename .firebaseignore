@@ -1,0 +1,70 @@
+# ============================================
+# Purrfect Care — .firebaseignore
+# Files listed here are NOT uploaded during
+# `firebase deploy`. Applies to Hosting &
+# Functions deploys.
+# ============================================
+
+# --- Secrets / Credentials ---
+.env
+.env.*
+.env.local
+*.env
+backend/.env
+backend/.env.local
+backend/.env.example
+firebase-credentials.json
+google-services.json
+GoogleService-Info.plist
+service-account*.json
+*.pem
+*.key
+*.p12
+*.p8
+*.mobileprovision
+
+# --- Backend source (deployed via Cloud Run, not Firebase Functions) ---
+backend/
+
+# --- Mobile source ---
+mobile/
+
+# --- Frontend source (only dist/ is deployed) ---
+frontend/src/
+frontend/public/
+frontend/index.html
+frontend/vite.config.*
+frontend/tsconfig.*
+frontend/package.json
+frontend/package-lock.json
+frontend/.env
+frontend/.env.*
+
+# --- Python artefacts ---
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+**/venv/
+**/.venv/
+
+# --- Node / Build tools ---
+**/node_modules/
+frontend/.vite/
+
+# --- Git & IDE ---
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# --- Logs & Temp ---
+*.log
+logs/
+*.bak
+*.tmp
+*.swp
+
+# --- OS ---
+.DS_Store
+Thumbs.db

@@ -4,18 +4,20 @@
 
 # --- Environment / Secrets ---
 # backend/.env is safe to track — contains ONLY non-secret vars (model names, ports, CORS)
-# backend/.env.local contains secrets and must NEVER be committed
+# All other .env files must NEVER be committed
 .env.local
 backend/.env.local
 *.env
 !**/.env.example
 !backend/.env
-!frontend/.env
-!frontend/.env.production
 firebase-credentials.json
 google-services.json
 GoogleService-Info.plist
 service-account*.json
+*.pem
+*.p12
+*.p8
+*.mobileprovision
 
 # --- Python ---
 __pycache__/
