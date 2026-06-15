@@ -13,9 +13,7 @@ from typing import Any
 from pydantic import BaseModel, EmailStr, Field
 
 
-# ──────────────────────────────────────────
 # Enumerations
-# ──────────────────────────────────────────
 
 class Role(str, Enum):
     """User roles matching the database CHECK constraint."""
@@ -26,9 +24,7 @@ class Role(str, Enum):
     ADMIN = "admin"
 
 
-# ──────────────────────────────────────────
 # User Models
-# ──────────────────────────────────────────
 
 class UserBase(BaseModel):
     """Shared user fields."""
@@ -91,9 +87,7 @@ class UserLoginResponse(BaseModel):
     token_type: str = "bearer"
 
 
-# ──────────────────────────────────────────
 # UserProfile Models
-# ──────────────────────────────────────────
 
 class UserProfileBase(BaseModel):
     """Shared user profile fields."""

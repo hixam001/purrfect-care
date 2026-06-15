@@ -12,9 +12,7 @@ from enum import Enum
 from pydantic import BaseModel, Field
 
 
-# ──────────────────────────────────────────
 # Enumerations
-# ──────────────────────────────────────────
 
 class OrderStatus(str, Enum):
     PENDING          = "pending"
@@ -27,9 +25,7 @@ class OrderStatus(str, Enum):
     REFUNDED         = "refunded"
 
 
-# ──────────────────────────────────────────
 # OrderItem Models
-# ──────────────────────────────────────────
 
 class OrderItemCreate(BaseModel):
     product_id: str
@@ -48,9 +44,7 @@ class OrderItemResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# ──────────────────────────────────────────
 # Order Models
-# ──────────────────────────────────────────
 
 class OrderCreate(BaseModel):
     """Request body — POST /api/orders (cat_owner)."""

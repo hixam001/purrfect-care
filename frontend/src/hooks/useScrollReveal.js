@@ -1,9 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-/**
- * Attach IntersectionObserver to elements with className "fade-up".
- * Adds "visible" class when element enters the viewport.
- */
+// Attach IntersectionObserver to elements with className "fade-up". | Adds "visible" class when element enters the viewport.
 export function useScrollReveal() {
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -24,10 +21,7 @@ export function useScrollReveal() {
   }, [])
 }
 
-/**
- * Returns a ref that when attached, adds the fade-up class and
- * self-observes for the visible trigger.
- */
+// Returns a ref that when attached, adds the fade-up class and | self-observes for the visible trigger.
 export function useFadeUp(delay = 0) {
   const ref = useRef(null)
 

@@ -47,9 +47,7 @@ class AuthService:
         self.service = service_client
         self.user_repo = UserRepository(service_client)
 
-    # ──────────────────────────────────────────────────
     # Registration
-    # ──────────────────────────────────────────────────
 
     def register_user(self, data: UserCreate) -> UserLoginResponse:
         """
@@ -153,9 +151,7 @@ class AuthService:
         )
 
 
-    # ──────────────────────────────────────────────────
     # Login
-    # ──────────────────────────────────────────────────
 
     def login_user(self, data: UserLoginRequest) -> UserLoginResponse:
         """
@@ -221,9 +217,7 @@ class AuthService:
             token_type="bearer",
         )
 
-    # ──────────────────────────────────────────────────
     # Logout
-    # ──────────────────────────────────────────────────
 
     def logout_user(self, access_token: str) -> None:
         """
@@ -236,9 +230,7 @@ class AuthService:
         except Exception as e:
             logger.warning(f"Supabase sign_out failed (non-fatal): {e}")
 
-    # ──────────────────────────────────────────────────
     # Token Refresh
-    # ──────────────────────────────────────────────────
 
     def refresh_session(self, refresh_token: str) -> UserLoginResponse:
         """
@@ -269,9 +261,7 @@ class AuthService:
             token_type="bearer",
         )
 
-    # ──────────────────────────────────────────────────
     # Password Reset
-    # ──────────────────────────────────────────────────
 
     def request_password_reset(self, email: str) -> None:
         """
@@ -285,9 +275,7 @@ class AuthService:
             # Log but do not surface — we never confirm whether the email exists
             logger.warning(f"Password reset for {email} failed (suppressed): {e}")
 
-    # ──────────────────────────────────────────────────
     # Get Current User Profile
-    # ──────────────────────────────────────────────────
 
     def get_current_profile(self, supabase_user_id: str) -> UserResponse:
         """
@@ -299,9 +287,7 @@ class AuthService:
             raise NotFoundException("User profile")
         return self._profile_to_response(profile)
 
-    # ──────────────────────────────────────────────────
     # Private Helpers
-    # ──────────────────────────────────────────────────
 
     @staticmethod
     def _profile_to_response(profile: dict) -> UserResponse:

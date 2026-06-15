@@ -96,10 +96,7 @@ export default function MobileSettings() {
                   style={{ backgroundColor:'#5e4749' }}>📷</div>
               </div>
               <span className="text-xs font-semibold" style={{ color:'#5e4749', fontFamily:'Plus Jakarta Sans, sans-serif' }}>Change photo</span>
-              <input type="file" accept="image/*" className="sr-only" onChange={handleAvatar} />
-            </label>
-
-            {/* Read-only fields from registration */}
+              <input type="file" accept="image// " className="sr-only" onChange={handleAvatar} /> | </label> | {/* Read-only fields from registration}
             {[
               { label:'Full name',    value: user?.name  ?? '', hint:'Set at registration' },
               { label:'Email',        value: user?.email ?? '', hint:'Cannot be changed'   },

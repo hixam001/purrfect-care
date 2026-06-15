@@ -1,10 +1,4 @@
-/**
- * SystemAdminLoginPage — Dedicated login portal for system administrators.
- * Accessible at /admin/login — intentionally NOT linked from the main navbar.
- *
- * Authentication is validated against the hardcoded admin account.
- * No registration option is exposed — admin accounts cannot be self-created.
- */
+// SystemAdminLoginPage — Dedicated login portal for system administrators. | Accessible at /admin/login — intentionally NOT linked from the main navbar. | Authentication is validated against the hardcoded admin account. | No registration option is exposed — admin accounts cannot be self-created.
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 

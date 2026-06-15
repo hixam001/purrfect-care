@@ -1,7 +1,4 @@
-/**
- * AppLayout — shared shell used by all inner pages (not auth pages).
- * Renders the Navbar + main content + Footer.
- */
+// AppLayout — shared shell used by all inner pages (not auth pages). | Renders the Navbar + main content + Footer.
 import { Link, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import Footer from '../components/Footer.jsx'

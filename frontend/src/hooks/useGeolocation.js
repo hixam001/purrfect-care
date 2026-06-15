@@ -1,10 +1,6 @@
 import { useState, useEffect } from 'react'
 
-/**
- * useGeolocation — requests browser location once on mount.
- * Returns { coords: { lat, lng }, loading, denied }.
- * 'denied' is true if the user blocked location or the browser can't access it.
- */
+// useGeolocation — requests browser location once on mount. | Returns { coords: { lat, lng }, loading, denied }. | 'denied' is true if the user blocked location or the browser can't access it.
 export function useGeolocation() {
   const [coords,  setCoords]  = useState(null)   // { lat, lng }
   const [loading, setLoading] = useState(true)
@@ -33,9 +29,7 @@ export function useGeolocation() {
   return { coords, loading, denied }
 }
 
-/**
- * haversineKm — great-circle distance in kilometres between two lat/lng points.
- */
+// haversineKm — great-circle distance in kilometres between two lat/lng points.
 export function haversineKm(lat1, lng1, lat2, lng2) {
   const R  = 6371
   const dL = ((lat2 - lat1) * Math.PI) / 180
@@ -48,10 +42,7 @@ export function haversineKm(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
-/**
- * sortByDistance — adds a `distKm` field and sorts nearest-first.
- * Falls back to the original order if no coords.
- */
+// sortByDistance — adds a `distKm` field and sorts nearest-first. | Falls back to the original order if no coords.
 export function sortByDistance(items, coords) {
   if (!coords) return items
   return [...items]
@@ -62,7 +53,7 @@ export function sortByDistance(items, coords) {
     .sort((a, b) => a.distKm - b.distKm)
 }
 
-/** fmtDist — formats km distance to a human-friendly string */
+// fmtDist — formats km distance to a human-friendly string
 export function fmtDist(km) {
   if (km == null) return null
   if (km < 1)    return `${Math.round(km * 1000)} m`

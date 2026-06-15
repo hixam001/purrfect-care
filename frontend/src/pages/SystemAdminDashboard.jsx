@@ -1,13 +1,10 @@
-/**
- * SystemAdminDashboard — Full platform administration panel.
- * All data is fetched live from the backend. No mock/static data.
- */
+// SystemAdminDashboard — Full platform administration panel. | All data is fetched live from the backend. No mock/static data.
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 const API = import.meta.env.VITE_API_URL || 'https://server-vmvwkwachq-uc.a.run.app'
 
-/* ── Colour palette ── */
+// ── Colour palette ──
 const C = {
   bg:          '#dbe8d8',
   surface:     'rgba(255,255,255,.88)',
@@ -97,7 +94,7 @@ function fmtDate(iso) {
   return new Date(iso).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })
 }
 
-/* ── Shared button styles ── */
+// ── Shared button styles ──
 const btnApprove = {
   background: C.oliveBg, color: C.olive, border: `1px solid ${C.oliveBorder}`,
   padding: '6px 14px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer',
@@ -107,7 +104,7 @@ const btnReject = {
   padding: '6px 14px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer',
 }
 
-/* ════════════════════════════════════════════════ */
+// ════════════════════════════════════════════════
 export default function SystemAdminDashboard() {
   const navigate = useNavigate()
 
@@ -128,7 +125,7 @@ export default function SystemAdminDashboard() {
   const [search,       setSearch]       = useState('')
   const [actionMsg,    setActionMsg]    = useState('')
 
-  /* ── API helpers ── */
+  // ── API helpers ──
   async function apiFetch(path, opts = {}) {
     const res = await fetch(`${API}${path}`, {
       ...opts,
@@ -191,7 +188,7 @@ export default function SystemAdminDashboard() {
     setTimeout(() => setActionMsg(''), 4000)
   }
 
-  /* ── Derived data ── */
+  // ── Derived data ──
   const hospitals    = allUsers.filter(u => u.role === 'hospital_admin')
   const stores       = allUsers.filter(u => u.role === 'store_owner')
   const vets         = allUsers.filter(u => u.role === 'vet')
@@ -213,7 +210,7 @@ export default function SystemAdminDashboard() {
     { id:'pending',   label:`Pending (${pendingCount})`,         icon:'⏳' },
   ]
 
-  /* ════════ PENDING USER CARD ════════ */
+  // ════════ PENDING USER CARD ════════
   function PendingCard({ u }) {
     const urls    = docUrls[u.id]
     const hasNoDocs = typeof urls === 'object' && Object.keys(urls).length === 0
@@ -271,7 +268,7 @@ export default function SystemAdminDashboard() {
     )
   }
 
-  /* ════════════════════════════════════════════════ */
+  // ════════════════════════════════════════════════
   return (
     <div className="min-h-screen" style={{ background: C.bg }}>
 

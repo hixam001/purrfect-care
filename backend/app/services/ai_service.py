@@ -34,9 +34,7 @@ def get_gemini_client() -> genai.Client:
     return _gemini_client
 
 
-# ---------------------------------------------------------------------------
 # Constants
-# ---------------------------------------------------------------------------
 
 EMBEDDING_MODEL  = settings.GEMINI_EMBEDDING_MODEL   # gemini-embedding-001
 CHAT_MODEL       = settings.GEMINI_CHAT_MODEL         # gemini-2.5-flash
@@ -56,9 +54,7 @@ RULES YOU MUST FOLLOW:
 6. If symptoms sound like an emergency, make that very clear and tell the owner to seek emergency veterinary care immediately."""
 
 
-# ---------------------------------------------------------------------------
 # Step 1: Embed the user's question
-# ---------------------------------------------------------------------------
 
 def embed_query(question: str) -> list[float]:
     """Converts a user question to a 768-dim vector (RETRIEVAL_QUERY task)."""
@@ -77,9 +73,7 @@ def embed_query(question: str) -> list[float]:
     return vector
 
 
-# ---------------------------------------------------------------------------
 # Step 2: Retrieve relevant chunks from Supabase
-# ---------------------------------------------------------------------------
 
 def retrieve_context(db: Client, question_embedding: list[float]) -> list[dict]:
     """Calls the match_cat_health Postgres RPC."""
@@ -97,9 +91,7 @@ def retrieve_context(db: Client, question_embedding: list[float]) -> list[dict]:
     return chunks
 
 
-# ---------------------------------------------------------------------------
 # Step 3: Build context string
-# ---------------------------------------------------------------------------
 
 def build_context_string(chunks: list[dict]) -> str:
     if not chunks:
@@ -112,9 +104,7 @@ def build_context_string(chunks: list[dict]) -> str:
     return "\n\n".join(parts)
 
 
-# ---------------------------------------------------------------------------
 # Step 4: Generate answer with Gemini Flash
-# ---------------------------------------------------------------------------
 
 def generate_answer(
     question: str,
@@ -125,8 +115,7 @@ def generate_answer(
                 CHAT_MODEL, len(conversation_history or []))
     client = get_gemini_client()
 
-    # Build message history in Gemini format
-    # Gemini uses: [{"role": "user"|"model", "parts": [{"text": "..."}]}]
+    # Build message history in Gemini format Gemini uses: [{"role": "user"|"model", "parts": [{"text": "..."}]}]
     contents = []
 
     if conversation_history:
@@ -173,9 +162,7 @@ def generate_answer(
     return answer
 
 
-# ---------------------------------------------------------------------------
 # Main public function
-# ---------------------------------------------------------------------------
 
 def ask_ai_companion(
     question: str,

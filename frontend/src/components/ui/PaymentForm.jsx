@@ -1,24 +1,10 @@
-/**
- * PaymentForm — Safepay-only payment.
- *
- * Calls the backend to create a Safepay session then redirects
- * the user to the Safepay-hosted checkout page. All payment
- * method selection (card, wallet, etc.) is handled by Safepay.
- *
- * Props:
- *   amount      : string  — formatted display string, e.g. "₨ 1,500/mo"
- *   amountPaisa : number  — amount in PKR paisa (e.g. 150000 = ₨ 1,500)
- *   orderId     : string  — unique order identifier
- *   title       : string  — plan name / billing label
- *   onBack      : () => void
- *   submitting  : bool    — if parent is already doing async work
- */
+// PaymentForm — Safepay-only payment. | Calls the backend to create a Safepay session then redirects | the user to the Safepay-hosted checkout page. All payment | method selection (card, wallet, etc.) is handled by Safepay. | Props: | amount      : string  — formatted display string, e.g. "₨ 1,500/mo" | amountPaisa : number  — amount in PKR paisa (e.g. 150000 = ₨ 1,500) | orderId     : string  — unique order identifier | title       : string  — plan name / billing label | onBack      : () => void | submitting  : bool    — if parent is already doing async work
 import { useState } from 'react'
 
 const API          = import.meta.env.VITE_API_URL || 'https://server-vmvwkwachq-uc.a.run.app'
 const APP_BASE_URL = 'https://purrfect-care-app.web.app'
 
-/** Parse "₨ 1,500/mo" or "₨ 15,000/yr" → integer paisa value */
+// Parse "₨ 1,500/mo" or "₨ 15,000/yr" → integer paisa value
 export function parsePaisa(amountStr = '') {
   const digits = amountStr.replace(/[^\d]/g, '')
   const pkr    = parseInt(digits, 10) || 0

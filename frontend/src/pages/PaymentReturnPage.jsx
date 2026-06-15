@@ -1,18 +1,4 @@
-/**
- * PaymentReturnPage
- *
- * Safepay redirects here after the user completes (or cancels) a payment.
- * Expected query params:
- *   status = "success" | "cancelled"
- *   order  = order ID string
- *   type   = "subscription" | "appointment" | "order" (optional — defaults to legacy flow)
- *
- * Behaviour:
- *   type=subscription + success → refresh subscription in AuthContext → redirect to dashboard
- *   type=subscription + cancelled → back to /subscription to try again
- *   anything else success → show pending review confirmation
- *   anything else cancelled → show cancelled screen
- */
+// PaymentReturnPage | Safepay redirects here after the user completes (or cancels) a payment. | Expected query params: | status = "success" | "cancelled" | order  = order ID string | type   = "subscription" | "appointment" | "order" (optional — defaults to legacy flow) | Behaviour: | type=subscription + success → refresh subscription in AuthContext → redirect to dashboard | type=subscription + cancelled → back to /subscription to try again | anything else success → show pending review confirmation | anything else cancelled → show cancelled screen
 import { useEffect, useState } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'

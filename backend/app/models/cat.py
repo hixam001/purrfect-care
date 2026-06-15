@@ -13,9 +13,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 
-# ──────────────────────────────────────────
 # Enumerations
-# ──────────────────────────────────────────
 
 class Gender(str, Enum):
     MALE   = "male"
@@ -31,9 +29,7 @@ class HistoryEntryType(str, Enum):
     NOTE         = "note"
 
 
-# ──────────────────────────────────────────
 # CatBreed Models
-# ──────────────────────────────────────────
 
 class CatBreedBase(BaseModel):
     name:                str   = Field(..., max_length=100)
@@ -54,9 +50,7 @@ class CatBreedResponse(CatBreedBase):
     model_config = {"from_attributes": True}
 
 
-# ──────────────────────────────────────────
 # Cat Models
-# ──────────────────────────────────────────
 
 class CatBase(BaseModel):
     name:         str     = Field(..., min_length=1, max_length=100)
@@ -96,9 +90,7 @@ class CatResponse(CatBase):
     model_config = {"from_attributes": True}
 
 
-# ──────────────────────────────────────────
 # MedicalRecord Models
-# ──────────────────────────────────────────
 
 class MedicalRecordBase(BaseModel):
     allergies:           list[str] = Field(default_factory=list)
@@ -125,9 +117,7 @@ class MedicalRecordResponse(MedicalRecordBase):
     model_config = {"from_attributes": True}
 
 
-# ──────────────────────────────────────────
 # PatientHistory Models
-# ──────────────────────────────────────────
 
 class PatientHistoryCreate(BaseModel):
     cat_id:          str

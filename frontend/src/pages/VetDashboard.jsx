@@ -1,12 +1,4 @@
-/**
- * VetDashboard
- *
- * Personal dashboard for Veterinarians (role === 'vet').
- * All data is fetched live:
- *   - Appointments  → GET /api/appointments/mine  (backend, bearer token)
- *   - Chat threads  → supabase chat_rooms where vet_id = this vet's ID
- *   - Profile       → AuthContext + supabase user_profiles
- */
+// VetDashboard | Personal dashboard for Veterinarians (role === 'vet'). | All data is fetched live: | - Appointments  → GET /api/appointments/mine  (backend, bearer token) | - Chat threads  → supabase chat_rooms where vet_id = this vet's ID | - Profile       → AuthContext + supabase user_profiles
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
@@ -14,7 +6,7 @@ import { supabase } from '../lib/supabaseClient.js'
 
 const API = import.meta.env.VITE_API_URL || 'https://us-central1-purrfect-care-app.cloudfunctions.net/server'
 
-/* ── Palette ─────────────────────────────────────────────────── */
+// ── Palette ───────────────────────────────────────────────────
 const C = {
   bg:          '#dbe8d8',
   surface:     'rgba(255,255,255,.88)',
@@ -31,7 +23,7 @@ const C = {
   greenText:   '#1E4D1C',
 }
 
-/* ── Mini components ──────────────────────────────────────────── */
+// ── Mini components ────────────────────────────────────────────
 function Panel({ children, className = '' }) {
   return (
     <div className={`rounded-2xl p-6 ${className}`}
@@ -109,11 +101,12 @@ function PatientAvatar({ name = '?' }) {
   )
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   MAIN COMPONENT
-═══════════════════════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════════════ | MAIN COMPONENT | ═══════════════════════════════════════════════════════════════
 export default function VetDashboard() {
-  const { user, logout } = useAuth()
+  const { user, logout, token } = useAuth()
+  const [saving,     setSaving]     = useState(false)
+  const [saveMsg,    setSaveMsg]    = useState('')
+  const [settingsForm, setSettingsForm] = useState({ name:'', phone:'', specialization:'', experience_years:'', bio:'' })
   const navigate = useNavigate()
 
   const [activeTab,    setActiveTab]    = useState('overview')
@@ -126,71 +119,84 @@ export default function VetDashboard() {
   const [loading,      setLoading]      = useState(true)
   const [error,        setError]        = useState(null)
 
-  /* ── Load vet profile + appointments + chat rooms ── */
+  // ── Load vet profile + appointments + chat rooms ──
   const load = useCallback(async () => {
     if (!user?.id) return
+
+    // Role check from AuthContext — bypasses Supabase RLS/session-timing issues
+    if (user.role !== 'vet') {
+      navigate('/dashboard', { replace: true }); return
+    }
+
     setLoading(true); setError(null)
 
     try {
-      // 1. Resolve profile + vet IDs (needed for chat_rooms query)
-      const { data: prof } = await supabase
-        .from('user_profiles')
-        .select('id, name, email, phone, role')
-        .eq('user_id', user.id)
-        .single()
-
-      if (!prof || prof.role !== 'vet') {
-        navigate('/dashboard', { replace: true }); return
-      }
-      setProfile(prof)
-      setMyProfileId(prof.id)
+      // 1. Use AuthContext user directly (already contains id, name, email, phone, role)
+      setProfile(user)
+      setMyProfileId(user.id)
 
       const { data: vetRow } = await supabase
         .from('vets')
         .select('id, specialization, experience_years, bio, rating, hospital_id, hospitals ( name, city )')
-        .eq('user_id', prof.id)
-        .single()
+        .eq('user_id', user.id)   // vets.user_id references user_profiles.id
+        .maybeSingle()
 
       setMyVetId(vetRow?.id ?? null)
 
-      // 2. Fetch appointments via backend (service-role bypasses RLS cleanly)
-      const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token') || ''
-      const res   = await fetch(`${API}/api/appointments/mine`, {
-        headers: { Authorization: `Bearer ${token}` },
+      // Prefill settings form
+      setSettingsForm({
+        name:             user.name             ?? '',
+        phone:            user.phone            ?? '',
+        specialization:   vetRow?.specialization  ?? '',
+        experience_years: vetRow?.experience_years ?? '',
+        bio:              vetRow?.bio              ?? '',
       })
-      if (res.ok) {
-        const appts = await res.json()
-        setAppointments(Array.isArray(appts) ? appts : [])
-      } else {
+
+      // 2. Fetch appointments via backend — errors are non-fatal
+      try {
+        const authToken = token || localStorage.getItem('pc_token') || ''
+        const res = await fetch(`${API}/api/appointments/mine`, {
+          headers: { Authorization: `Bearer ${authToken}` },
+        })
+        if (res.ok) {
+          const appts = await res.json()
+          setAppointments(Array.isArray(appts) ? appts : [])
+        }
+      } catch (_) {
+        // backend unavailable — show empty list, not hard error
         setAppointments([])
       }
 
-      // 3. Fetch chat rooms for this vet (with patient name + cat + latest message)
+      // 3. Fetch chat rooms for this vet — errors are non-fatal
       if (vetRow?.id) {
-        const { data: rooms } = await supabase
-          .from('chat_rooms')
-          .select(`
-            id, appointment_id, created_at,
-            appointments (
-              id, appointment_date, status,
-              cats ( name ),
-              user_profiles ( id, name )
-            )
-          `)
-          .eq('vet_id', vetRow.id)
-          .order('created_at', { ascending: false })
+        try {
+          const { data: rooms } = await supabase
+            .from('chat_rooms')
+            .select(`
+              id, appointment_id, created_at,
+              appointments (
+                id, appointment_date, status,
+                cats ( name ),
+                user_profiles ( id, name )
+              )
+            `)
+            .eq('vet_id', vetRow.id)
+            .order('created_at', { ascending: false })
 
-        setChatRooms(rooms ?? [])
+          setChatRooms(rooms ?? [])
+        } catch (_) {
+          setChatRooms([])
+        }
       }
     } catch (e) {
       setError(e.message)
     }
     setLoading(false)
-  }, [user?.id, navigate])
+  }, [user?.id, user?.role, token, navigate])
 
   useEffect(() => { load() }, [load])
 
-  /* ── Derived ── */
+  // ── Derived ──
   const today         = new Date().toISOString().slice(0, 10)
   const todayAppts    = appointments.filter(a => (a.appointment_date ?? '').slice(0, 10) === today)
   const upcomingAppts = appointments.filter(a => (a.appointment_date ?? '').slice(0, 10) >  today)
@@ -207,9 +213,11 @@ export default function VetDashboard() {
   const MAIN_TABS = [
     { id:'overview',     label:'Overview',     icon:'🏠' },
     { id:'appointments', label:'Appointments', icon:'📅' },
+    { id:'messages',     label:'Messages',     icon:'💬' },
+    { id:'settings',     label:'Settings',     icon:'⚙️' },
   ]
 
-  /* ── Loading / error states ── */
+  // ── Loading / error states ──
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: C.bg }}>
       <div className="text-[14px]" style={{ color: C.textMuted }}>Loading your dashboard…</div>
@@ -250,10 +258,11 @@ export default function VetDashboard() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 md:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-8">
 
         {/* ── Nav tabs ── */}
-        <div className="flex gap-2 mb-8 flex-wrap">
+        <div className="-mx-4 md:mx-0 mb-6 md:mb-8">
+          <div className="flex gap-2 px-4 md:px-0 overflow-x-auto pb-1" style={{ scrollbarWidth:'none' }}>
           {MAIN_TABS.map(t => (
             <button key={t.id} onClick={() => setActiveTab(t.id)}
                     className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[13px] font-semibold transition-all"
@@ -265,17 +274,7 @@ export default function VetDashboard() {
               {t.icon} {t.label}
             </button>
           ))}
-          {/* Messages links directly to full chat inbox page */}
-          <Link to="/chats"
-                className="flex items-center gap-2 px-5 py-2.5 rounded-2xl text-[13px] font-semibold transition-all no-underline"
-                style={{ background: C.surface, color: C.textMuted, border:`1px solid ${C.border}` }}>
-            💬 Messages {chatRooms.length > 0 && (
-              <span className="w-5 h-5 rounded-full text-[10px] flex items-center justify-center"
-                    style={{ background: C.olive, color:'#fff' }}>
-                {chatRooms.length}
-              </span>
-            )}
-          </Link>
+          </div>
         </div>
 
         {/* ════════════════════ OVERVIEW ════════════════════ */}
@@ -470,6 +469,137 @@ export default function VetDashboard() {
               </div>
             )}
           </Panel>
+        )}
+
+        {/* ════════════════════ MESSAGES ════════════════════ */}
+        {activeTab === 'messages' && (
+          <Panel>
+            <h2 className="font-display font-bold text-[1.1rem] mb-5" style={{ color: C.text }}>Patient Messages</h2>
+            {chatRooms.length === 0 ? (
+              <EmptyState icon="💬" title="No messages yet" sub="Chats with your patients will appear here once appointments are confirmed." />
+            ) : (
+              <div className="flex flex-col gap-2">
+                {chatRooms.map(r => {
+                  const appt    = r.appointments
+                  const patient = appt?.user_profiles?.name ?? 'Patient'
+                  const cat     = appt?.cats?.name ?? '—'
+                  const canChat = ['confirmed','in_progress'].includes(appt?.status)
+                  const statusStyle = STATUS_COLORS[appt?.status] ?? STATUS_COLORS.pending
+                  return (
+                    <div key={r.id}
+                         onClick={() => canChat && navigate(`/chat/${r.appointment_id}`)}
+                         className="flex items-center gap-4 p-4 rounded-2xl transition-all"
+                         style={{
+                           background:'rgba(0,0,0,.02)', border:`1px solid ${C.border}`,
+                           cursor: canChat ? 'pointer' : 'default',
+                           opacity: canChat ? 1 : 0.6,
+                         }}>
+                      <PatientAvatar name={patient} />
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-[14px] truncate" style={{ color: C.text }}>{patient}</div>
+                        <div className="text-[11px] mt-0.5" style={{ color: C.textMuted }}>
+                          🐱 {cat} · {fmtDate(appt?.appointment_date)}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-semibold"
+                              style={{ background: statusStyle.bg, color: statusStyle.text }}>
+                          {statusStyle.label}
+                        </span>
+                        {canChat && (
+                          <span className="text-[11px] font-bold" style={{ color: C.olive }}>Open chat →</span>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </Panel>
+        )}
+
+        {/* ════════════════════ SETTINGS ════════════════════ */}
+        {activeTab === 'settings' && (
+          <div className="max-w-xl space-y-4">
+            <Panel>
+              <h2 className="font-display font-bold text-[1.1rem] mb-5" style={{ color: C.text }}>Profile Settings</h2>
+              <div className="space-y-4">
+                {[{ key:'name', label:'Full Name', type:'text' }, { key:'phone', label:'Phone', type:'tel' }].map(({ key, label, type }) => (
+                  <div key={key}>
+                    <label className="block text-[12px] font-semibold mb-1.5" style={{ color: C.textMuted }}>{label}</label>
+                    <input type={type} value={settingsForm[key]}
+                           onChange={e => setSettingsForm(f => ({ ...f, [key]: e.target.value }))}
+                           className="w-full px-4 py-2.5 rounded-xl text-[13px] outline-none transition-all"
+                           style={{ background:'rgba(0,0,0,.03)', border:`1.5px solid ${C.border}`, color: C.text }} />
+                  </div>
+                ))}
+              </div>
+            </Panel>
+
+            <Panel>
+              <h2 className="font-display font-bold text-[1.1rem] mb-5" style={{ color: C.text }}>Vet Information</h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[12px] font-semibold mb-1.5" style={{ color: C.textMuted }}>Specialization</label>
+                  <input value={settingsForm.specialization}
+                         onChange={e => setSettingsForm(f => ({ ...f, specialization: e.target.value }))}
+                         className="w-full px-4 py-2.5 rounded-xl text-[13px] outline-none"
+                         style={{ background:'rgba(0,0,0,.03)', border:`1.5px solid ${C.border}`, color: C.text }} />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-semibold mb-1.5" style={{ color: C.textMuted }}>Years of Experience</label>
+                  <input type="number" min="0" value={settingsForm.experience_years}
+                         onChange={e => setSettingsForm(f => ({ ...f, experience_years: e.target.value }))}
+                         className="w-full px-4 py-2.5 rounded-xl text-[13px] outline-none"
+                         style={{ background:'rgba(0,0,0,.03)', border:`1.5px solid ${C.border}`, color: C.text }} />
+                </div>
+                <div>
+                  <label className="block text-[12px] font-semibold mb-1.5" style={{ color: C.textMuted }}>Bio</label>
+                  <textarea rows={4} value={settingsForm.bio}
+                            onChange={e => setSettingsForm(f => ({ ...f, bio: e.target.value }))}
+                            className="w-full px-4 py-2.5 rounded-xl text-[13px] outline-none resize-none"
+                            style={{ background:'rgba(0,0,0,.03)', border:`1.5px solid ${C.border}`, color: C.text }} />
+                </div>
+              </div>
+            </Panel>
+
+            {saveMsg && (
+              <div className="px-4 py-3 rounded-xl text-[13px] font-semibold text-center"
+                   style={{ background: saveMsg.startsWith('✅') ? C.greenBg : 'rgba(184,56,56,.08)',
+                            color: saveMsg.startsWith('✅') ? C.greenText : '#7D1F1F',
+                            border: `1px solid ${saveMsg.startsWith('✅') ? 'rgba(45,90,39,.2)' : 'rgba(184,56,56,.2)'}` }}>
+                {saveMsg}
+              </div>
+            )}
+
+            <button onClick={async () => {
+              setSaving(true); setSaveMsg('')
+              try {
+                // Update user_profiles
+                await supabase.from('user_profiles')
+                  .update({ name: settingsForm.name, phone: settingsForm.phone })
+                  .eq('id', myProfileId)
+                // Update vets row
+                if (myVetId) {
+                  await supabase.from('vets')
+                    .update({
+                      specialization:   settingsForm.specialization,
+                      experience_years: settingsForm.experience_years ? parseInt(settingsForm.experience_years) : null,
+                      bio:              settingsForm.bio,
+                    })
+                    .eq('id', myVetId)
+                }
+                setSaveMsg('✅ Profile saved successfully')
+              } catch (err) {
+                setSaveMsg('❌ Failed to save: ' + err.message)
+              } finally { setSaving(false) }
+            }}
+                    disabled={saving}
+                    className="w-full py-3 rounded-2xl font-bold text-[14px] text-white transition-all"
+                    style={{ background: C.olive, opacity: saving ? 0.7 : 1 }}>
+              {saving ? 'Saving…' : 'Save Changes'}
+            </button>
+          </div>
         )}
 
       </main>

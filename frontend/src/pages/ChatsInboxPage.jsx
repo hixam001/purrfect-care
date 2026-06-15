@@ -1,27 +1,10 @@
-/**
- * ChatsInboxPage — /chats
- *
- * A unified chat inbox that auto-detects the logged-in user's role:
- *
- *  Patient  → shows all chat rooms where they are the patient
- *             (appointment status: confirmed / in_progress)
- *  Vet      → shows all chat rooms where vet_id = their vet profile
- *
- * Each conversation card shows:
- *   • Other person's name + avatar initial
- *   • Cat name
- *   • Appointment date & status
- *   • Click anywhere → /chat/:appointmentId
- *
- * This page is intentionally standalone (no AppLayout wrapper)
- * so it works seamlessly in both mobile and desktop contexts.
- */
+// ChatsInboxPage — /chats | A unified chat inbox that auto-detects the logged-in user's role: | Patient  → shows all chat rooms where they are the patient | (appointment status: confirmed / in_progress) | Vet      → shows all chat rooms where vet_id = their vet profile | Each conversation card shows: | • Other person's name + avatar initial | • Cat name | • Appointment date & status | • Click anywhere → /chat/:appointmentId | This page is intentionally standalone (no AppLayout wrapper) | so it works seamlessly in both mobile and desktop contexts.
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useNavigate }                from 'react-router-dom'
 import { useAuth }                          from '../context/AuthContext.jsx'
 import { supabase }                         from '../lib/supabaseClient.js'
 
-/* ── Palette ─────────────────────────────────────────────── */
+// ── Palette ───────────────────────────────────────────────
 const C = {
   bg:          '#dbe8d8',
   surface:     'rgba(255,255,255,.90)',
@@ -42,7 +25,7 @@ const C = {
   redText:     '#7D1F1F',
 }
 
-/* ── Status colour map ─────────────────────────────────────── */
+// ── Status colour map ───────────────────────────────────────
 const STATUS = {
   confirmed:   { bg: C.oliveBg,  text: C.olive,     label: 'Confirmed'    },
   pending:     { bg: C.amberBg,  text: C.amberText,  label: 'Pending'     },
@@ -92,9 +75,7 @@ function fmtApptDate(iso) {
   return new Date(iso).toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' })
 }
 
-/* ═══════════════════════════════════════════════════════════
-   MAIN
-═══════════════════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════════ | MAIN | ═══════════════════════════════════════════════════════════
 export default function ChatsInboxPage() {
   const { user, logout } = useAuth()
   const navigate         = useNavigate()
@@ -211,17 +192,17 @@ export default function ChatsInboxPage() {
 
   useEffect(() => { load() }, [load])
 
-  /* ── back destination ── */
+  // ── back destination ──
   const backTo = role === 'vet' ? '/vet-dashboard' : '/dashboard'
 
-  /* ── Loading ── */
+  // ── Loading ──
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: C.bg }}>
       <div className="text-[14px]" style={{ color: C.textMuted }}>Loading conversations…</div>
     </div>
   )
 
-  /* ── Error ── */
+  // ── Error ──
   if (error) return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: C.bg }}>
       <div className="text-center max-w-xs">
@@ -265,7 +246,7 @@ export default function ChatsInboxPage() {
       <main className="max-w-2xl mx-auto px-4 py-6">
 
         {rooms.length === 0 ? (
-          /* ── Empty state ── */
+          // ── Empty state ──
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <div className="w-20 h-20 rounded-3xl flex items-center justify-center text-4xl mb-5"
                  style={{ background: C.oliveBg, border:`1px solid ${C.oliveBorder}` }}>
@@ -288,7 +269,7 @@ export default function ChatsInboxPage() {
             )}
           </div>
         ) : (
-          /* ── Conversation list ── */
+          // ── Conversation list ──
           <div className="flex flex-col gap-3">
             {rooms.map(r => (
               <ConversationCard key={r.roomId} room={r} isVet={isVet} />
@@ -300,7 +281,7 @@ export default function ChatsInboxPage() {
   )
 }
 
-/* ── Single conversation card ── */
+// ── Single conversation card ──
 function ConversationCard({ room, isVet }) {
   const navigate = useNavigate()
 

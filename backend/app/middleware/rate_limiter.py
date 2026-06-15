@@ -29,10 +29,7 @@ from starlette.responses import JSONResponse
 from starlette.types import ASGIApp, Receive, Scope, Send
 
 
-# ---------------------------------------------------------------------------
-# Tier definitions: (path_prefix, max_requests, window_seconds)
-# Evaluated in order; first match wins.
-# ---------------------------------------------------------------------------
+# Tier definitions: (path_prefix, max_requests, window_seconds) Evaluated in order; first match wins.
 _TIERS = [
     ("/api/auth/password",  5,   60),   # strict — password reset
     ("/api/auth",          15,   60),   # auth endpoints
@@ -127,10 +124,7 @@ class RateLimitMiddleware:
         await self.app(scope, receive, send)
 
 
-# ---------------------------------------------------------------------------
-# Decorators kept as no-ops so controller signatures are unchanged.
-# Rate limiting is now entirely handled by RateLimitMiddleware above.
-# ---------------------------------------------------------------------------
+# Decorators kept as no-ops so controller signatures are unchanged. Rate limiting is now entirely handled by RateLimitMiddleware above.
 def _noop(fn: Callable) -> Callable:
     return fn
 

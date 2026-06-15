@@ -37,9 +37,7 @@ router   = APIRouter()
 security = HTTPBearer()
 
 
-# ──────────────────────────────────────────────────────────
 # Dependency: build AuthService from the two Supabase clients
-# ──────────────────────────────────────────────────────────
 
 def get_auth_service(
     anon_client=Depends(get_supabase_anon_client),
@@ -52,9 +50,7 @@ def get_auth_service(
     return AuthService(anon_client=anon_client, service_client=service_client)
 
 
-# ──────────────────────────────────────────────────────────
 # Request / Response helpers
-# ──────────────────────────────────────────────────────────
 
 class RefreshRequest(BaseModel):
     refresh_token: str
@@ -64,9 +60,7 @@ class PasswordResetRequest(BaseModel):
     email: EmailStr
 
 
-# ──────────────────────────────────────────────────────────
 # Routes
-# ──────────────────────────────────────────────────────────
 
 @router.post(
     "/register",

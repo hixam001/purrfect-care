@@ -1,13 +1,4 @@
-/**
- * SettingsPage — user account & app settings.
- *
- * Sections:
- *  1. Profile — name, phone, city, avatar URL
- *  2. Password — change password via Supabase Auth
- *  3. Notifications — notification preferences
- *  4. Privacy — account visibility preferences
- *  5. Danger zone — delete account link
- */
+// SettingsPage — user account & app settings. | Sections: | 1. Profile — name, phone, city, avatar URL | 2. Password — change password via Supabase Auth | 3. Notifications — notification preferences | 4. Privacy — account visibility preferences | 5. Danger zone — delete account link
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -15,7 +6,7 @@ import { supabase } from '../lib/supabaseClient.js'
 import { Badge, BtnOlive, BtnOutline, Card, GlassCard } from '../components/ui/index.jsx'
 import { useFadeUp } from '../hooks/useScrollReveal.js'
 
-/* ─── section tab list ─────────────────────────────────────── */
+// ─── section tab list ───────────────────────────────────────
 const TABS = [
   { id: 'profile',       icon: '👤', label: 'Profile'       },
   { id: 'security',      icon: '🔐', label: 'Security'      },
@@ -23,7 +14,7 @@ const TABS = [
   { id: 'privacy',       icon: '🛡',  label: 'Privacy'       },
 ]
 
-/* ─── reusable field row ─────────────────────────────────────── */
+// ─── reusable field row ───────────────────────────────────────
 function FieldLabel({ children }) {
   return (
     <label className="t-mono text-[10px] block mb-1.5 uppercase tracking-widest text-clay-muted">
@@ -56,7 +47,7 @@ function InputField({ id, type = 'text', value, onChange, placeholder, disabled 
   )
 }
 
-/* ─── toast helper ──────────────────────────────────────────── */
+// ─── toast helper ────────────────────────────────────────────
 function Toast({ message, type = 'success', onDone }) {
   useEffect(() => {
     const t = setTimeout(onDone, 3500)
@@ -80,7 +71,7 @@ function Toast({ message, type = 'success', onDone }) {
   )
 }
 
-/* ─── Profile section ──────────────────────────────────────── */
+// ─── Profile section ────────────────────────────────────────
 function ProfileSection({ user }) {
   const fileRef = useRef()
   const [city,      setCity]      = useState('')
@@ -89,13 +80,13 @@ function ProfileSection({ user }) {
   const [saving,    setSaving]    = useState(false)
   const [toast,     setToast]     = useState(null)
 
-  /* Pre-fill from registration data */
+  // Pre-fill from registration data
   useEffect(() => {
     setCity(user?.city ?? '')
     setAvatarSrc(user?.avatar_url ?? null)
   }, [user])
 
-  /* Photo picker → upload to Supabase Storage */
+  // Photo picker → upload to Supabase Storage
   async function handlePhoto(e) {
     const file = e.target.files?.[0]
     if (!file || !user?.id) return
@@ -113,7 +104,7 @@ function ProfileSection({ user }) {
       .from('avatars')
       .getPublicUrl(data.path)
     setAvatarSrc(publicUrl)
-    /* Immediately persist the new avatar_url */
+    // Immediately persist the new avatar_url
     await supabase
       .from('user_profiles')
       .update({ avatar_url: publicUrl, updated_at: new Date().toISOString() })
@@ -160,16 +151,7 @@ function ProfileSection({ user }) {
           >
             <span className="text-white text-[10px] font-bold">{uploading ? 'Uploading…' : 'Change'}</span>
           </div>
-          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
-        </div>
-        <div>
-          <div className="font-semibold text-[14px] text-espresso">Profile Photo</div>
-          <div className="text-[12px] text-clay-muted mt-0.5">Click to upload a new photo</div>
-          <div className="text-[11px] text-clay-muted mt-1">JPG, PNG or WebP · max 5 MB</div>
-        </div>
-      </div>
-
-      {/* Read-only info from registration */}
+          <input ref={fileRef} type="file" accept="image// " className="hidden" onChange={handlePhoto} /> | </div> | <div> | <div className="font-semibold text-[14px] text-espresso">Profile Photo</div> | <div className="text-[12px] text-clay-muted mt-0.5">Click to upload a new photo</div> | <div className="text-[11px] text-clay-muted mt-1">JPG, PNG or WebP · max 5 MB</div> | </div> | </div> | {/* Read-only info from registration}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <div>
           <FieldLabel>Full Name</FieldLabel>
@@ -214,7 +196,7 @@ function ProfileSection({ user }) {
   )
 }
 
-/* ─── Security section ─────────────────────────────────────── */
+// ─── Security section ───────────────────────────────────────
 function SecuritySection() {
   const [form,   setForm]   = useState({ current: '', next: '', confirm: '' })
   const [saving, setSaving] = useState(false)
@@ -287,7 +269,7 @@ function SecuritySection() {
   )
 }
 
-/* ─── Notifications section ────────────────────────────────── */
+// ─── Notifications section ──────────────────────────────────
 function NotificationsSection({ user }) {
   const prefs = user?.preferences ?? {}
   const [notif, setNotif] = useState({
@@ -357,7 +339,7 @@ function NotificationsSection({ user }) {
   )
 }
 
-/* ─── Privacy section ──────────────────────────────────────── */
+// ─── Privacy section ────────────────────────────────────────
 function PrivacySection() {
   return (
     <div className="flex flex-col gap-5 max-w-lg">
@@ -385,7 +367,7 @@ function PrivacySection() {
   )
 }
 
-/* ─── Main page ─────────────────────────────────────────────── */
+// ─── Main page ───────────────────────────────────────────────
 export default function SettingsPage() {
   const { user, logout } = useAuth()
   const headerRef = useFadeUp(0)

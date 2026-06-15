@@ -6,7 +6,7 @@ import {
   BubbleVet, BubbleUser,
 } from './ui/index.jsx'
 
-/* ── Sub-panels ──────────────────────────────────── */
+// ── Sub-panels ────────────────────────────────────
 
 function ClinicMap() {
   return (
@@ -257,7 +257,7 @@ function Prescriptions() {
   )
 }
 
-/* ── Main ──────────────────────────────────────────── */
+// ── Main ────────────────────────────────────────────
 export default function FeatureBento() {
   const headerRef = useFadeUp(0)
   const bentoRef  = useFadeUp(0.1)

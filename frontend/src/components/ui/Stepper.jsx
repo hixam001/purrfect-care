@@ -1,9 +1,4 @@
-/**
- * Stepper — reusable multi-step progress indicator.
- * Props:
- *   steps   : string[]   — step labels
- *   current : number     — 0-indexed active step
- */
+// Stepper — reusable multi-step progress indicator. | Props: | steps   : string[]   — step labels | current : number     — 0-indexed active step
 export default function Stepper({ steps, current }) {
   return (
     <div className="w-full mb-8">

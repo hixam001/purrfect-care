@@ -12,9 +12,7 @@ from enum import Enum
 from pydantic import BaseModel, Field
 
 
-# ──────────────────────────────────────────
 # Enumerations
-# ──────────────────────────────────────────
 
 class PaymentStatus(str, Enum):
     PENDING   = "pending"
@@ -23,9 +21,7 @@ class PaymentStatus(str, Enum):
     REFUNDED  = "refunded"
 
 
-# ──────────────────────────────────────────
 # Payment Models
-# ──────────────────────────────────────────
 
 class PaymentCreate(BaseModel):
     """Request body — POST /api/payments/initiate"""

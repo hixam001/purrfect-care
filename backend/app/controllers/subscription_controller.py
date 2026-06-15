@@ -42,9 +42,7 @@ def _checkout_url(tracker: str, settings: Settings) -> str:
     return f"https://www.getsafepay.com/checkout/pay/{tracker}?env=production"
 
 
-# ──────────────────────────────────────────────────────────────
 # Helpers
-# ──────────────────────────────────────────────────────────────
 
 def _get_profile_id(user: AuthenticatedUser, sb) -> str:
     """Resolve Supabase auth UID → user_profiles.id."""
@@ -80,9 +78,7 @@ def _active_subscription(profile_id: str, sb) -> dict | None:
     return row.data[0] if row.data else None
 
 
-# ──────────────────────────────────────────────────────────────
 # Routes
-# ──────────────────────────────────────────────────────────────
 
 @router.get("/plans", response_model=list[SubscriptionPlan])
 async def list_plans(

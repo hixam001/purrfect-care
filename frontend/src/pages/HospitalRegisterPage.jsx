@@ -30,7 +30,7 @@ export default function HospitalRegisterPage() {
   const navigate = useNavigate()
   const [step, setStep]         = useState(0)
 
-  /* Step 0 — Hospital Info */
+  // Step 0 — Hospital Info
   const [hospName, setHospName]   = useState('')
   const [hospType, setHospType]   = useState('')
   const [license,  setLicense]    = useState('')
@@ -38,14 +38,14 @@ export default function HospitalRegisterPage() {
   const [address,  setAddress]    = useState('')
   const [phone,    setPhone]      = useState('')
 
-  /* Step 1 — Admin Account */
+  // Step 1 — Admin Account
   const [adminName,  setAdminName]  = useState('')
   const [adminEmail, setAdminEmail] = useState('')
   const [adminCnic,  setAdminCnic]  = useState('')
   const [password,   setPassword]   = useState('')
   const [confirm,    setConfirm]    = useState('')
 
-  /* Step 2 — Documents */
+  // Step 2 — Documents
   const [hospDocs, setHospDocs] = useState({})
 
   const [err,        setErr]        = useState('')
@@ -76,7 +76,7 @@ export default function HospitalRegisterPage() {
   function next() { setErr(''); setStep(s => s + 1) }
   function back() { setErr(''); setStep(s => s - 1) }
 
-  /* Auto-request location when the form first loads (step 0 is hospital info) */
+  // Auto-request location when the form first loads (step 0 is hospital info)
   useEffect(() => {
     if (step === 0 && lat === null && !geoLoading) {
       handleGetLocation()
@@ -99,10 +99,7 @@ export default function HospitalRegisterPage() {
     return true
   }
 
-  /**
-   * Step 2 (Documents) → Done: register the account + upload docs.
-   * All earlier steps: just validate and advance.
-   */
+  // Step 2 (Documents) → Done: register the account + upload docs. | All earlier steps: just validate and advance.
   async function handleNext() {
     setErr('')
     if (!validateStep()) return

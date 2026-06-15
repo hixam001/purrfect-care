@@ -13,9 +13,7 @@ from typing import Any
 from pydantic import BaseModel, EmailStr, Field
 
 
-# ──────────────────────────────────────────
 # Enumerations
-# ──────────────────────────────────────────
 
 class ServiceCategory(str, Enum):
     CHECKUP     = "checkup"
@@ -27,9 +25,7 @@ class ServiceCategory(str, Enum):
     EMERGENCY   = "emergency"
 
 
-# ──────────────────────────────────────────
 # HospitalService Models
-# ──────────────────────────────────────────
 
 class HospitalServiceBase(BaseModel):
     name:             str   = Field(..., max_length=100)
@@ -60,9 +56,7 @@ class HospitalServiceResponse(HospitalServiceBase):
     model_config = {"from_attributes": True}
 
 
-# ──────────────────────────────────────────
 # Hospital Models
-# ──────────────────────────────────────────
 
 class HospitalBase(BaseModel):
     name:            str   = Field(..., max_length=200)
@@ -109,9 +103,7 @@ class HospitalResponse(HospitalBase):
     model_config = {"from_attributes": True}
 
 
-# ──────────────────────────────────────────
 # AppointmentSlot shorthand (used by hospital admins to create slots)
-# ──────────────────────────────────────────
 
 class SlotCreate(BaseModel):
     """Request body — POST /api/hospitals/{id}/slots (hospital_admin)."""

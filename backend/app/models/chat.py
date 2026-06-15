@@ -12,9 +12,7 @@ from enum import Enum
 from pydantic import BaseModel, Field
 
 
-# ──────────────────────────────────────────
 # Enumerations
-# ──────────────────────────────────────────
 
 class MessageType(str, Enum):
     TEXT               = "text"
@@ -23,9 +21,7 @@ class MessageType(str, Enum):
     PRESCRIPTION_SHARE = "prescription_share"
 
 
-# ──────────────────────────────────────────
 # ChatRoom Models
-# ──────────────────────────────────────────
 
 class ChatRoomCreate(BaseModel):
     """Request body — POST /api/chat/rooms (initiates a new room)."""
@@ -45,9 +41,7 @@ class ChatRoomResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# ──────────────────────────────────────────
 # Message Models
-# ──────────────────────────────────────────
 
 class MessageCreate(BaseModel):
     """Request body — POST /api/chat/rooms/{id}/messages"""

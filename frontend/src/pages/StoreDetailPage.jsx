@@ -21,7 +21,7 @@ export default function StoreDetailPage() {
   const [cart,      setCart]      = useState([])
   const [cartOpen,  setCartOpen]  = useState(false)
 
-  /* ── Checkout flow state ─────────────────────── */
+  // ── Checkout flow state ───────────────────────
   const [checkoutOpen,    setCheckoutOpen]    = useState(false)
   const [deliveryAddress, setDeliveryAddress] = useState('')
   const [deliveryLat,     setDeliveryLat]     = useState(null)
@@ -78,7 +78,7 @@ export default function StoreDetailPage() {
     load()
   }, [storeId])
 
-  /* ── Cart helpers ───────────────────────────── */
+  // ── Cart helpers ─────────────────────────────
   function addToCart(p) {
     setCart(c => {
       const ex = c.find(x => x.id === p.id)
@@ -102,7 +102,7 @@ export default function StoreDetailPage() {
            (catFilter === 'All' || p.product_categories?.name === catFilter)
   })
 
-  /* ── Geolocation for delivery ───────────────── */
+  // ── Geolocation for delivery ─────────────────
   function handleDeliveryLocation() {
     if (!navigator.geolocation) return
     setGeoLoading(true)
@@ -117,7 +117,7 @@ export default function StoreDetailPage() {
     )
   }
 
-  /* ── Checkout ────────────────────────────────── */
+  // ── Checkout ──────────────────────────────────
   async function handleCheckout() {
     if (!user) { navigate('/login'); return }
     if (!deliveryAddress.trim()) { setCheckoutErr('Please enter a delivery address.'); return }
@@ -176,7 +176,7 @@ export default function StoreDetailPage() {
     }
   }
 
-  /* ── Guards ─────────────────────────────────── */
+  // ── Guards ───────────────────────────────────
   if (loading) return (
     <div className="max-w-7xl mx-auto px-4 py-16 text-center">
       <div className="text-clay-muted">Loading store…</div>
@@ -190,7 +190,7 @@ export default function StoreDetailPage() {
     </div>
   )
 
-  /* ── Input style helpers ─────────────────────── */
+  // ── Input style helpers ───────────────────────
   const iCls = "w-full px-4 py-3 rounded-xl text-[14px] text-espresso outline-none transition-all"
   const iSty = { background: 'rgba(255,255,255,.9)', border: '1.5px solid #b8ceb5' }
   const fi   = e => { e.target.style.borderColor = '#5e4749'; e.target.style.boxShadow = '0 0 0 3px rgba(85,107,47,.12)' }

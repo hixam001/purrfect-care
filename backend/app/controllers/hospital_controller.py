@@ -4,7 +4,8 @@ Hospital Controller
 Endpoints for hospital management, including vet registration.
 
 Routes:
-  POST /api/hospitals/vets  — Hospital admin registers a new vet account
+  GET  /api/hospitals/{hospital_id}/vets  — Public: list verified vets with names
+  POST /api/hospitals/vets                — Hospital admin registers a new vet account
 """
 
 import logging
@@ -81,8 +82,7 @@ async def register_vet(
 
     hospital_id = hospital["id"]
 
-    # 3. Create Supabase Auth user using Admin API (service role key bypasses
-    #    email confirmation and doesn't affect the caller's session)
+    # 3. Create Supabase Auth user using Admin API (service role key bypasses email confirmation and doesn't affect the caller's session)
     try:
         auth_result = db.auth.admin.create_user({
             "email":            body.email,
@@ -180,3 +180,41 @@ async def register_vet(
         "email":      body.email,
         "hospital":   hospital["name"],
     }
+
+
+@router.get(
+    "/{hospital_id}/vets",
+    summary="List verified vets for a hospital (public)",
+    description=(
+        "Returns all verified vets for a given hospital, including their name "
+        "and specialization. No authentication required. Uses the service-role "
+        "client to bypass RLS on user_profiles."
+    ),
+)
+async def list_hospital_vets(
+    hospital_id: str,
+    db=Depends(get_supabase_client),
+):
+    # Fetch vets from DB (service role bypasses all RLS)
+    vets_result = (
+        db.table("vets")
+        .select(
+            "id, specialization, experience_years, bio, rating, total_reviews, "
+            "user_profiles ( id, name, avatar_url )"
+        )
+        .eq("hospital_id", hospital_id)
+        .eq("is_verified", True)
+        .execute()
+    )
+    vets = vets_result.data or []
+
+    # Flatten: pull name/avatar from nested user_profiles
+    result = []
+    for v in vets:
+        prof = v.pop("user_profiles", None) or {}
+        result.append({
+            **v,
+            "name":       prof.get("name", "Veterinarian"),
+            "avatar_url": prof.get("avatar_url"),
+        })
+    return result

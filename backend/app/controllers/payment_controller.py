@@ -99,9 +99,7 @@ async def create_payment_session(
     }
 
 
-# ─────────────────────────────────────────────────────────────
 # Order payment session (store order with 1.5% platform fee)
-# ─────────────────────────────────────────────────────────────
 
 class OrderPaymentRequest(BaseModel):
     order_id: str          # your internal order ref
@@ -157,9 +155,7 @@ async def create_order_payment_session(
     }
 
 
-# ─────────────────────────────────────────────────────────────
 # Appointment payment session (₨500 fixed + 1.5% = ₨508)
-# ─────────────────────────────────────────────────────────────
 
 class AppointmentPaymentRequest(BaseModel):
     appointment_ref: str   # internal reference (for order_id)

@@ -1,11 +1,11 @@
-/** Shared UI primitives for the Purrfect Care design system */
+// Shared UI primitives for the Purrfect Care design system
 
-/** Badge/label using JetBrains Mono */
+// Badge/label using JetBrains Mono
 export function Badge({ children, className = '' }) {
   return <span className={`t-label ${className}`}>{children}</span>
 }
 
-/** Coloured pill */
+// Coloured pill
 export function Pill({ children, variant = 'green', className = '' }) {
   const variants = {
     green: 'pill-green',
@@ -19,7 +19,7 @@ export function Pill({ children, variant = 'green', className = '' }) {
   )
 }
 
-/** Primary olive button */
+// Primary olive button
 export function BtnOlive({ children, href = '#', className = '', onClick }) {
   const base = `btn btn-olive ${className}`
   return href !== '#'
@@ -27,7 +27,7 @@ export function BtnOlive({ children, href = '#', className = '', onClick }) {
     : <button className={base} onClick={onClick}>{children}</button>
 }
 
-/** Outline button */
+// Outline button
 export function BtnOutline({ children, href = '#', className = '', onClick }) {
   const base = `btn btn-outline ${className}`
   return href !== '#'
@@ -35,20 +35,20 @@ export function BtnOutline({ children, href = '#', className = '', onClick }) {
     : <button className={base} onClick={onClick}>{children}</button>
 }
 
-/** Ghost light button (for dark backgrounds) */
+// Ghost light button (for dark backgrounds)
 export function BtnGhostLight({ children, href = '#', className = '' }) {
   return (
     <a href={href} className={`btn btn-ghost-light ${className}`}>{children}</a>
   )
 }
 
-/** Animated pulse dot (online indicator) */
+// Animated pulse dot (online indicator)
 export function PulseDot({ size = 'md', className = '' }) {
   const sz = size === 'sm' ? 'w-[7px] h-[7px]' : 'w-2 h-2'
   return <span className={`pulse-dot ${sz} ${className}`} />
 }
 
-/** Progress bar with olive fill */
+// Progress bar with olive fill
 export function ProgressBar({ pct = 50, colorClass = '', className = '' }) {
   return (
     <div className={`prog-track ${className}`}>
@@ -60,7 +60,7 @@ export function ProgressBar({ pct = 50, colorClass = '', className = '' }) {
   )
 }
 
-/** Star rating */
+// Star rating
 export function Stars({ rating = 5, count, className = '' }) {
   const full  = Math.floor(rating)
   const empty = 5 - full
@@ -72,7 +72,7 @@ export function Stars({ rating = 5, count, className = '' }) {
   )
 }
 
-/** Card (oat background) */
+// Card (oat background)
 export function Card({ children, className = '', style }) {
   return (
     <div className={`card ${className}`} style={style}>
@@ -81,7 +81,7 @@ export function Card({ children, className = '', style }) {
   )
 }
 
-/** Frosted-glass card */
+// Frosted-glass card
 export function GlassCard({ children, className = '', style }) {
   return (
     <div className={`card-glass ${className}`} style={style}>
@@ -90,22 +90,22 @@ export function GlassCard({ children, className = '', style }) {
   )
 }
 
-/** Feature icon box */
+// Feature icon box
 export function FeatIcon({ children, className = '' }) {
   return <div className={`feat-icon ${className}`}>{children}</div>
 }
 
-/** Chat bubble — vet side */
+// Chat bubble — vet side
 export function BubbleVet({ children }) {
   return <div className="bubble-vet">{children}</div>
 }
 
-/** Chat bubble — user side */
+// Chat bubble — user side
 export function BubbleUser({ children }) {
   return <div className="bubble-user">{children}</div>
 }
 
-/** Stat chip (rounded pill with blur) */
+// Stat chip (rounded pill with blur)
 export function StatChip({ children, className = '' }) {
   return <div className={`stat-chip ${className}`}>{children}</div>
 }

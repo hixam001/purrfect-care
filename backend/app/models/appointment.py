@@ -12,9 +12,7 @@ from pydantic import BaseModel, Field
 from enum import Enum
 
 
-# ──────────────────────────────────────────
 # Enumerations
-# ──────────────────────────────────────────
 
 class AppointmentStatus(str, Enum):
     PENDING     = "pending"
@@ -25,9 +23,7 @@ class AppointmentStatus(str, Enum):
     NO_SHOW     = "no_show"
 
 
-# ──────────────────────────────────────────
 # AppointmentSlot Models
-# ──────────────────────────────────────────
 
 class AppointmentSlotBase(BaseModel):
     hospital_id:  str
@@ -50,9 +46,7 @@ class AppointmentSlotResponse(AppointmentSlotBase):
     model_config = {"from_attributes": True}
 
 
-# ──────────────────────────────────────────
 # Appointment Models
-# ──────────────────────────────────────────
 
 class AppointmentBase(BaseModel):
     cat_id:           str

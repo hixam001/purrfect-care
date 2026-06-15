@@ -83,7 +83,7 @@ async def get_my_appointments(
         db.table("appointments")
         .select(
             "id, appointment_date, status, notes, amount_paid, created_at, "
-            "cats ( name, breed, age ), "
+            "cats ( name, breed_id, age_months ), "
             "user_profiles ( name, email, phone ), "
             "hospitals ( name, city ), "
             "hospital_services ( name, duration_minutes ), "

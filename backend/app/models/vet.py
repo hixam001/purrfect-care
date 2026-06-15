@@ -10,9 +10,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 
-# ──────────────────────────────────────────
 # Vet Models
-# ──────────────────────────────────────────
 
 class VetBase(BaseModel):
     license_number:   str   = Field(..., min_length=1, max_length=50)

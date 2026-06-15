@@ -2,10 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 
-/* Only publicly self-registerable roles.
-   Vets must be registered by a Hospital Admin → /hospital/register.
-   Store Owners must apply and be verified → /store/register.
-   Hospital Admins and System Admins are provisioned separately.  */
+// Only publicly self-registerable roles. | Vets must be registered by a Hospital Admin → /hospital/register. | Store Owners must apply and be verified → /store/register. | Hospital Admins and System Admins are provisioned separately.
 const ROLES = [
   { value: 'cat_owner', label: '🐱 Cat Owner', desc: 'Book vets, track health & shop for your cat' },
 ]

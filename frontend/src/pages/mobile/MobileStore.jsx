@@ -4,7 +4,7 @@ import MobileLayout from '../../layouts/MobileLayout'
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../context/AuthContext'
 
-/* ─── helpers ─── */
+// ─── helpers ───
 function StarRow({ rating, total }) {
   const r = parseFloat(rating) || 0
   const stars = Math.round(r)
@@ -16,7 +16,7 @@ function StarRow({ rating, total }) {
   )
 }
 
-/* ─── Store list card ─── */
+// ─── Store list card ───
 function StoreCard({ st, onClick }) {
   const fee = parseFloat(st.delivery_fee) || 0
   return (
@@ -55,7 +55,7 @@ function StoreCard({ st, onClick }) {
   )
 }
 
-/* ─── Product card ─── */
+// ─── Product card ───
 function ProductCard({ p, qty, onAdd, onRemove }) {
   const price = parseFloat(p.discount_price ?? p.price)
   const orig  = p.discount_price ? parseFloat(p.price) : null
@@ -98,7 +98,7 @@ function ProductCard({ p, qty, onAdd, onRemove }) {
   )
 }
 
-/* ─── Cart sheet ─── */
+// ─── Cart sheet ───
 function CartSheet({ cart, store, onClose, onAdd, onRemove, onPlace, placing }) {
   const subtotal = cart.reduce((s, x) => s + parseFloat(x.discount_price ?? x.price) * x.qty, 0)
   const fee = parseFloat(store?.delivery_fee ?? 0)
@@ -150,7 +150,7 @@ function CartSheet({ cart, store, onClose, onAdd, onRemove, onPlace, placing }) 
   )
 }
 
-/* ─── Store detail view ─── */
+// ─── Store detail view ───
 function StoreDetailView({ storeId, storeName, onBack }) {
   const { user } = useAuth()
   const [store,    setStore]    = useState(null)
@@ -312,7 +312,7 @@ function StoreDetailView({ storeId, storeName, onBack }) {
   )
 }
 
-/* ─── Main screen ─── */
+// ─── Main screen ───
 export default function MobileStore() {
   const [stores,    setStores]   = useState([])
   const [loading,   setLoading]  = useState(true)
@@ -339,7 +339,7 @@ export default function MobileStore() {
     clearTimeout(debounce); debounce = setTimeout(() => load(v.trim()), 350)
   }
 
-  /* If a store is selected, show its product view */
+  // If a store is selected, show its product view
   if (selected) {
     return (
       <MobileLayout title={selected.name}>
@@ -348,7 +348,7 @@ export default function MobileStore() {
     )
   }
 
-  /* Otherwise show store list */
+  // Otherwise show store list
   return (
     <MobileLayout title="Cat Stores">
       {/* Search */}

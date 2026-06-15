@@ -11,9 +11,7 @@ from enum import Enum
 from pydantic import BaseModel, Field
 
 
-# ──────────────────────────────────────────
 # Enumerations
-# ──────────────────────────────────────────
 
 class NotificationChannel(str, Enum):
     PUSH  = "push"
@@ -42,9 +40,7 @@ class NotificationType(str, Enum):
     SYSTEM                 = "system"
 
 
-# ──────────────────────────────────────────
 # Notification Models
-# ──────────────────────────────────────────
 
 class NotificationCreate(BaseModel):
     user_id:  str

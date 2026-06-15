@@ -24,9 +24,7 @@ logger = logging.getLogger("purrfect_care.user_controller")
 router = APIRouter()
 
 
-# ──────────────────────────────────────────────────────────────
 # Dependencies
-# ──────────────────────────────────────────────────────────────
 
 def get_user_service(
     service_client=Depends(get_supabase_client),
@@ -49,9 +47,7 @@ def get_user_repository(
     return UserRepository(service_client)
 
 
-# ──────────────────────────────────────────────────────────────
 # Routes
-# ──────────────────────────────────────────────────────────────
 
 @router.put(
     "/me",
@@ -77,9 +73,7 @@ async def update_my_profile(
     return service.update_profile(profile["id"], body)
 
 
-# ──────────────────────────────────────────────────────────────
 # Save verification document storage paths to the caller's profile
-# ──────────────────────────────────────────────────────────────
 
 from pydantic import BaseModel  # noqa: E402
 
@@ -112,9 +106,7 @@ async def save_my_docs(
 
 
 
-# ──────────────────────────────────────────────────────────────
 # Admin — Approve / Reject hospital or store accounts
-# ──────────────────────────────────────────────────────────────
 
 from app.utils.exceptions import ForbiddenException  # noqa: E402 (after router def)
 

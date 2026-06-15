@@ -14,7 +14,7 @@ function fmtAge(m) {
   return r ? `${y}y ${r}mo` : `${y} yr`
 }
 
-/* ── Modal ── */
+// ── Modal ──
 function CatModal({ open, onClose, onSaved, editing }) {
   const { user } = useAuth()
   const [form, setForm]   = useState(EMPTY)
@@ -74,10 +74,7 @@ function CatModal({ open, onClose, onSaved, editing }) {
               : <div className="text-center"><div className="text-3xl">📸</div><div className="text-xs mt-1 font-semibold" style={{ color:'#5e4749', fontFamily:'Plus Jakarta Sans, sans-serif' }}>Add photo</div></div>
             }
           </div>
-          <input type="file" accept="image/*" className="sr-only" onChange={handlePhoto} />
-        </label>
-
-        {/* Fields */}
+          <input type="file" accept="image// " className="sr-only" onChange={handlePhoto} /> | </label> | {/* Fields}
         {[{label:'Cat name *',key:'name',placeholder:'e.g. Luna, Mochi'},{label:'Breed',key:'breed',placeholder:'e.g. Persian, Siamese'}].map(f => (
           <div key={f.key}>
             <label className="block text-xs font-semibold mb-1" style={{ color:'#3a2c2d', fontFamily:'Plus Jakarta Sans, sans-serif' }}>{f.label}</label>
@@ -143,7 +140,7 @@ function CatModal({ open, onClose, onSaved, editing }) {
   )
 }
 
-/* ── Cat card ── */
+// ── Cat card ──
 function CatCard({ cat, onEdit, onDelete }) {
   return (
     <div className="flex gap-3 p-4 rounded-2xl" style={{ backgroundColor:'#ffffff', border:'1px solid #b8ceb5', boxShadow:'0 2px 8px rgba(45,27,14,0.06)' }}>

@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabaseClient.js'
 import { Badge, BtnOlive, BtnOutline, Pill, Card, GlassCard } from '../components/ui/index.jsx'
 import { useFadeUp } from '../hooks/useScrollReveal.js'
 
-/* ── Quick-access feature tiles ── */
+// ── Quick-access feature tiles ──
 const TILES = [
   { icon:'📅', label:'Appointments',  desc:'Book & manage vet visits',        href:'/find-vets',    color:'rgba(94,71,73,.1)'  },
   { icon:'💬', label:'Messages',      desc:'Chat with your vets',             href:'/chats',        color:'rgba(45,90,39,.1)'  },
@@ -26,7 +26,7 @@ export default function DashboardPage() {
 
   const displayName = user?.full_name ?? user?.email ?? 'Cat Parent'
 
-  /* ── Load real appointments for this user ── */
+  // ── Load real appointments for this user ──
   useEffect(() => {
     if (!user?.id) { setApptLoading(false); return }
 

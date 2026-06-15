@@ -12,9 +12,7 @@ from enum import Enum
 from pydantic import BaseModel, Field
 
 
-# ──────────────────────────────────────────
 # Enumerations
-# ──────────────────────────────────────────
 
 class PrescriptionStatus(str, Enum):
     ACTIVE    = "active"
@@ -22,9 +20,7 @@ class PrescriptionStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
-# ──────────────────────────────────────────
 # Medicine Models
-# ──────────────────────────────────────────
 
 class MedicineBase(BaseModel):
     name:                  str   = Field(..., max_length=200)
@@ -68,9 +64,7 @@ class MedicineResponse(MedicineBase):
     model_config = {"from_attributes": True}
 
 
-# ──────────────────────────────────────────
 # Prescription Models
-# ──────────────────────────────────────────
 
 class PrescriptionBase(BaseModel):
     cat_id:         str

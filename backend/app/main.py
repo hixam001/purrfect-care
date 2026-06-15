@@ -73,8 +73,7 @@ def create_app() -> FastAPI:
     # --- Rate Limiter ---
     register_rate_limiter(app)
 
-    # --- API Routers ---
-    # Phase 3: Auth & Users
+    # --- API Routers --- Phase 3: Auth & Users
     from app.controllers.auth_controller import router as auth_router
     from app.controllers.user_controller import router as user_router
     from app.controllers.payment_controller import router as payment_router
@@ -84,9 +83,7 @@ def create_app() -> FastAPI:
     app.include_router(payment_router,      prefix="/api",               tags=["Payments"])
     app.include_router(subscription_router, prefix="/api/subscriptions", tags=["Subscriptions"])
 
-    # Phase 4: Cats & Breeds
-    # from app.controllers.cat_controller import router as cat_router
-    # app.include_router(cat_router, prefix="/api", tags=["Cats & Breeds"])
+    # Phase 4: Cats & Breeds from app.controllers.cat_controller import router as cat_router app.include_router(cat_router, prefix="/api", tags=["Cats & Breeds"])
 
     # Phase 5: Hospitals & Appointments
     from app.controllers.hospital_controller import router as hospital_router
@@ -94,11 +91,9 @@ def create_app() -> FastAPI:
     app.include_router(hospital_router, prefix="/api/hospitals", tags=["Hospitals"])
     app.include_router(appointment_router, prefix="/api/appointments", tags=["Appointments"])
 
-    # Phase 6: Chat, AI, Prescriptions
-    # from app.controllers.chat_controller import router as chat_router
+    # Phase 6: Chat, AI, Prescriptions from app.controllers.chat_controller import router as chat_router
     from app.controllers.ai_controller import router as ai_router
-    # from app.controllers.prescription_controller import router as prescription_router
-    # app.include_router(chat_router, prefix="/api/chats", tags=["Chat"])
+    # from app.controllers.prescription_controller import router as prescription_router app.include_router(chat_router, prefix="/api/chats", tags=["Chat"])
     app.include_router(ai_router, prefix="/api/ai", tags=["AI Companion"])
     # app.include_router(prescription_router, prefix="/api/prescriptions", tags=["Prescriptions"])
 
@@ -108,13 +103,7 @@ def create_app() -> FastAPI:
     app.include_router(store_router, prefix="/api/store", tags=["Store"])
     app.include_router(order_router, prefix="/api/orders", tags=["Orders"])
 
-    # Phase 8: Reviews, Offers, Admin
-    # from app.controllers.review_controller import router as review_router
-    # from app.controllers.offer_controller import router as offer_router
-    # from app.controllers.admin_controller import router as admin_router
-    # app.include_router(review_router, prefix="/api/reviews", tags=["Reviews"])
-    # app.include_router(offer_router, prefix="/api/offers", tags=["Offers"])
-    # app.include_router(admin_router, prefix="/api/admin", tags=["Admin"])
+    # Phase 8: Reviews, Offers, Admin from app.controllers.review_controller import router as review_router from app.controllers.offer_controller import router as offer_router from app.controllers.admin_controller import router as admin_router app.include_router(review_router, prefix="/api/reviews", tags=["Reviews"]) app.include_router(offer_router, prefix="/api/offers", tags=["Offers"]) app.include_router(admin_router, prefix="/api/admin", tags=["Admin"])
 
     # --- Health Check ---
     @app.get("/api/health", tags=["System"])

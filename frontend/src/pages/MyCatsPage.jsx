@@ -1,13 +1,4 @@
-/**
- * MyCatsPage — cat profile manager for the logged-in user.
- *
- * Features:
- *  - Lists all cats belonging to the user (real Supabase data)
- *  - "Add Cat" slide-in drawer with a rich form
- *  - Fields: name, breed (text), age, weight, color, gender,
- *            neutered toggle, microchip ID, photo upload (optional)
- *  - Edit & delete actions on each card
- */
+// MyCatsPage — cat profile manager for the logged-in user. | Features: | - Lists all cats belonging to the user (real Supabase data) | - "Add Cat" slide-in drawer with a rich form | - Fields: name, breed (text), age, weight, color, gender, | neutered toggle, microchip ID, photo upload (optional) | - Edit & delete actions on each card
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
@@ -15,7 +6,7 @@ import { supabase } from '../lib/supabaseClient.js'
 import { Badge, BtnOlive, BtnOutline, Pill, Card, GlassCard } from '../components/ui/index.jsx'
 import { useFadeUp } from '../hooks/useScrollReveal.js'
 
-/* ─── helpers ──────────────────────────────────────────────── */
+// ─── helpers ────────────────────────────────────────────────
 const GENDERS = ['male', 'female']
 
 function fmtAge(months) {
@@ -31,7 +22,7 @@ const EMPTY_FORM = {
   color: '', gender: 'male', is_neutered: false, microchip_id: '', photo_url: '',
 }
 
-/* ─── Add / Edit drawer ─────────────────────────────────────── */
+// ─── Add / Edit drawer ───────────────────────────────────────
 function CatDrawer({ open, onClose, onSaved, editing }) {
   const { user } = useAuth()
   const [form,    setForm]    = useState(EMPTY_FORM)
@@ -40,7 +31,7 @@ function CatDrawer({ open, onClose, onSaved, editing }) {
   const [preview, setPreview] = useState(null)
   const fileRef = useRef()
 
-  /* Pre-fill when editing */
+  // Pre-fill when editing
   useEffect(() => {
     if (editing) {
       setForm({
@@ -68,7 +59,7 @@ function CatDrawer({ open, onClose, onSaved, editing }) {
     const file = e.target.files?.[0]
     if (!file) return
     setPreview(URL.createObjectURL(file))
-    /* Upload to Supabase storage */
+    // Upload to Supabase storage
     const path = `cats/${user.id}/${Date.now()}_${file.name}`
     const { data, error } = await supabase.storage
       .from('cat-photos')
@@ -111,7 +102,7 @@ function CatDrawer({ open, onClose, onSaved, editing }) {
     setSaving(false)
   }
 
-  /* Input styling helpers */
+  // Input styling helpers
   const inputCls = `w-full px-4 py-3 rounded-xl text-[14px] outline-none transition-all`
   const inputStyle = {
     background: 'rgba(255,255,255,.9)',
@@ -191,10 +182,7 @@ function CatDrawer({ open, onClose, onSaved, editing }) {
             >
               <span className="text-white text-[11px] font-bold">Change</span>
             </div>
-            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
-          </div>
-
-          {/* Name */}
+            <input ref={fileRef} type="file" accept="image// " className="hidden" onChange={handlePhoto} /> | </div> | {/* Name}
           <div>
             <label className="t-mono text-[10px] block mb-1.5 uppercase tracking-widest text-clay-muted">Cat Name *</label>
             <input
@@ -353,7 +341,7 @@ function CatDrawer({ open, onClose, onSaved, editing }) {
   )
 }
 
-/* ─── Cat card ─────────────────────────────────────────────── */
+// ─── Cat card ───────────────────────────────────────────────
 function CatCard({ cat, onEdit, onDelete }) {
   const [deleting, setDeleting] = useState(false)
 
@@ -436,7 +424,7 @@ function CatCard({ cat, onEdit, onDelete }) {
   )
 }
 
-/* ─── Main page ─────────────────────────────────────────────── */
+// ─── Main page ───────────────────────────────────────────────
 export default function MyCatsPage() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
@@ -449,7 +437,7 @@ export default function MyCatsPage() {
 
   const displayName = user?.full_name ?? user?.email ?? 'Cat Parent'
 
-  /* Load cats */
+  // Load cats
   function loadCats() {
     if (!user?.id) { setLoading(false); return }
     supabase

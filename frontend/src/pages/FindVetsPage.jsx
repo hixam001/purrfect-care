@@ -16,7 +16,7 @@ export default function FindVetsPage() {
   const [search,     setSearch]     = useState('')
   const [cityFilter, setCityFilter] = useState('All')
 
-  /* ── Fetch approved hospitals ── */
+  // ── Fetch approved hospitals ──
   useEffect(() => {
     supabase
       .from('hospitals')
@@ -29,7 +29,7 @@ export default function FindVetsPage() {
       })
   }, [])
 
-  /* ── Sorted + filtered list ── */
+  // ── Sorted + filtered list ──
   const sorted = sortByDistance(hospitals, coords)
 
   const cities = ['All', ...new Set(hospitals.map(h => h.city).filter(Boolean))]

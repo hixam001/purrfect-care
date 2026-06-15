@@ -10,9 +10,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 
-# ──────────────────────────────────────────
 # Review Models
-# ──────────────────────────────────────────
 
 class ReviewBase(BaseModel):
     rating:      int  = Field(..., ge=1, le=5)
@@ -39,9 +37,7 @@ class ReviewResponse(ReviewBase):
     model_config = {"from_attributes": True}
 
 
-# ──────────────────────────────────────────
 # ReviewResponse Models
-# ──────────────────────────────────────────
 
 class ReviewResponseCreate(BaseModel):
     """Request body — POST /api/reviews/{id}/response (hospital_admin / store_owner / vet)."""
@@ -62,9 +58,7 @@ class ReviewResponseResponse(BaseModel):
 ReviewResponse.model_rebuild()
 
 
-# ──────────────────────────────────────────
 # Offer Models
-# ──────────────────────────────────────────
 
 class OfferBase(BaseModel):
     title:            str   = Field(..., max_length=200)

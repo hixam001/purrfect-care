@@ -63,9 +63,7 @@ class UserService:
         updated = self.user_repo.update(profile_id, update_payload)
         return self._to_response(updated)
 
-    # ──────────────────────────────────────────────────
     # Private Helpers
-    # ──────────────────────────────────────────────────
 
     @staticmethod
     def _to_response(profile: dict) -> UserResponse:

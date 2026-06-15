@@ -6,12 +6,7 @@ import { uploadAllDocs } from '../lib/uploadDocs.js'
 
 const API = import.meta.env.VITE_API_URL || 'https://server-vmvwkwachq-uc.a.run.app'
 
-/* ─────────────────────────────────────────────────────────────────────
-   Store registration — GATED flow.
-   After submitting, stores go into "pending_review" status.
-   They are NOT live until approved by a System Admin.
-   This mirrors the hospital registration security model.
-───────────────────────────────────────────────────────────────────── */
+// Store registration — GATED flow. | After submitting, stores go into "pending_review" status. | They are NOT live until approved by a System Admin. | This mirrors the hospital registration security model.
 
 const STEPS = ['Store Type', 'Store Info', 'Owner Details', 'Documents', 'Done']
 
@@ -41,10 +36,10 @@ export default function StoreRegisterPage() {
   const navigate = useNavigate()
   const [step, setStep] = useState(0)
 
-  /* Step 0 */
+  // Step 0
   const [storeType, setStoreType] = useState('')
 
-  /* Step 1 */
+  // Step 1
   const [storeName, setStoreName]   = useState('')
   const [storeDesc, setStoreDesc]   = useState('')
   const [city,      setCity]        = useState('')
@@ -52,7 +47,7 @@ export default function StoreRegisterPage() {
   const [storePhone,setStorePhone]  = useState('')
   const [selCats,   setSelCats]     = useState([])
 
-  /* Step 2 — Owner Details */
+  // Step 2 — Owner Details
   const [ownerName,  setOwnerName]  = useState('')
   const [ownerEmail, setOwnerEmail] = useState('')
   const [ownerCnic,  setOwnerCnic]  = useState('')
@@ -60,7 +55,7 @@ export default function StoreRegisterPage() {
   const [password,   setPassword]   = useState('')
   const [confirm,    setConfirm]    = useState('')
 
-  /* Step 3 — documents */
+  // Step 3 — documents
   const [storeDocs, setStoreDocs] = useState({})
   
   function handleDocFile(label, file) {
@@ -92,7 +87,7 @@ export default function StoreRegisterPage() {
     setSelCats(s => s.includes(c) ? s.filter(x=>x!==c) : [...s, c])
   }
 
-  /* Auto-request location when reaching Step 1 */
+  // Auto-request location when reaching Step 1
   useEffect(() => {
     if (step === 1 && lat === null && !geoLoading) {
       handleGetLocation()
@@ -111,10 +106,7 @@ export default function StoreRegisterPage() {
   function next() { setStep(s => s+1) }
   function back() { setErr(''); setStep(s => s-1) }
 
-  /**
-   * Step 3 = Documents → Done: register account + upload docs.
-   * All other steps: just validate and advance.
-   */
+  // Step 3 = Documents → Done: register account + upload docs. | All other steps: just validate and advance.
   async function handleNext() {
     setErr('')
     if (!validate()) return

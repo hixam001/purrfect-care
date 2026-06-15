@@ -38,7 +38,7 @@ export default function MobileDashboard() {
   const [cats, setCats] = useState([])
   const firstName = user?.name?.split(' ')[0] ?? 'there'
 
-  /* ── Redirect business roles to their own dashboards ── */
+  // ── Redirect business roles to their own dashboards ──
   useEffect(() => {
     if (user?.role === 'store_owner')    navigate('/store/dashboard', { replace: true })
     if (user?.role === 'hospital_admin') navigate('/hospital/dashboard', { replace: true })

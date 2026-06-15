@@ -1,11 +1,4 @@
-/**
- * SubscriptionPage
- *
- * Shown after login when the user has no active subscription.
- * - Store owners see 4 plans (Free, Basic, Growth, Premium)
- * - Hospital admins see 3 paid plans (Starter, Clinic, Hospital)
- * - Free plan activates directly; paid plans redirect to Safepay
- */
+// SubscriptionPage | Shown after login when the user has no active subscription. | - Store owners see 4 plans (Free, Basic, Growth, Premium) | - Hospital admins see 3 paid plans (Starter, Clinic, Hospital) | - Free plan activates directly; paid plans redirect to Safepay
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'

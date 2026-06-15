@@ -1,7 +1,4 @@
-/**
- * AuthContext — manages auth state (token, user, subscription) across the app.
- * Provides login / logout helpers and exposes the current user + subscription.
- */
+// AuthContext — manages auth state (token, user, subscription) across the app. | Provides login / logout helpers and exposes the current user + subscription.
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabaseClient.js'
 
@@ -16,7 +13,7 @@ export function AuthProvider({ children }) {
   const [loading,      setLoading]      = useState(true)
   const [error,        setError]        = useState(null)
 
-  /* ── Fetch subscription for authenticated user ─────────────────── */
+  // ── Fetch subscription for authenticated user ───────────────────
   const fetchSubscription = useCallback(async (jwt) => {
     if (!jwt) { setSubscription(null); return }
     try {
@@ -30,7 +27,7 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  /* ── Restore session on mount ─────────────────────── */
+  // ── Restore session on mount ───────────────────────
   useEffect(() => {
     const stored = localStorage.getItem('pc_token')
     if (!stored) { setLoading(false); return }
@@ -59,13 +56,13 @@ export function AuthProvider({ children }) {
     }
   }, [fetchSubscription])
 
-  /* ── Persist backend token ──────────────────────────── */
+  // ── Persist backend token ────────────────────────────
   useEffect(() => {
     if (token) localStorage.setItem('pc_token', token)
     else       localStorage.removeItem('pc_token')
   }, [token])
 
-  /* ── Login ───────────────────────────────────────── */
+  // ── Login ─────────────────────────────────────────
   async function login(email, password) {
     setLoading(true); setError(null)
     try {
@@ -97,7 +94,7 @@ export function AuthProvider({ children }) {
     }
   }
 
-  /* ── Register ────────────────────────────────────── */
+  // ── Register ──────────────────────────────────────
   async function register(payload) {
     setLoading(true); setError(null)
     try {
@@ -128,7 +125,7 @@ export function AuthProvider({ children }) {
     }
   }
 
-  /* ── Logout ──────────────────────────────────────── */
+  // ── Logout ────────────────────────────────────────
   async function logout() {
     if (token) {
       fetch(`${API}/api/auth/logout`, {
@@ -144,13 +141,13 @@ export function AuthProvider({ children }) {
     setSubscription(null)
   }
 
-  /* ── Refresh subscription (call after Safepay return) ─────────── */
+  // ── Refresh subscription (call after Safepay return) ───────────
   const refreshSubscription = useCallback(async () => {
     const jwt = localStorage.getItem('pc_token')
     await fetchSubscription(jwt)
   }, [fetchSubscription])
 
-  /* ── Computed helpers ─────────────────────────────────────────── */
+  // ── Computed helpers ───────────────────────────────────────────
   const activePlan    = subscription?.plan ?? null
   const isSubscribed  = subscription?.subscription?.status === 'active'
   const planLimits    = {

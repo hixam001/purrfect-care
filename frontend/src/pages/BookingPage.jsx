@@ -13,7 +13,7 @@ const STEPS = ['Select Date & Time', 'Choose Pet', 'Review & Pay', 'Confirmed']
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat']
 
-/* ── Mini Calendar ── */
+// ── Mini Calendar ──
 function Calendar({ selected, onSelect }) {
   const today = new Date()
   const [year,  setYear]  = useState(today.getFullYear())
@@ -95,17 +95,31 @@ export default function BookingPage() {
 
   const bookingRef = 'PC-' + Math.random().toString(36).slice(2,8).toUpperCase()
 
-  /* ── Load vet, hospital, cats, and available slots ── */
+  // ── Load vet, hospital, cats, and available slots ──
   useEffect(() => {
     async function load() {
       const today = new Date().toISOString().slice(0, 10)
-      const [{ data: v }, { data: h }, { data: c }, { data: sl }] = await Promise.all([
-        supabase.from('vets').select(`
-          id, specialization, experience_years, bio, rating, total_reviews,
-          user_profiles ( name ),
-          hospital_services ( id, name, price, duration_minutes )
-        `).eq('id', vetId).single(),
 
+      // 1. Fetch vet with LEFT join on user_profiles (cat owner can't read vet profiles via RLS — inner join would exclude the vet row entirely)
+      const { data: v } = await supabase
+        .from('vets')
+        .select('id, specialization, experience_years, bio, rating, total_reviews, hospital_id, user_profiles!left ( name )')
+        .eq('id', vetId)
+        .single()
+
+      // 2. Fetch services for this vet's hospital (no direct FK vets→services)
+      let services = []
+      if (v?.hospital_id) {
+        const { data: svcData } = await supabase
+          .from('hospital_services')
+          .select('id, name, price, duration_minutes')
+          .eq('hospital_id', v.hospital_id)
+        services = svcData ?? []
+      }
+      if (v) v.hospital_services = services
+
+      // 3. Fetch hospital, cats, and slots in parallel
+      const [{ data: h }, { data: c }, { data: sl }] = await Promise.all([
         hospitalId
           ? supabase.from('hospitals').select('id, name, city, address').eq('id', hospitalId).single()
           : { data: null },
@@ -114,7 +128,6 @@ export default function BookingPage() {
           ? supabase.from('cats').select('id, name, breed_id, age_months').eq('owner_id', user.id)
           : { data: [] },
 
-        // Real availability slots — only future, unbooked ones for this vet
         supabase.from('appointment_slots')
           .select('id, slot_date, start_time, end_time, is_booked')
           .eq('vet_id', vetId)
@@ -129,14 +142,13 @@ export default function BookingPage() {
       setCats(c ?? [])
       setSlots(sl ?? [])
       setSlotsLoading(false)
-      // Default to first available service
       if (v?.hospital_services?.length) setSelectedServiceId(v.hospital_services[0].id)
       setLoading(false)
     }
     load()
   }, [vetId, hospitalId, user?.id])
 
-  /* Group slots by date for display */
+  // Group slots by date for display
   const slotsByDate = useMemo(() => {
     return slots.reduce((acc, s) => {
       acc[s.slot_date] = acc[s.slot_date] ?? []
@@ -158,7 +170,7 @@ export default function BookingPage() {
                        ?? vet?.hospital_services?.[0]
   const feeDisplay     = selectedService ? `₨ ${selectedService.price.toLocaleString()}` : '—'
 
-  /* ── Confirm booking: save appointment (with slot_id) then initiate Safepay ── */
+  // ── Confirm booking: save appointment (with slot_id) then initiate Safepay ──
   async function handleConfirm() {
     setSaving(true)
     setPayErr('')
@@ -173,8 +185,7 @@ export default function BookingPage() {
       const selectedSlot = slots.find(s => s.id === slotId)
       const apptDate = new Date(`${date}T${selectedSlot.start_time}`)
 
-      // 2. Insert appointment — slot_id UNIQUE constraint prevents double-booking
-      //    The DB trigger (migration 010) will mark slot as is_booked = true
+      // 2. Insert appointment — slot_id UNIQUE constraint prevents double-booking The DB trigger (migration 010) will mark slot as is_booked = true
       const { data: appt, error: apptErr } = await supabase.from('appointments').insert({
         user_id:          user.id,
         cat_id:           catId,

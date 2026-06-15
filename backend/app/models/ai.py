@@ -22,9 +22,7 @@ class SeverityLevel(str, Enum):
     CRITICAL = "critical"
 
 
-# ──────────────────────────────────────────
 # IllnessRecord Models (Item)
-# ──────────────────────────────────────────
 
 class IllnessRecordCreate(BaseModel):
     """Request body for adding an illness to the knowledge base."""
@@ -53,9 +51,7 @@ class IllnessRecordResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
-# ──────────────────────────────────────────
 # AI Consultation Models (Transaction)
-# ──────────────────────────────────────────
 
 class AIConsultRequest(BaseModel):
     """Request body for AI consultation (POST /api/ai/consult)."""

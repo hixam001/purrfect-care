@@ -26,9 +26,7 @@ logger = logging.getLogger("purrfect_care.ai_controller")
 router = APIRouter()
 
 
-# ──────────────────────────────────────────────────────────
 # Request / Response schemas
-# ──────────────────────────────────────────────────────────
 
 class ChatMessage(BaseModel):
     """A single message in the conversation history."""
@@ -77,9 +75,7 @@ class AIChatResponse(BaseModel):
     retrieved_count: int
 
 
-# ──────────────────────────────────────────────────────────
 # Route
-# ──────────────────────────────────────────────────────────
 
 @router.post(
     "/chat",

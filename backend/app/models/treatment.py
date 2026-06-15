@@ -12,9 +12,7 @@ from enum import Enum
 from pydantic import BaseModel, Field
 
 
-# ──────────────────────────────────────────
 # Enumerations
-# ──────────────────────────────────────────
 
 class TreatmentStatus(str, Enum):
     IN_PROGRESS      = "in_progress"
@@ -22,9 +20,7 @@ class TreatmentStatus(str, Enum):
     FOLLOW_UP_NEEDED = "follow_up_needed"
 
 
-# ──────────────────────────────────────────
 # Treatment Models
-# ──────────────────────────────────────────
 
 class TreatmentBase(BaseModel):
     appointment_id:       str

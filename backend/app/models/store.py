@@ -11,9 +11,7 @@ from typing import Any
 from pydantic import BaseModel, EmailStr, Field
 
 
-# ──────────────────────────────────────────
 # ProductCategory Models
-# ──────────────────────────────────────────
 
 class ProductCategoryBase(BaseModel):
     name:        str   = Field(..., max_length=100)
@@ -31,9 +29,7 @@ class ProductCategoryResponse(ProductCategoryBase):
     model_config = {"from_attributes": True}
 
 
-# ──────────────────────────────────────────
 # Product Models
-# ──────────────────────────────────────────
 
 class ProductBase(BaseModel):
     category_id:    str | None = None
@@ -79,9 +75,7 @@ class ProductResponse(ProductBase):
     model_config = {"from_attributes": True}
 
 
-# ──────────────────────────────────────────
 # CatStore Models
-# ──────────────────────────────────────────
 
 class CatStoreBase(BaseModel):
     name:            str   = Field(..., max_length=200)

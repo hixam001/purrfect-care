@@ -13,14 +13,14 @@ export default function Navbar() {
   const [scrolled,       setScrolled]       = useState(false)
   const [activeSection,  setActiveSection]  = useState('')
 
-  /* ── Navbar shadow on scroll ─────────────────── */
+  // ── Navbar shadow on scroll ───────────────────
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20)
     window.addEventListener('scroll', onScroll, { passive: true })
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
-  /* ── Active section tracking ─────────────────── */
+  // ── Active section tracking ───────────────────
   useEffect(() => {
     const ids = NAV_LINKS.map(l => l.href.slice(1))
     const observer = new IntersectionObserver(

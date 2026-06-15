@@ -2,9 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 
-/* Redirect destination per role after login.
- * Subscription state is checked separately — the guard in App.jsx will
- * bounce hospital_admin; login page handles store_owner redirect itself. */
+// Redirect destination per role after login. | Subscription state is checked separately — the guard in App.jsx will | bounce hospital_admin; login page handles store_owner redirect itself.
 function dashboardForRole(role) {
   if (role === 'admin')          return '/admin/dashboard'
   if (role === 'hospital_admin') return '/hospital/dashboard'
@@ -27,8 +25,7 @@ export default function LoginPage() {
     const result = await login(email, password)
     if (result.ok) {
       const role = result.user?.role ?? null
-      // Store owners and hospital admins without an active subscription
-      // are redirected to plan selection before accessing their dashboards.
+      // Store owners and hospital admins without an active subscription are redirected to plan selection before accessing their dashboards.
       const needsSubscription =
         (role === 'store_owner' || role === 'hospital_admin') && !isSubscribed
       navigate(needsSubscription ? '/subscription' : dashboardForRole(role))

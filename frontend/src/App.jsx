@@ -2,10 +2,10 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 import { useIsMobile } from './hooks/useIsMobile.js'
 
-/* Layouts */
+// Layouts
 import AppLayout from './layouts/AppLayout.jsx'
 
-/* Landing page sections */
+// Landing page sections
 import { useScrollReveal } from './hooks/useScrollReveal.js'
 import Hero          from './components/Hero.jsx'
 import MarqueeTicker from './components/MarqueeTicker.jsx'
@@ -17,29 +17,29 @@ import StatsBand     from './components/StatsBand.jsx'
 import Testimonials  from './components/Testimonials.jsx'
 import CTABanner     from './components/CTABanner.jsx'
 
-/* Auth pages — desktop */
+// Auth pages — desktop
 import LoginPage            from './pages/LoginPage.jsx'
 import RegisterPage         from './pages/RegisterPage.jsx'
 import SystemAdminLoginPage from './pages/SystemAdminLoginPage.jsx'
 
-/* Mobile auth pages */
+// Mobile auth pages
 import MobileLogin    from './pages/mobile/MobileLogin.jsx'
 import MobileRegister from './pages/mobile/MobileRegister.jsx'
 
-/* Dashboards */
+// Dashboards
 import DashboardPage          from './pages/DashboardPage.jsx'
 import HospitalAdminDashboard from './pages/HospitalAdminDashboard.jsx'
 import SystemAdminDashboard   from './pages/SystemAdminDashboard.jsx'
 import VetDashboard           from './pages/VetDashboard.jsx'
 import StoreDashboard         from './pages/StoreDashboard.jsx'
 
-/* Onboarding */
+// Onboarding
 import HospitalRegisterPage from './pages/HospitalRegisterPage.jsx'
 import StoreRegisterPage    from './pages/StoreRegisterPage.jsx'
 import PaymentReturnPage    from './pages/PaymentReturnPage.jsx'
 import SubscriptionPage     from './pages/SubscriptionPage.jsx'
 
-/* App pages — desktop */
+// App pages — desktop
 import FindVetsPage       from './pages/FindVetsPage.jsx'
 import HospitalDetailPage from './pages/HospitalDetailPage.jsx'
 import BookingPage        from './pages/BookingPage.jsx'
@@ -53,7 +53,7 @@ import MyCatsPage         from './pages/MyCatsPage.jsx'
 import SettingsPage       from './pages/SettingsPage.jsx'
 
 
-/* App pages — mobile */
+// App pages — mobile
 import MobileDashboard from './pages/mobile/MobileDashboard.jsx'
 import MobileMyCats    from './pages/mobile/MobileMyCats.jsx'
 import MobileFindVets  from './pages/mobile/MobileFindVets.jsx'
@@ -61,7 +61,7 @@ import MobileAIChat    from './pages/mobile/MobileAIChat.jsx'
 import MobileStore     from './pages/mobile/MobileStore.jsx'
 import MobileSettings  from './pages/mobile/MobileSettings.jsx'
 
-/* ── Landing home ── */
+// ── Landing home ──
 function HomePage() {
   useScrollReveal()
   return (
@@ -79,7 +79,7 @@ function HomePage() {
   )
 }
 
-/* ── Route guards ── */
+// ── Route guards ──
 function RequireAuth({ children }) {
   const { isLoggedIn } = useAuth()
   return isLoggedIn ? children : <Navigate to="/login" replace />
@@ -114,7 +114,7 @@ function RequireStoreOwner({ children }) {
   return children
 }
 
-/* ── Root router ── */
+// ── Root router ──
 function AppRoutes() {
   const mobile = useIsMobile()
 
@@ -143,9 +143,7 @@ function AppRoutes() {
       {/* ── Store owner dashboard (always desktop, no AppLayout) ── */}
       <Route path="/store/dashboard" element={<RequireStoreOwner><StoreDashboard /></RequireStoreOwner>} />
 
-      {/* ══════════════════════════════════════════
-          MOBILE ROUTES — use MobileLayout internally
-          ══════════════════════════════════════════ */}
+      {/* ══════════════════════════════════════════ | MOBILE ROUTES — use MobileLayout internally | ══════════════════════════════════════════ */}
       {mobile && (
         <>
           <Route path="/"              element={<Navigate to="/dashboard" replace />} />
@@ -165,10 +163,7 @@ function AppRoutes() {
         </>
       )}
 
-      {/* ══════════════════════════════════════════
-          DESKTOP ROUTES — ALL inside AppLayout
-          (gives every page the Navbar + Footer)
-          ══════════════════════════════════════════ */}
+      {/* ══════════════════════════════════════════ | DESKTOP ROUTES — ALL inside AppLayout | (gives every page the Navbar + Footer) | ══════════════════════════════════════════ */}
       {!mobile && (
         <Route element={<AppLayout />}>
           {/* Landing */}
@@ -214,7 +209,7 @@ function AppRoutes() {
   )
 }
 
-/* ── App ── */
+// ── App ──
 export default function App() {
   return (
     <AuthProvider>

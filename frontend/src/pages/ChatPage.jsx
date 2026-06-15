@@ -18,12 +18,12 @@ export default function ChatPage() {
   const bottomRef  = useRef(null)
   const channelRef = useRef(null)
 
-  /* ── Scroll to bottom ── */
+  // ── Scroll to bottom ──
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior:'smooth' })
   }, [messages])
 
-  /* ── Load appointment + chat room ── */
+  // ── Load appointment + chat room ──
   useEffect(() => {
     if (!user?.id) return
 
@@ -151,7 +151,7 @@ export default function ChatPage() {
     })
   }
 
-  /* ── Blocked / case closed ── */
+  // ── Blocked / case closed ──
   const backTo = appointment?.vets?.user_profiles?.id === myProfileId
     ? '/vet-dashboard' : '/dashboard'
 
