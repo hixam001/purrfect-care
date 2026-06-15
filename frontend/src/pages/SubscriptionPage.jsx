@@ -24,7 +24,8 @@ const PLAN_COLORS = {
   store_basic:   { bg:'rgba(85,107,47,.08)', border:'rgba(85,107,47,.3)',  badge:null           },
   store_growth:  { bg:'rgba(94,71,73,.1)',   border:'rgba(94,71,73,.35)',  badge:'Best Value'   },
   store_premium: { bg:'rgba(196,140,56,.1)', border:'rgba(196,140,56,.35)',badge:'Most Popular' },
-  hosp_starter:  { bg:'rgba(160,140,125,.1)',border:'#b8ceb5',             badge:null           },
+  hosp_free:     { bg:'rgba(160,140,125,.1)', border:'#b8ceb5',            badge:null           },
+  hosp_starter:  { bg:'rgba(85,107,47,.08)', border:'rgba(85,107,47,.3)',  badge:null           },
   hosp_clinic:   { bg:'rgba(94,71,73,.1)',   border:'rgba(94,71,73,.35)',  badge:'Most Popular' },
   hosp_hospital: { bg:'rgba(196,140,56,.1)', border:'rgba(196,140,56,.35)',badge:null           },
 }
@@ -35,7 +36,7 @@ function formatPrice(pkr) {
 }
 
 export default function SubscriptionPage() {
-  const { user, token, subscription, refreshSubscription } = useAuth()
+  const { user, token, subscription, refreshSubscription, loading: authLoading } = useAuth()
   const navigate = useNavigate()
 
   const role     = user?.role || 'store_owner'
@@ -50,14 +51,14 @@ export default function SubscriptionPage() {
 
   // If user already has an active subscription, redirect to dashboard
   useEffect(() => {
-    if (subscription?.status === 'active') {
+    if (subscription?.subscription?.status === 'active') {
       navigate(role === 'hospital_admin' ? '/hospital/dashboard' : '/store/dashboard', { replace: true })
     }
   }, [subscription, role, navigate])
 
-  // Fetch plans for this role
+  // Fetch plans for this role — wait for auth to finish so role is known
   useEffect(() => {
-    if (!role) return
+    if (authLoading) return   // auth still resolving, role not yet confirmed
     fetch(`${API}/api/subscriptions/plans?role=${role}`)
       .then(r => r.json())
       .then(data => {
@@ -69,7 +70,7 @@ export default function SubscriptionPage() {
       })
       .catch(() => setErr('Failed to load plans. Please refresh.'))
       .finally(() => setLoading(false))
-  }, [role])
+  }, [role, authLoading])
 
   async function handleSelectPlan() {
     if (!selected) return
