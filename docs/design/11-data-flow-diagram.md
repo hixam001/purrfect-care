@@ -8,97 +8,76 @@
 ## Level 0 — Context Diagram
 
 ```plantuml
-@startuml
-scale max 1024 width
-skinparam wrapWidth 200
-skinparam maxMessageSize 150
-skinparam usecaseBackgroundColor white
-skinparam usecaseBorderColor black
-skinparam rectangleBackgroundColor white
-skinparam rectangleBorderColor black
+@startuml Level_0_Context
+scale max 1600 width
+skinparam nodesep 110
+skinparam ranksep 130
+skinparam defaultFontSize 12
+skinparam defaultFontName Arial
+skinparam wrapWidth 160
+skinparam ArrowColor #444444
+skinparam ArrowFontSize 11
 
-rectangle "👤 Cat Owner" as CO
-rectangle "👨‍⚕️ Veterinarian" as VT
-rectangle "🏥 Hospital Admin" as HA
-rectangle "🏪 Store Owner" as SO
-rectangle "🔑 System Admin" as SA
-rectangle "💳 Safepay API" as STRIPE
-rectangle "🤖 Gemini API" as GEMINI
-rectangle "📧 Resend" as SENDGRID
-rectangle "🔔 Firebase CM" as FIREBASE
+skinparam rectangle {
+  BackgroundColor #F7F9FC
+  BorderColor     #4A6FA5
+  FontStyle       bold
+  FontSize        12
+}
+skinparam usecase {
+  BackgroundColor #E8F5E9
+  BorderColor     #2E7D32
+  FontColor       #1B5E20
+}
 
-usecase "<size:24><b>0</b></size>\n<size:20>Purrfect Care</size>\n<size:20>System</size>\n<size:14>(FastAPI / Cloud Run\n+ Supabase PostgreSQL)</size>" as PC
+' ── Central system ──────────────────────────────────────────
+usecase "<size:22><b>0</b></size>\n<size:17><b>PurrfectCare</b></size>\n<size:13><b>System</b></size>\n<size:10>FastAPI · Cloud Run\nSupabase PostgreSQL</size>" as PC
 
-CO --> PC : Registration
-CO --> PC : Login
-CO --> PC : Cat Data
-CO --> PC : Booking Request
-CO --> PC : Order
-CO --> PC : Chat Message
-CO --> PC : Symptom / AI Query
-CO --> PC : Review
-PC --> CO : Auth Token
-PC --> CO : Cat Profile
-PC --> CO : Appointment Confirmation
-PC --> CO : Order Status
-PC --> CO : AI Recommendation
-PC --> CO : Prescription
-PC --> CO : Notification
+' ── Human Actors ────────────────────────────────────────────
+rectangle "👤\n<b>Cat Owner</b>"      as CO
+rectangle "👨‍⚕️\n<b>Veterinarian</b>"   as VT
+rectangle "🏥\n<b>Hospital Admin</b>"  as HA
+rectangle "🏪\n<b>Store Owner</b>"     as SO
+rectangle "🔑\n<b>System Admin</b>"    as SA
 
-VT --> PC : Credentials
-VT --> PC : Availability Slots
-VT --> PC : Diagnosis
-VT --> PC : Prescription
-VT --> PC : Chat Response
-PC --> VT : Appointment Queue
-PC --> VT : Patient Record
-PC --> VT : Chat Message
-PC --> VT : Notification
+' ── External Services ────────────────────────────────────────
+rectangle "💳\n<b>Safepay API</b>"    as STRIPE
+rectangle "🤖\n<b>Gemini API</b>"     as GEMINI
+rectangle "📧\n<b>Resend / FCM</b>"   as NOTIFY
 
-HA --> PC : Hospital Info
-HA --> PC : Services
-HA --> PC : Slot Schedules
-HA --> PC : Vet Registration
-HA --> PC : Offer
-HA --> PC : Page Config
-HA --> PC : Review Response
-PC --> HA : Dashboard Stats
-PC --> HA : Appointment Data
-PC --> HA : Reviews
-PC --> HA : Notification
+' ── Data Flows ───────────────────────────────────────────────
 
-SO --> PC : Store Info
-SO --> PC : Products
-SO --> PC : Offer
-SO --> PC : Order Update
-SO --> PC : Review Response
-PC --> SO : Order Queue
-PC --> SO : Analytics
-PC --> SO : Reviews
-PC --> SO : Notification
+' Cat Owner  (left)
+CO -right-> PC : Registration · Login\nCat Data · Booking Request\nChat Message · AI Query\nOrder · Review
+PC -left->  CO : Auth Token · Cat Profile\nAppointment Confirmation\nAI Recommendation\nPrescription · Order Status\nNotification
 
-SA --> PC : Approval
-SA --> PC : Verification
-SA --> PC : Medicine Data
-SA --> PC : Breed Data
-SA --> PC : Health Knowledge
-PC --> SA : Pending Approvals
-PC --> SA : KPIs
-PC --> SA : User Reports
-PC --> SA : System Alerts
+' Veterinarian  (right)
+VT -left->  PC : Credentials · Availability\nDiagnosis · Prescription\nChat Response
+PC -right-> VT : Appointment Queue\nPatient Record\nChat Message · Notification
 
-PC --> STRIPE : Payment Session
-PC --> STRIPE : Refund
-STRIPE --> PC : Payment Confirmation
-STRIPE --> PC : Webhook Event (HMAC)
+' System Admin  (top)
+SA -down->  PC : Approval · Verification\nMedicine Data · Breed Data\nHealth Knowledge
+PC -up->    SA : Pending Approvals · KPIs\nUser Reports · System Alerts
 
-PC --> GEMINI : Embedding Request (768-dim)
-PC --> GEMINI : Chat Generation Request
-GEMINI --> PC : Vector Embedding
-GEMINI --> PC : Grounded AI Answer
+' Hospital Admin  (bottom-left)
+HA -up->   PC : Hospital Info · Services\nSlot Schedules · Vet Registration\nOffer · Review Response
+PC -down-> HA : Dashboard Stats\nAppointment Data · Reviews\nNotification
 
-PC --> SENDGRID : Email Request
-PC --> FIREBASE : Push Notification
+' Store Owner  (bottom-right)
+SO -up->   PC : Store Info · Products\nOffer · Order Update\nReview Response
+PC -down-> SO : Order Queue · Analytics\nReviews · Notification
+
+' Safepay  (bottom)
+STRIPE -up-> PC : Payment Confirmation\nWebhook Event (HMAC)
+PC -down->   STRIPE : Payment Session\nRefund Request
+
+' Gemini  (bottom)
+GEMINI -up-> PC : Vector Embedding\nGrounded AI Answer
+PC -down->   GEMINI : Embed Request (768-dim)\nChat Generation Request
+
+' Notify  (bottom, one-way)
+PC -down-> NOTIFY : Email Request\nPush Notification
+
 @enduml
 ```
 
@@ -209,11 +188,17 @@ P3 --> D11 : insert appointment
 P3 --> CO : booking confirmation
 P3 --> VT : appointment queue
 
-'''' P5 Chat
-CO --> P5 : message
-VT --> P5 : message
-P5 --> D17
-P5 --> D18
+'''' P5 Chat (all R/W via FastAPI backend — service role; realtime push via Supabase)
+CO --> P5 : open chat (appointment ID)
+VT --> P5 : open chat (appointment ID)
+P5 --> D11 : verify participant (GET /api/appointments/{id})
+P5 --> D17 : get / create chat room (GET /api/appointments/{id}/chat-room)
+P5 --> D18 : load messages (GET /api/appointments/{id}/messages)
+CO --> P5 : send message (POST /api/appointments/{id}/messages)
+VT --> P5 : send message (POST /api/appointments/{id}/messages)
+P5 --> D18 : insert message (service role)
+P5 --> CO : realtime message push
+P5 --> VT : realtime message push
 
 '''' P6 AI Companion (RAG)
 CO --> P6 : symptoms / question

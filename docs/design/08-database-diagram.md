@@ -315,6 +315,7 @@ graph LR
 
     %% ATTRIBUTES - chat_rooms
     chat_rooms --- A_cr_id([<u>id</u>])
+    chat_rooms --- A_cr_appt([appointment_id])
     chat_rooms --- A_cr_act([is_active])
 
     %% ATTRIBUTES - messages
@@ -582,15 +583,18 @@ graph LR
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | `id` | UUID | PK | Chat room ID |
-| `user_id` | UUID | FK → users.id, NOT NULL | Cat owner |
+| `user_id` | UUID | FK → **user_profiles.id**, NOT NULL | Cat owner's profile PK |
 | `vet_id` | UUID | FK → vets.id, NOT NULL | Veterinarian |
+| `appointment_id` | UUID | FK → appointments.id, **UNIQUE** | Linked appointment (migration 025 — one chat room per appointment) |
 | `last_message_at` | TIMESTAMPTZ | | Timestamp of last message |
 | `unread_user` | INTEGER | DEFAULT 0 | Unread count for user |
 | `unread_vet` | INTEGER | DEFAULT 0 | Unread count for vet |
 | `is_active` | BOOLEAN | DEFAULT true | Chat is active |
 | `created_at` | TIMESTAMPTZ | DEFAULT now() | Creation time |
 
-**Unique constraint**: `UNIQUE(user_id, vet_id)`
+**Unique constraint**: `UNIQUE(appointment_id)` *(migration 025: old `UNIQUE(user_id, vet_id)` dropped — one chat thread per appointment)*
+
+> **Chat access note (migration 025+)**: Chat room creation, message loading, and message sending are handled by the FastAPI backend using the service-role key (bypasses Supabase client session + RLS). Supabase realtime channel is used only for live message push updates.
 
 ---
 
@@ -891,9 +895,9 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";         -- Trigram search for medicine
 | `products` | SELECT public (active only); INSERT/UPDATE/DELETE store owner | Store owners manage their own store's products (migration 018/019) |
 | `product_categories` | INSERT authenticated | Any authenticated user can add categories |
 
-## Table Count: **28 tables** — Applied Migrations: **024**
+## Table Count: **28 tables** — Applied Migrations: **025**
 
-> **Migration history note**: 24 migration files applied on top of the initial schema. Key post-schema changes: `user_profiles` RLS fixed (migration 022/023 dropped recursive `user_profiles → vets → user_profiles` policy causing infinite recursion); `appointment_slots` now uses `is_booked` (not `is_available`); cat-owner INSERT policy added to `appointments` (migration 024).
+> **Migration history note**: 25 migration files applied on top of the initial schema. Key post-schema changes: `user_profiles` RLS fixed (022/023 — dropped recursive policy); `appointment_slots` uses `is_booked` not `is_available`; cat-owner INSERT policy on `appointments` (024); `chat_rooms.appointment_id` FK + `UNIQUE(appointment_id)` replaces `UNIQUE(user_id, vet_id)` (025 — one chat room per appointment).
 
 ---
 
@@ -906,8 +910,13 @@ Certain data flows bypass Supabase RLS by routing through the FastAPI backend us
 | `POST /api/auth/register` | Public | Create Supabase auth user + user_profiles row |
 | `POST /api/auth/login` | Public | Validate credentials, issue JWT + Supabase session tokens |
 | `GET /api/auth/me` | Bearer JWT | Return authenticated user's profile |
-| `GET /api/hospitals/{id}/vets` | Public | List verified vets with names (**service role** — bypasses user_profiles RLS recursion) |
+| `GET /api/hospitals/{id}/vets` | Public | List verified vets (service role — bypasses user_profiles RLS) |
+| `GET /api/hospitals/vet/{vet_id}` | Public | Get single vet's name + avatar (service role) |
 | `POST /api/hospitals/vets` | Hospital admin JWT | Register new vet account (creates auth user + vet profile) |
+| `GET /api/appointments/{id}` | Bearer JWT | Single appointment with participant verification (service role) |
+| `GET /api/appointments/{id}/chat-room` | Bearer JWT | Get or create chat room for appointment (service role) |
+| `GET /api/appointments/{id}/messages` | Bearer JWT | Load all messages for appointment's chat room (service role) |
+| `POST /api/appointments/{id}/messages` | Bearer JWT | Send a message (service role — bypasses messages RLS) |
 | `POST /api/payments/appointment-session` | Bearer JWT | Create Safepay checkout session for appointment platform fee |
 | `POST /api/payments/order-session` | Bearer JWT | Create Safepay checkout session for order |
 | `POST /api/payments/webhook` | Safepay HMAC | Receive payment confirmations, update appointment/order status |
