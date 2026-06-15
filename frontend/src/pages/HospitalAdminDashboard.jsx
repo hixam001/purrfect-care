@@ -81,6 +81,7 @@ const fo = e => { e.target.style.borderColor = C.border; e.target.style.boxShado
    VET REGISTER MODAL
 ═══════════════════════════════════════════ */
 function VetRegisterModal({ onClose, onDone }) {
+  const { token } = useAuth()
   const [form, setForm] = useState({ name:'', email:'', password:'', phone:'', spec:'', license:'', exp:'', fee:'', bio:'' })
   const [saving,   setSaving]   = useState(false)
   const [success,  setSuccess]  = useState(false)
@@ -101,10 +102,10 @@ function VetRegisterModal({ onClose, onDone }) {
     }
     setSaving(true); setErr('')
     try {
-      const token = localStorage.getItem('access_token') || sessionStorage.getItem('access_token') || ''
+      const authToken = token || localStorage.getItem('pc_token') || ''
       const res = await fetch(`${API}/api/hospitals/vets`, {
         method:  'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${authToken}` },
         body: JSON.stringify({
           name:             form.name,
           email:            form.email,

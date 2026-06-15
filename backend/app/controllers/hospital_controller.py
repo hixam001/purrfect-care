@@ -121,7 +121,7 @@ async def register_vet(
             "phone":     body.phone,
             "role":      "vet",
             "is_active": True,
-        }).select().execute()
+        }).execute()
     except Exception as exc:
         # Rollback: delete the auth user we just created
         try:
@@ -156,9 +156,8 @@ async def register_vet(
             "license_number":   body.license_number,
             "experience_years": body.experience_years,
             "bio":              body.bio,
-            "consultation_fee": body.consultation_fee,
             "is_verified":      True,
-        }).select().execute()
+        }).execute()
     except Exception as exc:
         logger.error("Failed to create vet record: %s", exc)
         raise HTTPException(
