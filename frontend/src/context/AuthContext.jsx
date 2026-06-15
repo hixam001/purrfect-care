@@ -27,16 +27,23 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  // ── Restore session on mount ───────────────────────
+  // ── Restore session on mount (session-first: setSession must complete before setUser)
   useEffect(() => {
-    const stored = localStorage.getItem('pc_token')
+    const stored     = localStorage.getItem('pc_token')
+    const sb_access  = localStorage.getItem('pc_sb_access')
+    const sb_refresh = localStorage.getItem('pc_sb_refresh')
     if (!stored) { setLoading(false); return }
 
-    fetch(`${API}/api/auth/me`, {
-      headers: { Authorization: `Bearer ${stored}` },
-    })
-      .then(r => r.ok ? r.json() : null)
-      .then(async profile => {
+    async function restore() {
+      // 1. Re-establish Supabase session FIRST so auth.uid() is valid for RLS
+      if (sb_access && sb_refresh) {
+        await supabase.auth.setSession({ access_token: sb_access, refresh_token: sb_refresh })
+          .catch(() => {})
+      }
+      // 2. Restore user profile from backend
+      try {
+        const r       = await fetch(`${API}/api/auth/me`, { headers: { Authorization: `Bearer ${stored}` } })
+        const profile = r.ok ? await r.json() : null
         if (profile) {
           setUser(profile)
           await fetchSubscription(stored)
@@ -44,16 +51,10 @@ export function AuthProvider({ children }) {
           localStorage.removeItem('pc_token')
           setToken(null)
         }
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false))
-
-    const sb_access  = localStorage.getItem('pc_sb_access')
-    const sb_refresh = localStorage.getItem('pc_sb_refresh')
-    if (sb_access && sb_refresh) {
-      supabase.auth.setSession({ access_token: sb_access, refresh_token: sb_refresh })
-        .catch(() => {})
+      } catch { /* network error – stay logged out */ }
+      setLoading(false)
     }
+    restore()
   }, [fetchSubscription])
 
   // ── Persist backend token ────────────────────────────
@@ -74,7 +75,7 @@ export function AuthProvider({ children }) {
       const data = await res.json()
       if (!res.ok) throw new Error(data.detail ?? 'Login failed')
       setToken(data.access_token)
-      setUser(data.user)
+      // Session FIRST — so any immediately-rendered component has auth.uid() ready
       if (data.access_token && data.refresh_token) {
         await supabase.auth.setSession({
           access_token:  data.access_token,
@@ -83,7 +84,7 @@ export function AuthProvider({ children }) {
         localStorage.setItem('pc_sb_access',  data.access_token)
         localStorage.setItem('pc_sb_refresh', data.refresh_token)
       }
-      // Fetch subscription after login
+      setUser(data.user)
       await fetchSubscription(data.access_token)
       return { ok: true, user: data.user }
     } catch (e) {

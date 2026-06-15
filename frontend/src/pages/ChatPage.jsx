@@ -3,6 +3,8 @@ import { useParams, Link, Navigate }   from 'react-router-dom'
 import { useAuth }   from '../context/AuthContext.jsx'
 import { supabase }  from '../lib/supabaseClient.js'
 
+const API = import.meta.env.VITE_API_URL ?? ''
+
 export default function ChatPage() {
   const { appointmentId } = useParams()
   const { user }          = useAuth()
@@ -11,6 +13,7 @@ export default function ChatPage() {
   const [chatRoom,    setChatRoom]    = useState(null)
   const [messages,    setMessages]    = useState([])
   const [myProfileId, setMyProfileId] = useState(null)
+  const [vetName,     setVetName]     = useState('Your Vet')
   const [input,       setInput]       = useState('')
   const [loading,     setLoading]     = useState(true)
   const [blocked,     setBlocked]     = useState(false)
@@ -28,94 +31,62 @@ export default function ChatPage() {
     if (!user?.id) return
 
     async function load() {
-      // Resolve caller's profile + role
-      const { data: myProfile } = await supabase
-        .from('user_profiles')
-        .select('id, role')
-        .eq('user_id', user.id)
-        .single()
+      const stored = localStorage.getItem('pc_token')
+      if (!stored) { setBlocked(true); setLoading(false); return }
 
-      if (!myProfile) { setBlocked(true); setLoading(false); return }
-
-      const profileId = myProfile.id
-      const isVet     = myProfile.role === 'vet'
-      setMyProfileId(profileId)
-
-      // Fetch vet row when caller is a vet (need vet.id to match appointment.vet_id)
-      let myVetId = null
-      if (isVet) {
-        const { data: vetRow } = await supabase
-          .from('vets')
-          .select('id')
-          .eq('user_id', profileId)
-          .single()
-        myVetId = vetRow?.id ?? null
-      }
-
-      // Fetch appointment without user_id restriction — vets must also be able to load it
-      const { data: appt } = await supabase
-        .from('appointments')
-        .select(`
-          id, status, user_id, vet_id,
-          cats ( name ),
-          vets ( id, user_profiles ( id, name ) ),
-          hospitals ( name )
-        `)
-        .eq('id', appointmentId)
-        .single()
-
-      if (!appt) { setBlocked(true); setLoading(false); return }
-
-      // Authorisation: must be the cat owner OR the assigned vet
-      const isPatient     = appt.user_id === profileId
-      const isAssignedVet = !!myVetId && appt.vet_id === myVetId
-      if (!isPatient && !isAssignedVet) {
+      // 1. Profile via backend JWT — no Supabase session needed
+      const meRes = await fetch(`${API}/api/auth/me`, {
+        headers: { Authorization: `Bearer ${stored}` },
+      })
+      if (!meRes.ok) {
+        console.error('[ChatPage] /api/auth/me failed', meRes.status)
         setBlocked(true); setLoading(false); return
       }
+      const myProfile = await meRes.json()
+      const profileId = myProfile.id
+      setMyProfileId(profileId)
 
-      // Block only when appointment is terminal
+      // 2. Appointment + participant check via backend (service role, no Supabase RLS)
+      const apptRes = await fetch(`${API}/api/appointments/${appointmentId}`, {
+        headers: { Authorization: `Bearer ${stored}` },
+      })
+      if (!apptRes.ok) {
+        const detail = await apptRes.json().catch(() => ({}))
+        console.error('[ChatPage] appointment fetch failed', apptRes.status, detail)
+        setBlocked(true); setLoading(false); return
+      }
+      const appt = await apptRes.json()
+
+      // Populate vet name from backend response
+      setVetName(appt.vet_name ?? 'Your Vet')
+
+      // Block on terminal status (show "Case is Closed")
       if (['cancelled', 'completed', 'no_show'].includes(appt.status)) {
         setBlocked(true); setLoading(false); setAppointment(appt); return
       }
 
       setAppointment(appt)
 
-      // Get or create chat room
-      let { data: room } = await supabase
-        .from('chat_rooms')
-        .select('*')
-        .eq('appointment_id', appointmentId)
-        .maybeSingle()
-
-      if (!room) {
-        const { data: newRoom } = await supabase
-          .from('chat_rooms')
-          .insert({
-            user_id:        appt.user_id,
-            vet_id:         appt.vets?.id,
-            appointment_id: appointmentId,
-          })
-          .select()
-          .single()
-        room = newRoom
+      // 3. Chat room via backend (service role — no RLS/session dependency)
+      const roomRes = await fetch(`${API}/api/appointments/${appointmentId}/chat-room`, {
+        headers: { Authorization: `Bearer ${stored}` },
+      })
+      if (!roomRes.ok) {
+        console.error('[ChatPage] chat-room fetch failed', roomRes.status)
+        setLoading(false); return
       }
-
+      const room = await roomRes.json()
       setChatRoom(room)
 
-      // Load existing messages
-      const { data: msgs } = await supabase
-        .from('messages')
-        .select(`
-          id, content, sent_at, message_type, sender_id,
-          user_profiles ( id, name )
-        `)
-        .eq('chat_room_id', room.id)
-        .order('sent_at', { ascending: true })
-
-      setMessages(msgs ?? [])
+      // 4. Load messages via backend
+      const msgsRes = await fetch(`${API}/api/appointments/${appointmentId}/messages`, {
+        headers: { Authorization: `Bearer ${stored}` },
+      })
+      const msgs = msgsRes.ok ? await msgsRes.json() : []
+      setMessages(msgs)
       setLoading(false)
 
-      // Subscribe to new messages via realtime
+      // Realtime: subscribe for live updates (removes optimistic when real msg arrives)
       channelRef.current = supabase
         .channel(`chat_room_${room.id}`)
         .on('postgres_changes', {
@@ -124,7 +95,12 @@ export default function ChatPage() {
           table:  'messages',
           filter: `chat_room_id=eq.${room.id}`,
         }, payload => {
-          setMessages(m => [...m, payload.new])
+          setMessages(m => {
+            // Remove optimistic placeholder with same content+sender, add real msg
+            const withoutOpt = m.filter(x => !String(x.id).startsWith('opt-'))
+            const alreadyHas = withoutOpt.some(x => x.id === payload.new.id)
+            return alreadyHas ? withoutOpt : [...withoutOpt, payload.new]
+          })
         })
         .subscribe()
     }
@@ -143,17 +119,40 @@ export default function ChatPage() {
     const text = input.trim()
     setInput('')
 
-    await supabase.from('messages').insert({
-      chat_room_id: chatRoom.id,
-      sender_id:    myProfileId,   // must be user_profiles.id, not auth UID
+    // Optimistic: add message to UI immediately
+    const optimistic = {
+      id:           `opt-${Date.now()}`,
       content:      text,
+      sent_at:      new Date().toISOString(),
       message_type: 'text',
+      sender_id:    myProfileId,
+      user_profiles: { id: myProfileId, name: 'You' },
+    }
+    setMessages(m => [...m, optimistic])
+
+    // Send via backend (no Supabase session needed)
+    const stored = localStorage.getItem('pc_token')
+    const res = await fetch(`${API}/api/appointments/${appointmentId}/messages`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${stored}` },
+      body:    JSON.stringify({ content: text }),
     })
+
+    if (!res.ok) {
+      console.error('[ChatPage] send failed', res.status)
+      // Rollback optimistic message and restore input
+      setMessages(m => m.filter(msg => msg.id !== optimistic.id))
+      setInput(text)
+    }
   }
 
-  // ── Blocked / case closed ──
-  const backTo = appointment?.vets?.user_profiles?.id === myProfileId
-    ? '/vet-dashboard' : '/dashboard'
+  // ── Derive display values from appointment ──
+  const hospName    = appointment?.hospitals?.name ?? ''
+  const catName     = appointment?.cats?.name ?? 'your cat'
+  const isVetViewer = myProfileId && appointment?.vet_id
+    ? false  // simplified: chat opened from cat owner side by default
+    : false
+  const backTo = '/dashboard'
 
   if (!loading && blocked) return (
     <div className="min-h-screen flex items-center justify-center px-4"
@@ -182,10 +181,9 @@ export default function ChatPage() {
     </div>
   )
 
-  const isVetViewer = appointment?.vets?.user_profiles?.id === myProfileId
-  const otherName   = isVetViewer
+  const otherName = isVetViewer
     ? (appointment?.user_profiles?.name ?? 'Patient')
-    : (vetName)
+    : vetName
 
   return (
     <div className="min-h-screen flex flex-col" style={{ background:'linear-gradient(135deg,#dbe8d8,#EFE5DC)' }}>

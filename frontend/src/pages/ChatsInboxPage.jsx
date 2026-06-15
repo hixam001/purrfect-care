@@ -92,10 +92,11 @@ export default function ChatsInboxPage() {
 
     try {
       // 1. Resolve profile
+      // FIX: user.id = user_profiles.id (PK), not auth UID — use .eq('id')
       const { data: prof } = await supabase
         .from('user_profiles')
         .select('id, name, role')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .single()
 
       if (!prof) throw new Error('Profile not found.')

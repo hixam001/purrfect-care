@@ -517,17 +517,17 @@ graph LR
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | `id` | UUID | PK | Appointment ID |
-| `user_id` | UUID | FK → users.id, NOT NULL | Cat owner |
+| `user_id` | UUID | FK → user_profiles.id, NOT NULL | Cat owner's profile (NOT auth.uid directly) |
 | `cat_id` | UUID | FK → cats.id, NOT NULL | Patient cat |
 | `vet_id` | UUID | FK → vets.id, NOT NULL | Attending vet |
 | `hospital_id` | UUID | FK → hospitals.id, NOT NULL | Hospital |
 | `service_id` | UUID | FK → hospital_services.id, NOT NULL | Service booked |
-| `slot_id` | UUID | FK → appointment_slots.id | Time slot |
+| `slot_id` | UUID | FK → appointment_slots.id | Time slot (UNIQUE — prevents double-booking) |
 | `appointment_date` | TIMESTAMPTZ | NOT NULL | Date and time |
 | `status` | VARCHAR(20) | DEFAULT 'pending', CHECK IN ('pending','confirmed','in_progress','completed','cancelled','no_show') | Status |
 | `notes` | TEXT | | Appointment notes |
-| `amount_paid` | DECIMAL(10,2) | | Payment amount |
-| `payment_id` | VARCHAR(255) | | Stripe payment ID |
+| `amount_paid` | DECIMAL(10,2) | | Consultation fee (billed at clinic) |
+| `payment_id` | VARCHAR(255) | | Safepay tracker token for platform fee |
 | `created_at` | TIMESTAMPTZ | DEFAULT now() | Booking time |
 | `updated_at` | TIMESTAMPTZ | DEFAULT now() | Last status change |
 
@@ -687,7 +687,7 @@ graph LR
 | `delivery_fee` | DECIMAL(6,2) | DEFAULT 0 | Delivery charge |
 | `total` | DECIMAL(10,2) | NOT NULL | Grand total |
 | `status` | VARCHAR(20) | DEFAULT 'pending', CHECK IN ('pending','confirmed','preparing','ready','out_for_delivery','delivered','cancelled','refunded') | Status |
-| `payment_id` | VARCHAR(255) | | Stripe payment ID |
+| `payment_id` | VARCHAR(255) | | Safepay tracker token |
 | `delivery_address` | TEXT | NOT NULL | Delivery address |
 | `delivery_location` | GEOGRAPHY(POINT, 4326) | | Delivery GPS |
 | `notes` | TEXT | | Delivery instructions |
@@ -740,7 +740,7 @@ graph LR
 | `user_id` | UUID | FK → users.id, NOT NULL | Payer |
 | `amount` | DECIMAL(10,2) | NOT NULL | Payment amount |
 | `payment_method` | VARCHAR(50) | | card, wallet, etc. |
-| `stripe_payment_id` | VARCHAR(255) | NOT NULL | Stripe payment intent ID |
+| `stripe_payment_id` | VARCHAR(255) | NOT NULL | **Safepay tracker token** (column retains legacy name; populated by Safepay webhook) |
 | `status` | VARCHAR(20) | DEFAULT 'pending', CHECK IN ('pending','completed','failed','refunded') | Payment status |
 | `created_at` | TIMESTAMPTZ | DEFAULT now() | Payment timestamp |
 | `completed_at` | TIMESTAMPTZ | | Completion timestamp |
@@ -870,21 +870,47 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";         -- Trigram search for medicine
 
 | Table | Policy | Description |
 |-------|--------|-------------|
-| users | SELECT own, admin all | Users see own profile, admin sees all |
-| cats | CRUD own | Owners manage their own cats |
-| appointments | SELECT own + vet + hospital | User, assigned vet, and hospital can view |
-| medical_records | SELECT owner + vet | Owner and treating vets |
-| chat_rooms | SELECT participants | Only user and vet in the room |
-| messages | SELECT room members | Only chat room participants |
-| orders | SELECT buyer + store | Buyer and store owner |
-| hospitals/stores | SELECT all, UPDATE admin | Public read, admin write |
-| treatments | SELECT vet + owner | Treating vet and cat owner |
-| payments | SELECT payer + admin | Payer and system admin |
-| review_responses | SELECT all | Public like reviews |
-| products | SELECT public (active only); INSERT/UPDATE/DELETE store owner | Store owners manage their own store's products (migration 004) |
-| product_categories | INSERT authenticated | Any authenticated user can add categories |
+| `user_profiles` | SELECT own | Users read their own profile (`user_id = auth.uid()`) |
+| `users` | SELECT own, admin all | Users see own row; admin sees all |
+| `cats` | CRUD own | Owners manage their own cats |
+| `appointment_slots` | SELECT public (true) | Anyone can read slots (for booking UI) |
+| `appointment_slots` | INSERT/UPDATE/DELETE hospital admin | Admin manages slots for their hospital |
+| `appointments` | SELECT own + vet + hospital | User, assigned vet, and hospital admin can view |
+| `appointments` | **INSERT cat owner** | Cat owner can book (added migration 024: `user_id IN (SELECT id FROM user_profiles WHERE user_id = auth.uid())`) |
+| `appointments` | UPDATE vet + hospital admin | Status updates only |
+| `medical_records` | SELECT owner + vet | Owner and treating vets |
+| `chat_rooms` | SELECT participants | Only user and vet in the room |
+| `messages` | SELECT room members | Only chat room participants |
+| `messages` | INSERT room members | Vets and users can send messages (migration 014) |
+| `orders` | SELECT buyer + store | Buyer and store owner |
+| `hospitals/stores` | SELECT approved = true | Public read of approved listings |
+| `hospitals/stores` | UPDATE admin | Admin write only |
+| `treatments` | SELECT vet + owner | Treating vet and cat owner |
+| `payments` | SELECT payer + admin | Payer and system admin |
+| `review_responses` | SELECT all | Public like reviews |
+| `products` | SELECT public (active only); INSERT/UPDATE/DELETE store owner | Store owners manage their own store's products (migration 018/019) |
+| `product_categories` | INSERT authenticated | Any authenticated user can add categories |
 
-## Table Count: **28 tables**
+## Table Count: **28 tables** — Applied Migrations: **024**
+
+> **Migration history note**: 24 migration files applied on top of the initial schema. Key post-schema changes: `user_profiles` RLS fixed (migration 022/023 dropped recursive `user_profiles → vets → user_profiles` policy causing infinite recursion); `appointment_slots` now uses `is_booked` (not `is_available`); cat-owner INSERT policy added to `appointments` (migration 024).
+
+---
+
+## Backend API Endpoints (FastAPI / Cloud Run)
+
+Certain data flows bypass Supabase RLS by routing through the FastAPI backend using the service-role key:
+
+| Endpoint | Auth | Purpose |
+|----------|------|---------|
+| `POST /api/auth/register` | Public | Create Supabase auth user + user_profiles row |
+| `POST /api/auth/login` | Public | Validate credentials, issue JWT + Supabase session tokens |
+| `GET /api/auth/me` | Bearer JWT | Return authenticated user's profile |
+| `GET /api/hospitals/{id}/vets` | Public | List verified vets with names (**service role** — bypasses user_profiles RLS recursion) |
+| `POST /api/hospitals/vets` | Hospital admin JWT | Register new vet account (creates auth user + vet profile) |
+| `POST /api/payments/appointment-session` | Bearer JWT | Create Safepay checkout session for appointment platform fee |
+| `POST /api/payments/order-session` | Bearer JWT | Create Safepay checkout session for order |
+| `POST /api/payments/webhook` | Safepay HMAC | Receive payment confirmations, update appointment/order status |
 
 ---
 
@@ -900,4 +926,3 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";         -- Trigram search for medicine
 | **TransactionLineItem** | `order_items`, `messages` |
 | **SubsequentTransaction** | `treatments`, `prescriptions`, `payments`, `patient_history`, `review_responses` |
 | **System** | `notifications` |
-

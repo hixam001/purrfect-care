@@ -218,3 +218,37 @@ async def list_hospital_vets(
             "avatar_url": prof.get("avatar_url"),
         })
     return result
+
+
+@router.get(
+    "/vet/{vet_id}",
+    summary="Get a single vet's public info (name, specialization)",
+    description=(
+        "Returns name, avatar_url, and specialization for a vet by their vet.id. "
+        "Uses the service-role client to bypass user_profiles RLS. "
+        "Used by ChatPage to display the vet's name without a Supabase session dependency."
+    ),
+)
+async def get_vet_by_id(
+    vet_id: str,
+    db=Depends(get_supabase_client),
+):
+    # Service-role client — bypasses RLS on user_profiles
+    result = (
+        db.table("vets")
+        .select("id, specialization, user_profiles ( id, name, avatar_url )")
+        .eq("id", vet_id)
+        .maybe_single()
+        .execute()
+    )
+    vet = result.data
+    if not vet:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Vet not found")
+
+    prof = vet.pop("user_profiles", None) or {}
+    return {
+        **vet,
+        "name":       prof.get("name", "Veterinarian"),
+        "avatar_url": prof.get("avatar_url"),
+    }
