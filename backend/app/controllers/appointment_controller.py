@@ -275,25 +275,64 @@ async def get_or_create_chat_room(
     role       = profile.get("role", "")
 
     appt = _verify_participant(db, appointment_id, profile_id, role)
+    user_id = appt["user_id"]
+    vet_id  = appt.get("vet_id")
 
-    # Get existing room
-    room_res = db.table("chat_rooms").select("*") \
-        .eq("appointment_id", appointment_id).maybe_single().execute()
-    room = room_res.data
+    if not vet_id:
+        raise HTTPException(
+            status_code=422,
+            detail="A vet must be assigned to this appointment before chat can begin.",
+        )
+
+    # ── Look up existing chat room ───────────────────────────────────────────
+    # Primary: try by appointment_id (requires migration 025 + PostgREST cache)
+    # Fallback: look up by user_id + vet_id if the above fails
+    room = None
+    try:
+        res = db.table("chat_rooms").select("*") \
+            .eq("appointment_id", appointment_id).limit(1).execute()
+        if res and res.data:
+            room = res.data[0]
+    except Exception as e:
+        logger.warning("appointment_id lookup failed (%s) — falling back to user+vet", e)
 
     if not room:
-        # Create room (service role — bypasses RLS)
-        ins = db.table("chat_rooms").insert({
-            "user_id":        appt["user_id"],
-            "vet_id":         appt["vet_id"],
-            "appointment_id": appointment_id,
-        }).select().execute()
-        room = ins.data[0] if ins.data else None
+        try:
+            res2 = db.table("chat_rooms").select("*") \
+                .eq("user_id", user_id).eq("vet_id", vet_id).limit(1).execute()
+            if res2 and res2.data:
+                room = res2.data[0]
+        except Exception as e:
+            logger.error("user_id+vet_id lookup failed: %s", e)
+            raise HTTPException(status_code=500, detail=f"Could not query chat room: {e}")
+
+    # ── Create if still not found ────────────────────────────────────────────
+    if not room:
+        insert_row = {"user_id": user_id, "vet_id": vet_id}
+        try:
+            insert_row["appointment_id"] = appointment_id   # may fail if column unknown
+        except Exception:
+            pass
+        try:
+            ins = db.table("chat_rooms").insert(insert_row).execute()
+            room = ins.data[0] if (ins and ins.data) else None
+        except Exception as e:
+            # If appointment_id column not yet in schema cache, retry without it
+            logger.warning("INSERT with appointment_id failed (%s) — retrying without it", e)
+            try:
+                ins2 = db.table("chat_rooms").insert(
+                    {"user_id": user_id, "vet_id": vet_id}
+                ).execute()
+                room = ins2.data[0] if (ins2 and ins2.data) else None
+            except Exception as e2:
+                logger.error("chat_rooms INSERT fallback failed: %s", e2)
+                raise HTTPException(status_code=500, detail=f"Could not create chat room: {e2}")
 
     if not room:
-        raise HTTPException(status_code=500, detail="Could not create chat room.")
+        raise HTTPException(status_code=500, detail="Could not create or find chat room.")
 
     return room
+
 
 
 @router.get(
@@ -313,20 +352,42 @@ async def get_messages(
 
     _verify_participant(db, appointment_id, profile_id, role)
 
-    # Find the chat room
-    room_res = db.table("chat_rooms").select("id") \
-        .eq("appointment_id", appointment_id).maybe_single().execute()
-    if not room_res.data:
+    # Find the chat room — try appointment_id first, fall back to user+vet
+    room_id = None
+    try:
+        res = db.table("chat_rooms").select("id") \
+            .eq("appointment_id", appointment_id).limit(1).execute()
+        if res and res.data:
+            room_id = res.data[0]["id"]
+    except Exception:
+        pass
+
+    if not room_id:
+        try:
+            appt_res = db.table("appointments").select("user_id, vet_id") \
+                .eq("id", appointment_id).limit(1).execute()
+            if appt_res and appt_res.data:
+                u, v = appt_res.data[0]["user_id"], appt_res.data[0]["vet_id"]
+                res2 = db.table("chat_rooms").select("id") \
+                    .eq("user_id", u).eq("vet_id", v).limit(1).execute()
+                if res2 and res2.data:
+                    room_id = res2.data[0]["id"]
+        except Exception as e:
+            logger.error("chat room lookup (messages) failed: %s", e)
+
+    if not room_id:
         return []   # No room yet — no messages
 
-    room_id = room_res.data["id"]
-
-    msgs_res = db.table("messages") \
-        .select("id, content, sent_at, message_type, sender_id, user_profiles(id, name)") \
-        .eq("chat_room_id", room_id) \
-        .order("sent_at", desc=False) \
-        .execute()
-    return msgs_res.data or []
+    try:
+        msgs_res = db.table("messages") \
+            .select("id, content, sent_at, message_type, sender_id, user_profiles(id, name)") \
+            .eq("chat_room_id", room_id) \
+            .order("sent_at", desc=False) \
+            .execute()
+        return msgs_res.data or []
+    except Exception as e:
+        logger.error("messages SELECT failed: %s", e)
+        return []
 
 
 @router.post(
@@ -351,28 +412,54 @@ async def send_message(
 
     _verify_participant(db, appointment_id, profile_id, role)
 
-    # Ensure room exists
-    room_res = db.table("chat_rooms").select("id") \
-        .eq("appointment_id", appointment_id).maybe_single().execute()
-    if not room_res.data:
-        raise HTTPException(status_code=404, detail="Chat room not found.")
+    # Ensure room exists — try appointment_id first, fall back to user+vet
+    room_id = None
+    try:
+        res = db.table("chat_rooms").select("id") \
+            .eq("appointment_id", appointment_id).limit(1).execute()
+        if res and res.data:
+            room_id = res.data[0]["id"]
+    except Exception:
+        pass
 
-    room_id = room_res.data["id"]
+    if not room_id:
+        try:
+            appt_res = db.table("appointments").select("user_id, vet_id") \
+                .eq("id", appointment_id).limit(1).execute()
+            if appt_res and appt_res.data:
+                u, v = appt_res.data[0]["user_id"], appt_res.data[0]["vet_id"]
+                res2 = db.table("chat_rooms").select("id") \
+                    .eq("user_id", u).eq("vet_id", v).limit(1).execute()
+                if res2 and res2.data:
+                    room_id = res2.data[0]["id"]
+        except Exception as e:
+            logger.error("chat room lookup (send) failed: %s", e)
+            raise HTTPException(status_code=500, detail=f"Could not find chat room: {e}")
+
+    if not room_id:
+        raise HTTPException(status_code=404, detail="Chat room not found. Open the chat page first to create it.")
 
     # Insert message (service role — bypasses messages RLS)
-    ins = db.table("messages").insert({
-        "chat_room_id": room_id,
-        "sender_id":    profile_id,
-        "content":      body.content.strip(),
-        "message_type": body.message_type,
-    }).select().execute()
+    try:
+        ins = db.table("messages").insert({
+            "chat_room_id": room_id,
+            "sender_id":    profile_id,
+            "content":      body.content.strip(),
+            "message_type": body.message_type,
+        }).execute()
+    except Exception as e:
+        logger.error("messages INSERT failed: %s", e)
+        raise HTTPException(status_code=500, detail=f"Failed to send message: {e}")
 
     if not ins.data:
         raise HTTPException(status_code=500, detail="Failed to send message.")
 
     # Update last_message_at on the room
-    db.table("chat_rooms") \
-        .update({"last_message_at": ins.data[0]["sent_at"]}) \
-        .eq("id", room_id).execute()
+    try:
+        db.table("chat_rooms") \
+            .update({"last_message_at": ins.data[0]["sent_at"]}) \
+            .eq("id", room_id).execute()
+    except Exception as e:
+        logger.warning("last_message_at update failed (non-fatal): %s", e)
 
     return ins.data[0]

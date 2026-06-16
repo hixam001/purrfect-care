@@ -106,7 +106,7 @@ export default function ChatsInboxPage() {
       let data = []
 
       if (prof.role === 'vet') {
-        // Vet: get vet row first, then query chat_rooms by vet_id
+        // Vet: query appointments assigned to them (chat room may not exist yet)
         const { data: vetRow } = await supabase
           .from('vets')
           .select('id')
@@ -115,72 +115,54 @@ export default function ChatsInboxPage() {
 
         if (vetRow?.id) {
           const { data: rows, error: e } = await supabase
-            .from('chat_rooms')
+            .from('appointments')
             .select(`
-              id,
-              appointment_id,
-              created_at,
-              appointments (
-                id,
-                appointment_date,
-                status,
-                cats   ( name ),
-                user_profiles ( id, name )
-              )
-            `)
-            .eq('vet_id', vetRow.id)
-            .order('created_at', { ascending: false })
-
-          if (e) throw e
-          // Map: "other" is the patient
-          data = (rows ?? []).map(r => ({
-            roomId:         r.id,
-            appointmentId:  r.appointment_id,
-            otherName:      r.appointments?.user_profiles?.name ?? 'Patient',
-            catName:        r.appointments?.cats?.name ?? '—',
-            apptDate:       r.appointments?.appointment_date,
-            status:         r.appointments?.status ?? 'pending',
-            updatedAt:      r.created_at,
-            canChat:        ['confirmed','in_progress'].includes(r.appointments?.status),
-          }))
-        }
-      } else {
-        // Patient: query chat_rooms by user_id (patient's profile id)
-        const { data: rows, error: e } = await supabase
-          .from('chat_rooms')
-          .select(`
-            id,
-            appointment_id,
-            created_at,
-            appointments (
               id,
               appointment_date,
               status,
-              cats ( name ),
-              vets (
-                id,
-                specialization,
-                user_profiles ( id, name )
-              ),
-              hospitals ( name )
-            )
+              cats ( name )
+            `)
+            .eq('vet_id', vetRow.id)
+            .in('status', ['confirmed', 'in_progress', 'completed'])
+            .order('appointment_date', { ascending: false })
+
+          if (e) throw e
+          data = (rows ?? []).map(r => ({
+            appointmentId:  r.id,
+            otherName:      'Patient',
+            catName:        r.cats?.name ?? '—',
+            apptDate:       r.appointment_date,
+            status:         r.status ?? 'confirmed',
+            updatedAt:      r.appointment_date,
+            canChat:        ['confirmed','in_progress'].includes(r.status),
+          }))
+        }
+      } else {
+        // Patient: query appointments belonging to them (room created on demand when they open chat)
+        const { data: rows, error: e } = await supabase
+          .from('appointments')
+          .select(`
+            id,
+            appointment_date,
+            status,
+            cats ( name ),
+            hospitals ( name )
           `)
           .eq('user_id', prof.id)
-          .order('created_at', { ascending: false })
+          .in('status', ['confirmed', 'in_progress', 'completed'])
+          .order('appointment_date', { ascending: false })
 
         if (e) throw e
-        // Map: "other" is the vet
         data = (rows ?? []).map(r => ({
-          roomId:         r.id,
-          appointmentId:  r.appointment_id,
-          otherName:      r.appointments?.vets?.user_profiles?.name ?? 'Vet',
-          subLabel:       r.appointments?.vets?.specialization ?? '',
-          hospitalName:   r.appointments?.hospitals?.name ?? '',
-          catName:        r.appointments?.cats?.name ?? '—',
-          apptDate:       r.appointments?.appointment_date,
-          status:         r.appointments?.status ?? 'pending',
-          updatedAt:      r.created_at,
-          canChat:        ['confirmed','in_progress'].includes(r.appointments?.status),
+          appointmentId:  r.id,
+          otherName:      'Your Vet',
+          subLabel:       '',
+          hospitalName:   r.hospitals?.name ?? '',
+          catName:        r.cats?.name ?? '—',
+          apptDate:       r.appointment_date,
+          status:         r.status ?? 'confirmed',
+          updatedAt:      r.appointment_date,
+          canChat:        ['confirmed','in_progress'].includes(r.status),
         }))
       }
 

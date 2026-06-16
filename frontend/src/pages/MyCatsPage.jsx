@@ -182,7 +182,11 @@ function CatDrawer({ open, onClose, onSaved, editing }) {
             >
               <span className="text-white text-[11px] font-bold">Change</span>
             </div>
-            <input ref={fileRef} type="file" accept="image// " className="hidden" onChange={handlePhoto} /> | </div> | {/* Name}
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
+          </div>
+
+          {/* Name */}
+
           <div>
             <label className="t-mono text-[10px] block mb-1.5 uppercase tracking-widest text-clay-muted">Cat Name *</label>
             <input

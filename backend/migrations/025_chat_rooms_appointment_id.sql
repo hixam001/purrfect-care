@@ -6,14 +6,24 @@
 ALTER TABLE chat_rooms
   DROP CONSTRAINT IF EXISTS chat_rooms_user_id_vet_id_key;
 
--- 2. Add appointment_id FK
+-- 2. Add appointment_id FK (IF NOT EXISTS is valid for ADD COLUMN)
 ALTER TABLE chat_rooms
   ADD COLUMN IF NOT EXISTS appointment_id UUID REFERENCES appointments(id) ON DELETE CASCADE;
 
 -- 3. One chat room per appointment
-ALTER TABLE chat_rooms
-  ADD CONSTRAINT chat_rooms_appointment_id_key UNIQUE (appointment_id);
+--    ADD CONSTRAINT IF NOT EXISTS is not supported in PostgreSQL — use DO block
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'chat_rooms_appointment_id_key'
+  ) THEN
+    ALTER TABLE chat_rooms
+      ADD CONSTRAINT chat_rooms_appointment_id_key UNIQUE (appointment_id);
+  END IF;
+END $$;
 
 -- 4. Index for lookups
 CREATE INDEX IF NOT EXISTS idx_chat_rooms_appointment_id
   ON chat_rooms(appointment_id);
+
