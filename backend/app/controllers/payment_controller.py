@@ -65,11 +65,10 @@ async def create_payment_session(
         response = await client.post(
             f"{base}/order/v1/init",
             json={
-                "merchant_api_key": settings.SAFEPAY_SECRET_KEY,
-                "intent": "CYBERSOURCE",
-                "mode": "payment",
+                "client": settings.SAFEPAY_PUBLIC_KEY,
+                "environment": settings.SAFEPAY_ENV,
                 "currency": body.currency,
-                "amount": body.amount,
+                "amount": float(body.amount),
                 "order_id": body.order_id,
                 "cancel_url": body.cancel_url,
                 "redirect_url": body.redirect_url,
@@ -116,7 +115,6 @@ async def create_order_payment_session(
     """Create a Safepay session for a store order (cart + 1.5% platform fee)."""
     fee_pkr        = math.ceil(body.amount_pkr * PLATFORM_FEE_RATE)
     total_pkr      = body.amount_pkr + fee_pkr
-    total_paisa    = total_pkr * 100
     safepay_oid    = f"ORD-{body.order_id}"
 
     base = _safepay_base(settings)
@@ -124,11 +122,10 @@ async def create_order_payment_session(
         resp = await client.post(
             f"{base}/order/v1/init",
             json={
-                "merchant_api_key": settings.SAFEPAY_SECRET_KEY,
-                "intent":           "CYBERSOURCE",
-                "mode":             "payment",
+                "client":           settings.SAFEPAY_PUBLIC_KEY,
+                "environment":      settings.SAFEPAY_ENV,
                 "currency":         "PKR",
-                "amount":           total_paisa,
+                "amount":           float(total_pkr),
                 "order_id":         safepay_oid,
                 "cancel_url":       body.cancel_url,
                 "redirect_url":     body.redirect_url,
@@ -169,7 +166,6 @@ async def create_appointment_payment_session(
     settings: Settings = Depends(get_settings),
 ):
     """Create a Safepay session for an appointment booking (₨508 fixed)."""
-    total_paisa  = APPOINTMENT_TOTAL * 100
     safepay_oid  = f"APT-{body.appointment_ref}"
 
     base = _safepay_base(settings)
@@ -177,11 +173,10 @@ async def create_appointment_payment_session(
         resp = await client.post(
             f"{base}/order/v1/init",
             json={
-                "merchant_api_key": settings.SAFEPAY_SECRET_KEY,
-                "intent":           "CYBERSOURCE",
-                "mode":             "payment",
+                "client":           settings.SAFEPAY_PUBLIC_KEY,
+                "environment":      settings.SAFEPAY_ENV,
                 "currency":         "PKR",
-                "amount":           total_paisa,
+                "amount":           float(APPOINTMENT_TOTAL),
                 "order_id":         safepay_oid,
                 "cancel_url":       body.cancel_url,
                 "redirect_url":     body.redirect_url,

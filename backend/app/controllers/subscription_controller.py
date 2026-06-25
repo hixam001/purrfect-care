@@ -148,18 +148,16 @@ async def subscription_checkout(
         )
 
     order_id = f"SUB-{profile['id'][:8]}-{int(datetime.now(timezone.utc).timestamp())}"
-    amount_paisa = price * 100  # PKR → paisa
 
     base = _safepay_base(settings)
     async with httpx.AsyncClient() as client:
         resp = await client.post(
             f"{base}/order/v1/init",
             json={
-                "merchant_api_key": settings.SAFEPAY_SECRET_KEY,
-                "intent":           "CYBERSOURCE",
-                "mode":             "payment",
+                "client":           settings.SAFEPAY_PUBLIC_KEY,
+                "environment":      settings.SAFEPAY_ENV,
                 "currency":         "PKR",
-                "amount":           amount_paisa,
+                "amount":           float(price),
                 "order_id":         order_id,
                 "cancel_url":       body.cancel_url,
                 "redirect_url":     body.redirect_url,
