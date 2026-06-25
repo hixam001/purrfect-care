@@ -3,13 +3,12 @@
 # ============================================
 
 # --- Environment / Secrets ---
-# backend/.env is safe to track — contains ONLY non-secret vars (model names, ports, CORS)
-# All other .env files must NEVER be committed
+.env
 .env.local
+backend/.env
 backend/.env.local
 *.env
 !**/.env.example
-!backend/.env
 firebase-credentials.json
 google-services.json
 GoogleService-Info.plist
