@@ -15,8 +15,6 @@ passlib[bcrypt]==1.7.4
 
 # Payments — Safepay (uses httpx, already listed below)
 
-# Firebase Functions
-firebase-functions>=0.1.0
 
 # AI / Embeddings
 google-genai>=1.0.0            # Gemini chat + text-embedding-004 (new unified SDK)
